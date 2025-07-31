@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32.SafeHandles;
 using System.Management;
+using System.Runtime.InteropServices;
 
 
 namespace CPUSetLib
@@ -75,7 +76,7 @@ namespace CPUSetLib
             return NativeMethods.SetProcessDefaultCpuSetMasks(hProcess.DangerousGetHandle(), ref affinity, 1);
         }
 
-        private static bool GetCpuSetMask(int pid, out ulong coreMask)
+        private static bool GetCpuSetMask(int pid, out CPUSet cpuSet)
         {
             using SafeProcessHandle hProcess = NativeMethods.OpenProcess(ProcessAccessFlags.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
             if (hProcess.IsInvalid)
@@ -83,16 +84,48 @@ namespace CPUSetLib
                 throw new UnauthorizedAccessException();
             }
 
-            uint requiredCount;
             // First call to get how many entries we need
-            bool success = NativeMethods.GetProcessDefaultCpuSetMasks(hProcess, null, 0, out requiredCount);
+            bool success = NativeMethods.GetProcessDefaultCpuSetMasks(hProcess, null, 0, out uint requiredCount);
+            if (!success)
+            {
+                throw new InvalidOperationException($"Failed to get CPU ");
+            }
 
             if (requiredCount == 0)
             {
-                coreMask = 0;
-                return false;
+                cpuSet = new CPUSet { State = CPUSetState.Unset };
+                return true;
             }
+
+            // CHATGPT CODE
+            //var masks = new NativeMethods.GROUP_AFFINITY[requiredCount];
+
+            //bool success = NativeMethods.GetProcessDefaultCpuSetMasks(hProcess, masks, requiredCount, out _);
+
+            //if (!success)
+            //{
+            //    Console.WriteLine($"[!] Failed to get CPU set masks for PID {pid}. Error: {Marshal.GetLastWin32Error()}");
+            //    return;
+            //}
+
+            //for (int i = 0; i < requiredCount; i++)
+            //{
+            //    var m = masks[i];
+            //    Console.WriteLine($"Group: {m.Group}, Mask: 0x{m.Mask:X}");
+            //}
         }
+    }
+
+    public enum CPUSetState
+    {
+        Set,
+        Unset
+    }
+
+    public class CPUSet
+    {
+        public CPUSetState State { get; set; }
+        public ulong Mask { get; set; }
     }
 
     public class ProcessInfo
@@ -101,8 +134,8 @@ namespace CPUSetLib
         public string? FullPath { get; set; }
         public uint PID { get; set; }
         public DateTime CreationTime { get; set; }
-        public ulong WantedSet { get; set; }
-        public ulong ActualSet { get; set; }
+        public required CPUSet WantedSet { get; set; }
+        public required CPUSet ActualSet { get; set; }
     }
 
     public class NewProcessEventArgs : EventArgs
