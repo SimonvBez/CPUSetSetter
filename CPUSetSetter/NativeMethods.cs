@@ -24,14 +24,14 @@ namespace CPUSetLib
     internal static partial class NativeMethods
     {
         [LibraryImport("kernel32.dll", SetLastError = true)]
-        public static partial SafeProcessHandle OpenProcess(ProcessAccessFlags access, [MarshalAs(UnmanagedType.Bool)] bool inheritHandle, int processId);
+        public static partial SafeProcessHandle OpenProcess(ProcessAccessFlags access, [MarshalAs(UnmanagedType.Bool)] bool inheritHandle, uint processId);
 
         [LibraryImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static partial bool SetProcessDefaultCpuSetMasks(IntPtr hProcess, ref GROUP_AFFINITY cpuSetMasks, uint cpuSetMaskCount);
+        public static partial bool SetProcessDefaultCpuSetMasks(SafeProcessHandle hProcess, GROUP_AFFINITY[]? cpuSetMasks, uint cpuSetMaskCount);
 
         [LibraryImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static partial bool GetProcessDefaultCpuSetMasks(SafeProcessHandle process, [Out] GROUP_AFFINITY[]? cpuSetMasks, uint cpuSetMaskCount, out uint requiredMaskCount);
+        public static partial bool GetProcessDefaultCpuSetMasks(SafeProcessHandle hProcess, [Out] GROUP_AFFINITY[]? cpuSetMasks, uint cpuSetMaskCount, out uint requiredMaskCount);
     }
 }

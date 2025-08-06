@@ -1,26 +1,19 @@
 ﻿using Microsoft.Win32.SafeHandles;
 using System.Management;
-using System.Runtime.InteropServices;
 
 
 namespace CPUSetLib
 {
     public class CPUSetSetter
     {
-        private Dictionary<uint, ProcessInfo> _currentProcesses = new();
-
-
-        public event EventHandler<NewProcessEventArgs>? OnNewProcessSpawned;
-
-        public CPUSetSetter()
-        {
-            
-        }
+        public event EventHandler<ProcessEventArgs>? OnNewProcess;
+        public event EventHandler<ProcessEventArgs>? OnExitedProcess;
 
         public void Start()
         {
             ListCurrentProcesses();
             StartNewProcessListener();
+            StartExitedProcessListener();
         }
 
         private void ListCurrentProcesses()
@@ -29,8 +22,7 @@ namespace CPUSetLib
 
             foreach (ManagementBaseObject process in searcher.Get())
             {
-                ProcessInfo pInfo = ParseManegementProcess(process);
-                OnNewProcessSpawned?.Invoke(this, new NewProcessEventArgs { Process = pInfo });
+                AddNewProcess(process);
             }
         }
 
@@ -42,24 +34,49 @@ namespace CPUSetLib
             watcher.EventArrived += (_, e) =>
             {
                 var process = (ManagementBaseObject)e.NewEvent["TargetInstance"];
-                ProcessInfo pInfo = ParseManegementProcess(process);
-
-                OnNewProcessSpawned?.Invoke(this, new NewProcessEventArgs { Process = pInfo });
+                AddNewProcess(process);
             };
 
             watcher.Start();
         }
 
-        private static ProcessInfo ParseManegementProcess(ManagementBaseObject process)
+        private void StartExitedProcessListener()
         {
-            string name = (string)process["Name"];
-            string exePath = (string)process["ExecutablePath"];
-            uint pid = (uint)process["ProcessId"];
-            DateTime creationTime = ManagementDateTimeConverter.ToDateTime((string)process["CreationDate"]);
-            return new ProcessInfo { ExecutableName = name, FullPath = exePath, PID = pid, CreationTime = creationTime };
+            string query = "SELECT * FROM __InstanceDeletionEvent WITHIN 5 WHERE TargetInstance ISA 'Win32_Process'";
+            ManagementEventWatcher watcher = new(new WqlEventQuery(query));
+
+            watcher.EventArrived += (_, e) =>
+            {
+                var process = (ManagementBaseObject)e.NewEvent["TargetInstance"];
+                ProcessInfo pInfo = ParseManagementProcess(process);
+                OnExitedProcess?.Invoke(this, new ProcessEventArgs { Process = pInfo });
+            };
+
+            watcher.Start();
         }
 
-        private static bool ApplyCpuSetMaskToProcess(int pid, ulong coreMask)
+        private void AddNewProcess(ManagementBaseObject process)
+        {
+            ProcessInfo pInfo = ParseManagementProcess(process);
+            OnNewProcess?.Invoke(this, new ProcessEventArgs { Process = pInfo });
+        }
+
+        private static ProcessInfo ParseManagementProcess(ManagementBaseObject process)
+        {
+            string name = (string)process["Name"];
+            string? exePath = (string?)process["ExecutablePath"];
+            uint pid = (uint)process["ProcessId"];
+            DateTime creationTime = ManagementDateTimeConverter.ToDateTime((string)process["CreationDate"]);
+            return new ProcessInfo
+            {
+                ExecutableName = name.ToLower(),
+                FullPath = exePath?.ToLower(),
+                PID = pid,
+                CreationTime = creationTime
+            };
+        }
+
+        public static bool ApplyCpuSetMaskToProcess(uint pid, ulong coreMask)
         {
             using SafeProcessHandle hProcess = NativeMethods.OpenProcess(ProcessAccessFlags.PROCESS_SET_LIMITED_INFORMATION, false, pid);
             if (hProcess.IsInvalid)
@@ -67,53 +84,59 @@ namespace CPUSetLib
                 return false;
             }
 
-            var affinity = new GROUP_AFFINITY
+            if (coreMask == 0)
             {
-                Group = 0,
-                Mask = coreMask
-            };
+                return NativeMethods.SetProcessDefaultCpuSetMasks(hProcess, null, 0);
+            }
 
-            return NativeMethods.SetProcessDefaultCpuSetMasks(hProcess.DangerousGetHandle(), ref affinity, 1);
+            GROUP_AFFINITY[] affinity = [
+                new GROUP_AFFINITY {
+                    Group = 0,
+                    Mask = coreMask
+                }
+            ];
+
+            return NativeMethods.SetProcessDefaultCpuSetMasks(hProcess, affinity, 1);
         }
 
-        private static bool GetCpuSetMask(int pid, out CPUSet cpuSet)
-        {
-            using SafeProcessHandle hProcess = NativeMethods.OpenProcess(ProcessAccessFlags.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
-            if (hProcess.IsInvalid)
-            {
-                throw new UnauthorizedAccessException();
-            }
+        //private static bool GetCpuSetMask(uint pid, out CPUSet cpuSet)
+        //{
+        //    using SafeProcessHandle hProcess = NativeMethods.OpenProcess(ProcessAccessFlags.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+        //    if (hProcess.IsInvalid)
+        //    {
+        //        throw new UnauthorizedAccessException();
+        //    }
 
-            // First call to get how many entries we need
-            bool success = NativeMethods.GetProcessDefaultCpuSetMasks(hProcess, null, 0, out uint requiredCount);
-            if (!success)
-            {
-                throw new InvalidOperationException($"Failed to get CPU ");
-            }
+        //    // First call to get how many entries we need
+        //    bool success = NativeMethods.GetProcessDefaultCpuSetMasks(hProcess, null, 0, out uint requiredCount);
+        //    if (!success)
+        //    {
+        //        throw new InvalidOperationException($"Failed to get CPU Set masks");
+        //    }
 
-            if (requiredCount == 0)
-            {
-                cpuSet = new CPUSet { State = CPUSetState.Unset };
-                return true;
-            }
+        //    if (requiredCount == 0)
+        //    {
+        //        // No CPU Set has been configured for this process
+        //        cpuSet = CPUSet.Unset;
+        //        return true;
+        //    }
+        //    else if (requiredCount > 1)
+        //    {
+        //        // More than 64 CPUs are not supported
+        //        throw new NotImplementedException("Only single CPU Set masks are supported (max 64 CPUs)");
+        //    }
 
-            // CHATGPT CODE
-            //var masks = new NativeMethods.GROUP_AFFINITY[requiredCount];
+        //    // Get the CPU Set of this process
+        //    var masks = new GROUP_AFFINITY[requiredCount];
+        //    success = NativeMethods.GetProcessDefaultCpuSetMasks(hProcess, masks, requiredCount, out _);
+        //    if (!success)
+        //    {
+        //        throw new InvalidOperationException($"Failed to get CPU Set masks");
+        //    }
 
-            //bool success = NativeMethods.GetProcessDefaultCpuSetMasks(hProcess, masks, requiredCount, out _);
-
-            //if (!success)
-            //{
-            //    Console.WriteLine($"[!] Failed to get CPU set masks for PID {pid}. Error: {Marshal.GetLastWin32Error()}");
-            //    return;
-            //}
-
-            //for (int i = 0; i < requiredCount; i++)
-            //{
-            //    var m = masks[i];
-            //    Console.WriteLine($"Group: {m.Group}, Mask: 0x{m.Mask:X}");
-            //}
-        }
+        //    cpuSet = new CPUSet { State = CPUSetState.Set, Mask = masks[0].Mask };
+        //    return true;
+        //}
     }
 
     public enum CPUSetState
@@ -126,6 +149,43 @@ namespace CPUSetLib
     {
         public CPUSetState State { get; set; }
         public ulong Mask { get; set; }
+
+        public static CPUSet Unset => new() { State = CPUSetState.Unset, Mask = 0 };
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is not CPUSet other)
+            {
+                return false;
+            }
+
+            if (State == other.State)
+            {
+                // Always return true if both States are Unset, disregarding of Mask
+                return State == CPUSetState.Unset || Mask == other.Mask;
+            }
+            return false;
+        }
+
+        public override int GetHashCode() => (State, Mask).GetHashCode();
+
+        public static bool operator ==(CPUSet lhs, CPUSet rhs)
+        {
+            if (lhs is null)
+            {
+                if (rhs is null)
+                {
+                    return true;
+                }
+
+                // Only the left side is null.
+                return false;
+            }
+            // Equals handles case of null on right side.
+            return lhs.Equals(rhs);
+        }
+
+        public static bool operator !=(CPUSet lhs, CPUSet rhs) => !(lhs == rhs);
     }
 
     public class ProcessInfo
@@ -134,11 +194,9 @@ namespace CPUSetLib
         public string? FullPath { get; set; }
         public uint PID { get; set; }
         public DateTime CreationTime { get; set; }
-        public required CPUSet WantedSet { get; set; }
-        public required CPUSet ActualSet { get; set; }
     }
 
-    public class NewProcessEventArgs : EventArgs
+    public class ProcessEventArgs : EventArgs
     {
         public required ProcessInfo Process { get; set; }
     }

@@ -6,10 +6,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <SupportedOSPlatformVersion>10.0.22621.0</SupportedOSPlatformVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CPUSetSetter\CPUSetLib.csproj" />
+    <ProjectReference Include="..\CPUSetSetter\CPUSetLib.CS.csproj" />
   </ItemGroup>
 
 </Project>
