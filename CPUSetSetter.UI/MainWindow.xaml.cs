@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using System.Windows.Controls;
 
 
 namespace CPUSetSetter.UI
@@ -8,10 +9,13 @@ namespace CPUSetSetter.UI
     /// </summary>
     public partial class MainWindow : Window
     {
+        private MainWindowViewModel viewModel;
+
         public MainWindow()
         {
+            viewModel = new MainWindowViewModel(Dispatcher);
+            DataContext = viewModel;
             InitializeComponent();
-            DataContext = new MainWindowViewModel(Dispatcher);
         }
     }
 }

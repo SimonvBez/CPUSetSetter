@@ -3,12 +3,43 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:CPUSetSetter.UI" d:DataContext="{d:DesignInstance Type=local:MainWindowViewModel}"
+        xmlns:local="clr-namespace:CPUSetSetter.UI"
+        d:DataContext="{d:DesignInstance Type=local:MainWindowViewModel}"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
+
     <Grid>
-        <DataGrid ItemsSource="{Binding RunningProcesses}" IsReadOnly="True">
-            
+        <DataGrid ItemsSource="{Binding RunningProcessesView}" AutoGenerateColumns="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Name"
+                                    Binding="{Binding Name}"
+                                    IsReadOnly="True"
+                                    Width="1*"/>
+                <DataGridTextColumn Header="Path"
+                                    Binding="{Binding Path}"
+                                    IsReadOnly="True"
+                                    Width="3*">
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="ToolTip" Value="{Binding Path}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Creation time"
+                                    Binding="{Binding CreationTime}"
+                                    IsReadOnly="True"
+                                    CanUserResize="False"
+                                    Width="Auto"/>
+                <DataGridTemplateColumn Header="CPU Set"
+                                        Width="80">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ComboBox ItemsSource="{Binding DefinedCpuSets, Source={x:Static local:Settings.Default}}"
+                                      SelectedValue="{Binding CpuSetName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
         </DataGrid>
     </Grid>
 </Window>

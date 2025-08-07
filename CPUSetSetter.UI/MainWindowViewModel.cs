@@ -1,5 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Windows.Data;
 using System.Windows.Threading;
 
 
@@ -8,9 +10,10 @@ namespace CPUSetSetter.UI
     public partial class MainWindowViewModel : ObservableObject
     {
         private readonly Dispatcher _dispatcher;
+        private readonly ObservableCollection<ProcessListEntry> _runningProcesses = [];
 
         [ObservableProperty]
-        private ObservableCollection<ProcessInfo> _runningProcesses = new();
+        private ICollectionView _runningProcessesView;
 
         public MainWindowViewModel(Dispatcher dispatcher)
         {
@@ -20,15 +23,18 @@ namespace CPUSetSetter.UI
             processEvents.OnNewProcess += (_, e) => OnNewProcess(e.Process);
             processEvents.OnExitedProcess += (_, e) => OnExitedProcess(e.PID);
             processEvents.Start();
+
+            RunningProcessesView = CollectionViewSource.GetDefaultView(_runningProcesses);
+            RunningProcessesView.SortDescriptions.Add(new SortDescription(nameof(ProcessListEntry.CreationTime), ListSortDirection.Descending));
         }
 
         private void OnNewProcess(ProcessInfo pInfo)
         {
             _dispatcher.Invoke(() =>
             {
-                if (!RunningProcesses.Any(x => x.PID == pInfo.PID))
+                if (!_runningProcesses.Any(x => x.Pid == pInfo.PID))
                 {
-                    RunningProcesses.Add(pInfo);
+                    _runningProcesses.Add(new ProcessListEntry(pInfo));
                 }
             });
         }
@@ -37,14 +43,57 @@ namespace CPUSetSetter.UI
         {
             _dispatcher.Invoke(() =>
             {
-                for (int i = RunningProcesses.Count - 1; i >= 0; --i)
+                for (int i = _runningProcesses.Count - 1; i >= 0; --i)
                 {
-                    if (RunningProcesses[i].PID == exitedPid)
+                    if (_runningProcesses[i].Pid == exitedPid)
                     {
-                        RunningProcesses.RemoveAt(i);
+                        _runningProcesses.RemoveAt(i);
                     }
                 }
             });
+        }
+
+        public List<string> TestSource { get; } = ["Option 1", "Option 2"];
+
+        [ObservableProperty]
+        private string _selectedTest = "";
+
+        partial void OnSelectedTestChanged(string value)
+        {
+            
+        }
+    }
+
+
+    public partial class ProcessListEntry : ObservableObject
+    {
+        [ObservableProperty]
+        private uint _pid;
+
+        [ObservableProperty]
+        private string _name;
+
+        [ObservableProperty]
+        private string _path;
+
+        [ObservableProperty]
+        private DateTime _creationTime;
+
+        [ObservableProperty]
+        private string _cpuSetName;
+
+        public ProcessListEntry(ProcessInfo pInfo)
+        {
+            Pid = pInfo.PID;
+            Name = pInfo.Name;
+            Path = pInfo.ImagePath ?? "";
+            CreationTime = pInfo.CreationTime;
+            CpuSetName = "";
+        }
+
+        partial void OnCpuSetNameChanged(string value)
+        {
+            
         }
     }
 }
