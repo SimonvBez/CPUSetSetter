@@ -15,6 +15,9 @@ namespace CPUSetSetter.UI
         [ObservableProperty]
         private ICollectionView _runningProcessesView;
 
+        [ObservableProperty]
+        private string _processNameFilter = "";
+
         public MainWindowViewModel(Dispatcher dispatcher)
         {
             _dispatcher = dispatcher;
@@ -26,6 +29,8 @@ namespace CPUSetSetter.UI
 
             RunningProcessesView = CollectionViewSource.GetDefaultView(_runningProcesses);
             RunningProcessesView.SortDescriptions.Add(new SortDescription(nameof(ProcessListEntry.CreationTime), ListSortDirection.Descending));
+
+            RunningProcessesView.Filter = item => ((ProcessListEntry)item).Name.Contains(ProcessNameFilter, StringComparison.OrdinalIgnoreCase);
         }
 
         private void OnNewProcess(ProcessInfo pInfo)
@@ -53,14 +58,9 @@ namespace CPUSetSetter.UI
             });
         }
 
-        public List<string> TestSource { get; } = ["Option 1", "Option 2"];
-
-        [ObservableProperty]
-        private string _selectedTest = "";
-
-        partial void OnSelectedTestChanged(string value)
+        partial void OnProcessNameFilterChanged(string value)
         {
-            
+            RunningProcessesView.Refresh();
         }
     }
 

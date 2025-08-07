@@ -6,40 +6,88 @@
         xmlns:local="clr-namespace:CPUSetSetter.UI"
         d:DataContext="{d:DesignInstance Type=local:MainWindowViewModel}"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="CPU Set Setter" Height="450" Width="800">
 
-    <Grid>
-        <DataGrid ItemsSource="{Binding RunningProcessesView}" AutoGenerateColumns="False">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Name"
-                                    Binding="{Binding Name}"
-                                    IsReadOnly="True"
-                                    Width="1*"/>
-                <DataGridTextColumn Header="Path"
-                                    Binding="{Binding Path}"
-                                    IsReadOnly="True"
-                                    Width="3*">
-                    <DataGridTextColumn.CellStyle>
-                        <Style TargetType="DataGridCell">
-                            <Setter Property="ToolTip" Value="{Binding Path}" />
-                        </Style>
-                    </DataGridTextColumn.CellStyle>
-                </DataGridTextColumn>
-                <DataGridTextColumn Header="Creation time"
-                                    Binding="{Binding CreationTime}"
-                                    IsReadOnly="True"
-                                    CanUserResize="False"
-                                    Width="Auto"/>
-                <DataGridTemplateColumn Header="CPU Set"
-                                        Width="80">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <ComboBox ItemsSource="{Binding DefinedCpuSets, Source={x:Static local:Settings.Default}}"
-                                      SelectedValue="{Binding CpuSetName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-        </DataGrid>
-    </Grid>
+    <TabControl>
+        <TabItem>
+            <TabItem.Header>
+                <TextBlock>Processes</TextBlock>
+            </TabItem.Header>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Grid Margin="0,5,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <TextBlock Grid.Column="0"
+                               Text="Search:"
+                               VerticalAlignment="Center"/>
+                    <TextBox Grid.Column="1"
+                             Margin="5,0,0,0"
+                             MaxLines="1"
+                             FontSize="14"
+                             Text="{Binding ProcessNameFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                </Grid>
+
+                <DataGrid Grid.Row="1"
+                          Margin="0,10,0,10"
+                          ItemsSource="{Binding RunningProcessesView}"
+                          AutoGenerateColumns="False">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Name"
+                                            Binding="{Binding Name}"
+                                            IsReadOnly="True"
+                                            Width="1*"/>
+                        
+                        <DataGridTextColumn Header="Path"
+                                            Binding="{Binding Path}"
+                                            IsReadOnly="True"
+                                            Width="3*">
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="ToolTip" Value="{Binding Path}" />
+                                </Style>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
+                        
+                        <DataGridTextColumn Header="Creation time"
+                                            Binding="{Binding CreationTime}"
+                                            IsReadOnly="True"
+                                            CanUserResize="False"
+                                            Width="Auto"/>
+                        
+                        <DataGridTemplateColumn Header="CPU Set"
+                                                Width="80">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <ComboBox ItemsSource="{Binding DefinedCpuSets, Source={x:Static local:Settings.Default}}"
+                                              SelectedValue="{Binding CpuSetName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <GroupBox Grid.Row="2"
+                          Header="Current foreground process">
+                    <TextBlock Text="processName.exe&#x0a;Cache"/>
+                </GroupBox>
+            </Grid>
+        </TabItem>
+
+        <TabItem>
+            <TabItem.Header>
+                <TextBlock>Settings</TextBlock>
+            </TabItem.Header>
+        </TabItem>
+    </TabControl>
 </Window>
