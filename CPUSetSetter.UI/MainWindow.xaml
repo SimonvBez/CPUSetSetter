@@ -6,21 +6,27 @@
         xmlns:local="clr-namespace:CPUSetSetter.UI"
         d:DataContext="{d:DesignInstance Type=local:MainWindowViewModel}"
         mc:Ignorable="d"
-        Title="CPU Set Setter" Height="450" Width="800">
+        Title="CPU Set Setter"
+        Height="550"
+        MinHeight="435"
+        Width="900"
+        MinWidth="600">
 
     <TabControl>
+        <!--Processes Tab-->
         <TabItem>
             <TabItem.Header>
-                <TextBlock>Processes</TextBlock>
+                <TextBlock Text="Processes"/>
             </TabItem.Header>
 
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="105"/>
                 </Grid.RowDefinitions>
 
+                <!--Search Bar-->
                 <Grid Margin="0,5,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
@@ -30,6 +36,7 @@
                     <TextBlock Grid.Column="0"
                                Text="Search:"
                                VerticalAlignment="Center"/>
+                    
                     <TextBox Grid.Column="1"
                              Margin="5,0,0,0"
                              MaxLines="1"
@@ -37,16 +44,34 @@
                              Text="{Binding ProcessNameFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 </Grid>
 
+                <!--Process list-->
                 <DataGrid Grid.Row="1"
                           Margin="0,10,0,10"
                           ItemsSource="{Binding RunningProcessesView}"
-                          AutoGenerateColumns="False">
+                          AutoGenerateColumns="False"
+                          RowHeight="24">
+
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding FailedToOpen}" Value="True">
+                                    <Setter Property="Background" Value="#D83E3B"></Setter>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding FailedToOpen}" Value="False">
+                                    <Setter Property="Background" Value="White"></Setter>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.RowStyle>
+                    
                     <DataGrid.Columns>
+                        <!--Name column-->
                         <DataGridTextColumn Header="Name"
                                             Binding="{Binding Name}"
                                             IsReadOnly="True"
                                             Width="1*"/>
-                        
+
+                        <!--Path column-->
                         <DataGridTextColumn Header="Path"
                                             Binding="{Binding Path}"
                                             IsReadOnly="True"
@@ -57,37 +82,188 @@
                                 </Style>
                             </DataGridTextColumn.CellStyle>
                         </DataGridTextColumn>
-                        
+
+                        <!--Creation time column-->
                         <DataGridTextColumn Header="Creation time"
                                             Binding="{Binding CreationTime}"
                                             IsReadOnly="True"
                                             CanUserResize="False"
                                             Width="Auto"/>
-                        
+
+                        <!--CPU Set column-->
                         <DataGridTemplateColumn Header="CPU Set"
                                                 Width="80">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <ComboBox ItemsSource="{Binding DefinedCpuSets, Source={x:Static local:Settings.Default}}"
-                                              SelectedValue="{Binding CpuSetName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                    <ComboBox ItemsSource="{Binding CpuSetPickable, Source={x:Static local:Config.Default}}"
+                                              SelectedValue="{Binding CpuSet, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Name}"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-                        
                     </DataGrid.Columns>
                 </DataGrid>
 
-                <GroupBox Grid.Row="2"
-                          Header="Current foreground process">
-                    <TextBlock Text="processName.exe&#x0a;Cache"/>
-                </GroupBox>
+                <!--Current foreground process and Log-->
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="300"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!--Current foreground process-->
+                    <GroupBox Grid.Column="0"
+                              Header="Current foreground process">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="60"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" Margin="5"
+                                       Text="Name:&#x0a;CPU Set:"/>
+
+                            <TextBlock Grid.Column="1" Margin="5">
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="{}{0}&#x0a;{1}">
+                                        <Binding Path="CurrentForegroundProcess.Name"/>
+                                        <Binding Path="CurrentForegroundProcess.CpuSet.Name"/>
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </Grid>
+                    </GroupBox>
+
+                    <!--Log-->
+                    <GroupBox Grid.Column="1"
+                              Header="Log">
+                        <TextBox IsReadOnly="True"
+                                 Text="{Binding Text, Source={x:Static local:WindowLogger.Default}}"
+                                 TextChanged="TextBox_TextChanged"/>
+                    </GroupBox>
+                </Grid>
             </Grid>
         </TabItem>
 
+        <!--Settings Tab-->
         <TabItem>
             <TabItem.Header>
-                <TextBlock>Settings</TextBlock>
+                <TextBlock Text="Settings"/>
             </TabItem.Header>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="100"/>
+                </Grid.RowDefinitions>
+                
+                <GroupBox Header="CPU Sets">
+                    <Grid Margin="5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <!--CPU Set name selector-->
+                        <Grid Margin="0,0,10,0" Grid.Column="0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="50"/>
+                            </Grid.RowDefinitions>
+
+                            <ListBox Grid.Row="0" Margin="0, 0, 0, 10"
+                                     ItemsSource="{Binding CpuSets, Source={x:Static local:Config.Default}}"
+                                     SelectedValue="{Binding SettingsSelectedCpuSet, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Name}"/>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <Grid Grid.Row="1">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="60"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBox Grid.Row="0" Grid.Column="0" Margin="0,0,10,2"
+                                         FontSize="14"
+                                         Text="{Binding SettingsNewCpuSetName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <Button Grid.Row="0" Grid.Column="1" Margin="0,0,0,2"
+                                        Content="Add"
+                                        Command="{Binding AddNewSetCommand}"/>
+                                <Button Grid.Row="1" Grid.Column="1" Margin="0,2,0,0"
+                                        Content="Remove"
+                                        Command="{Binding RemoveSetCommand}"/>
+                            </Grid>
+                        </Grid>
+
+                        <ItemsControl Grid.Column="1"
+                                      ItemsSource="{Binding SettingsSelectedCpuSet.SettingsTabMask}">
+                            
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <ItemsControl ItemsSource="{Binding}">
+                                        
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Margin="0,0,20,0" Orientation="Vertical"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
+                                                    <CheckBox IsChecked="{Binding IsEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                    <TextBlock Margin="5,0,0,0" Text="{Binding Name}"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                        
+                                    </ItemsControl>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!--<ItemsControl Grid.Column="1"
+                                      ItemsSource="{Binding SettingsSelectedCpuSet.Mask}">
+                            
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="{x:Static local:MainWindowViewModel.SettingsCoreColumnCount}"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <CheckBox IsChecked="{Binding IsEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <TextBlock Margin="5,0,0,0" Text="{Binding Name}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>-->
+                    </Grid>
+                </GroupBox>
+            </Grid>
         </TabItem>
     </TabControl>
 </Window>

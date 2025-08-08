@@ -9,13 +9,18 @@ namespace CPUSetSetter.UI
     /// </summary>
     public partial class MainWindow : Window
     {
-        private MainWindowViewModel viewModel;
+        private readonly MainWindowViewModel viewModel;
 
         public MainWindow()
         {
             viewModel = new MainWindowViewModel(Dispatcher);
             DataContext = viewModel;
             InitializeComponent();
+        }
+
+        private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ((TextBox)sender).ScrollToEnd();
         }
     }
 }

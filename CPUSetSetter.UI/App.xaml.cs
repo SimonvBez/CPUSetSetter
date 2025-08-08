@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Markup;
 
+
 namespace CPUSetSetter.UI
 {
     /// <summary>
@@ -10,6 +11,16 @@ namespace CPUSetSetter.UI
     public partial class App : Application
     {
         private void OnStartup(object sender, StartupEventArgs e)
+        {
+            if (Environment.ProcessorCount > 64)
+            {
+                throw new NotImplementedException("More than 64 logical CPU cores are not supported");
+            }
+
+            SetAppCulture();
+        }
+
+        private static void SetAppCulture()
         {
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
             Thread.CurrentThread.CurrentUICulture = CultureInfo.CurrentCulture;
@@ -21,3 +32,13 @@ namespace CPUSetSetter.UI
         }
     }
 }
+
+/*
+ * 
+ * TODO:
+ * - Store Sets assigned to processes
+ * - Match full path setting
+ * - Listen to hotkeys
+ * - Allow user to set hotkeys
+ * 
+ */

@@ -1,4 +1,5 @@
-﻿using System.Management;
+﻿using Microsoft.Win32.SafeHandles;
+using System.Management;
 
 
 namespace CPUSetSetter.UI
@@ -17,7 +18,7 @@ namespace CPUSetSetter.UI
 
         private void ListCurrentProcesses()
         {
-            ManagementObjectSearcher searcher = new("SELECT Name, ExecutablePath, ProcessId, CreationDate FROM Win32_Process");
+            ManagementObjectSearcher searcher = new("SELECT Name, ProcessId, CreationDate FROM Win32_Process");
 
             foreach (ManagementBaseObject process in searcher.Get())
             {
@@ -63,9 +64,23 @@ namespace CPUSetSetter.UI
         private static ProcessInfo ParseManagementProcess(ManagementBaseObject process)
         {
             string name = (string)process["Name"];
-            string? exePath = (string?)process["ExecutablePath"];
             uint pid = (uint)process["ProcessId"];
             DateTime creationTime = ManagementDateTimeConverter.ToDateTime((string)process["CreationDate"]);
+
+            using SafeProcessHandle hProcess = NativeMethods.OpenProcess(ProcessAccessFlags.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+            string exePath;
+            if (!hProcess.IsInvalid)
+            {
+                char[] buffer = new char[1024];
+                uint size = 1024;
+                bool success = NativeMethods.QueryFullProcessImageNameW(hProcess, 0, buffer, ref size);
+                exePath = success ? new string(buffer[..(int)size]) : "";
+            }
+            else
+            {
+                exePath = "";
+            }
+
             return new ProcessInfo
             {
                 Name = name,
@@ -79,7 +94,7 @@ namespace CPUSetSetter.UI
     public class ProcessInfo
     {
         public required string Name { get; set; }
-        public string? ImagePath { get; set; }
+        public required string ImagePath { get; set; }
         public uint PID { get; set; }
         public DateTime CreationTime { get; set; }
     }
