@@ -35,5 +35,7 @@ namespace CPUSetSetter.UI
 
 /*
  * TODO:
- * - Add list of saved process settings
+ * - Program icon
+ * - Add tray icon and starting as minimized
+ * - Low priority: Add list of saved process settings
  */
