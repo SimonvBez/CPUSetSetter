@@ -173,7 +173,7 @@ namespace CPUSetSetter
         private void PopulateDefaultConfig()
         {
             // Add the special <unset> Set
-            CpuSets.Add(CPUSet.Unset);
+            CpuSets.Add(CPUSet.CreateUnset());
 
             // Add a default Cache and Freq Set if this is a known hybrid cache CPU
             string[] knownDuoHybridCpus = ["7950X3D", "7900X3D", "9950X3D", "9900X3D"];

@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Runtime.InteropServices;
@@ -11,7 +11,7 @@ namespace CPUSetSetter
     {
         public static string UnsetName { get; } = "";
         public static string UnsetSettingsName { get; } = "<unset>";
-        public static CPUSet Unset { get; } = new CPUSet(UnsetName, []) { IsUnset = true };
+        public static CPUSet Unset => Config.Default.GetCpuSetByName(UnsetName)!;
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(SettingsName))]
@@ -62,11 +62,13 @@ namespace CPUSetSetter
             SetupHotkeyListener();
         }
 
+        public static CPUSet CreateUnset()
+        {
+            return new CPUSet(UnsetName, []) { IsUnset = true };
+        }
+
         private void SetupHotkeyListener()
         {
-            if (IsUnset)
-                return;
-
             _hotkeyCallback = new(Hotkey, (_, _) => OnHotkeyPressed());
 
             Hotkey.CollectionChanged += (_, e) =>
