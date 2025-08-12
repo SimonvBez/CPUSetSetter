@@ -12,11 +12,18 @@ namespace CPUSetSetter.UI
 {
     public partial class Config : ObservableObject, IJsonOnDeserialized
     {
-        // Config variables
-        [JsonIgnore]
-        public ObservableCollection<CPUSet> CpuSetPickable { get; } = [CPUSet.Unset];
+        private static JsonSerializerOptions JsonOptions { get; } = CreateJsonOptions();
+        private static JsonSerializerOptions CreateJsonOptions()
+        {
+            JsonSerializerOptions options = new() { WriteIndented = true };
+            options.Converters.Add(new JsonStringEnumConverter());
+            return options;
+        }
 
+        // Config variables
         public ObservableCollection<CPUSet> CpuSets { get; init; } = [];
+
+        public ObservableCollection<ProcessCPUSet> ProcessCPUSets { get; init; } = [];
 
         [ObservableProperty]
         private bool _matchWholePath = true;
@@ -26,42 +33,55 @@ namespace CPUSetSetter.UI
 
         private bool _isLoading = true;
 
-        // Private constructor to force usage of Load()
         [JsonConstructor]
         private Config() { }
 
+        /// <summary>
+        /// After the JSON desterilizer has constructed the Config, set up the collection listeners
+        /// </summary>
         public void OnDeserialized()
         {
-            // Keep CpuSetPickableNames up-to-date when CpuSets changes
+            SetupListener();
+        }
+
+        private void SetupListener()
+        {
+            // Save changes to CpuSets
             CpuSets.CollectionChanged += (_, e) =>
+            {
+                Save();
+            };
+
+            // When there is a change to a saved process CPU Set, apply it immediately to the running processes
+            ProcessCPUSets.CollectionChanged += (_, e) =>
             {
                 switch (e.Action)
                 {
                     case NotifyCollectionChangedAction.Add:
-                        foreach (CPUSet newSet in e.NewItems!)
+                        foreach (ProcessCPUSet processCPUSet in e.NewItems!)
                         {
-                            CpuSetPickable.Add(newSet);
+                            processCPUSet.ApplyCpuSet();
                         }
                         break;
                     case NotifyCollectionChangedAction.Remove:
-                        foreach (CPUSet newSet in e.OldItems!)
+                        foreach (ProcessCPUSet processCPUSet in e.OldItems!)
                         {
-                            CpuSetPickable.Remove(newSet);
+                            // Update every ProcessListEntry now that this process CPU Set definition has been removed
+                            foreach (ProcessListEntry pEntry in MainWindowViewModel.RunningProcesses)
+                            {
+                                pEntry.CpuSet = pEntry.GetConfiguredCpuSet();
+                            }
                         }
                         break;
                     case NotifyCollectionChangedAction.Reset:
-                        throw new NotImplementedException();
                     case NotifyCollectionChangedAction.Replace:
-                        throw new NotImplementedException();
                     case NotifyCollectionChangedAction.Move:
-                        throw new NotImplementedException();
                     default:
                         throw new NotImplementedException();
                 }
                 Save();
             };
         }
-
 
         protected override void OnPropertyChanged(PropertyChangedEventArgs e)
         {
@@ -78,7 +98,7 @@ namespace CPUSetSetter.UI
             try
             {
                 using FileStream fileStream = File.Create("CPUSetSetter_config.json");
-                JsonSerializer.Serialize(fileStream, this);
+                JsonSerializer.Serialize(fileStream, this, options: JsonOptions);
             }
             catch (Exception ex)
             {
@@ -90,32 +110,73 @@ namespace CPUSetSetter.UI
         {
             try
             {
+                // Try to load the config .json file
                 Config loadedConfig;
                 {
                     using FileStream fileStream = File.OpenRead("CPUSetSetter_config.json");
-                    loadedConfig = JsonSerializer.Deserialize<Config>(fileStream) ?? throw new NullReferenceException();
+                    loadedConfig = JsonSerializer.Deserialize<Config>(fileStream, options: JsonOptions) ?? throw new NullReferenceException();
                     loadedConfig._isLoading = false;
                 }
                 loadedConfig.InitCpuSetNames();
                 loadedConfig.ValidateCPUSets();
                 return loadedConfig;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 Config newConfig = new() { _isLoading = false };
-                newConfig.OnDeserialized();
+                newConfig.SetupListener();
                 newConfig.PopulateDefaultConfig();
                 return newConfig;
             }
         }
 
-        public CPUSet GetCpuSetByName(string name)
+        public CPUSet? GetCpuSetByName(string name)
         {
-            return CpuSetPickable.First(x => x.Name == name);
+            return CpuSets.FirstOrDefault(x => x!.Name == name, null);
+        }
+
+        public ProcessCPUSet? GetProcessCpuSetByName(string processName, string executablePath)
+        {
+            return ProcessCPUSets.FirstOrDefault(x =>
+            {
+                return x!.Name.Equals(processName, StringComparison.OrdinalIgnoreCase) &&
+                    (!MatchWholePath || x.Path.Equals(executablePath, StringComparison.OrdinalIgnoreCase));
+            },
+            null);
+        }
+
+        public void SetProcessCpuSet(string processName, string executablePath, string cpuSetName)
+        {
+            ProcessCPUSet? processCPUSet = GetProcessCpuSetByName(processName, executablePath);
+            if (processCPUSet is not null)
+            {
+                processCPUSet.CpuSetName = cpuSetName;
+            }
+            else
+            {
+                // There is no existing process CPU Set rule, create a new one
+                ProcessCPUSets.Add(new ProcessCPUSet(processName, executablePath, cpuSetName));
+            }
+        }
+
+        public void RemoveProcessCpuSet(string processName, string executablePath)
+        {
+            for (int i = ProcessCPUSets.Count - 1; i >= 0; --i)
+            {
+                if (ProcessCPUSets[i].Name.Equals(processName, StringComparison.OrdinalIgnoreCase) &&
+                    !MatchWholePath || ProcessCPUSets[i].Path.Equals(executablePath, StringComparison.OrdinalIgnoreCase))
+                {
+                    ProcessCPUSets.RemoveAt(i);
+                }
+            }
         }
 
         private void PopulateDefaultConfig()
         {
+            // Add the special <unset> Set
+            CpuSets.Add(CPUSet.Unset);
+
+            // Add a default Cache and Freq Set if this is a known hybrid cache CPU
             string[] knownDuoHybridCpus = ["7950X3D", "7900X3D", "9950X3D", "9900X3D"];
 
             ManagementObjectSearcher searcher = new("root\\CIMV2", "SELECT * FROM Win32_Processor");
@@ -148,7 +209,7 @@ namespace CPUSetSetter.UI
         {
             foreach (CPUSet cpuSet in CpuSets)
             {
-                CpuSetPickable.Add(cpuSet);
+                CpuSets.Add(cpuSet);
             }
         }
 

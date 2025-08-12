@@ -11,9 +11,9 @@ namespace CPUSetSetter.UI
 
         public void Start()
         {
-            ListCurrentProcesses();
             StartNewProcessListener();
             StartExitedProcessListener();
+            ListCurrentProcesses();
         }
 
         private void ListCurrentProcesses()

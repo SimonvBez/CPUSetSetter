@@ -34,11 +34,6 @@ namespace CPUSetSetter.UI
 }
 
 /*
- * 
  * TODO:
- * - Store Sets assigned to processes
- * - Match full path setting
- * - Listen to hotkeys
- * - Allow user to set hotkeys
- * 
+ * - Add list of saved process settings
  */

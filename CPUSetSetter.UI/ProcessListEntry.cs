@@ -6,8 +6,6 @@ namespace CPUSetSetter.UI
 {
     public partial class ProcessListEntry : ObservableObject
     {
-        private bool _isUpdatingOtherProcesses = false;
-
         [ObservableProperty]
         private uint _pid;
 
@@ -35,7 +33,7 @@ namespace CPUSetSetter.UI
             Name = pInfo.Name;
             Path = pInfo.ImagePath;
             CreationTime = pInfo.CreationTime;
-            CpuSet = CPUSet.Unset;
+            CpuSet = GetConfiguredCpuSet();
         }
 
         partial void OnCpuSetChanged(CPUSet? oldValue, CPUSet newValue)
@@ -43,21 +41,28 @@ namespace CPUSetSetter.UI
             oldValue?.RemoveProcess(this);
             newValue.AddProcess(this, oldValue is not null || !newValue.IsUnset); // Don't apply the Unset CPUSet when the program is first started
 
-            // Prevent deep recursion when applying this set to other processes
-            if (_isUpdatingOtherProcesses)
-                return;
-
-            // Apply this set to any process with the same name and path
-            _isUpdatingOtherProcesses = true;
-            foreach (ProcessListEntry pEntry in MainWindowViewModel.RunningProcesses)
+            if (newValue == CPUSet.Unset)
             {
-                if (Name.Equals(pEntry.Name, StringComparison.OrdinalIgnoreCase) &&
-                    Path.Equals(pEntry.Path, StringComparison.OrdinalIgnoreCase))
-                {
-                    pEntry.CpuSet = newValue;
-                }
+                Config.Default.RemoveProcessCpuSet(Name, Path); // Cpu set was cleared
             }
-            _isUpdatingOtherProcesses = false;
+            else
+            {
+                Config.Default.SetProcessCpuSet(Name, Path, CpuSet.Name); // Find the process CPU Set definition and change its CPU set
+            }
+        }
+
+        public CPUSet GetConfiguredCpuSet()
+        {
+            ProcessCPUSet? processCPUSet = Config.Default.GetProcessCpuSetByName(Name, Path);
+            if (processCPUSet is null)
+            {
+                return CPUSet.Unset; // No process definition, go with Unset
+            }
+            else
+            {
+                // Process CPU Set definition exists, take the belonging CPUSet
+                return Config.Default.GetCpuSetByName(processCPUSet.CpuSetName) ?? CPUSet.Unset;
+            }
         }
     }
 }

@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         Title="CPU Set Setter"
         Height="550"
-        MinHeight="435"
+        MinHeight="510"
         Width="900"
         MinWidth="600">
 
@@ -92,10 +92,11 @@
 
                         <!--CPU Set column-->
                         <DataGridTemplateColumn Header="CPU Set"
-                                                Width="80">
+                                                Width="120"
+                                                SortMemberPath="CpuSet.Name">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <ComboBox ItemsSource="{Binding CpuSetPickable, Source={x:Static local:Config.Default}}"
+                                    <ComboBox ItemsSource="{Binding CpuSets, Source={x:Static local:Config.Default}}"
                                               SelectedValue="{Binding CpuSet, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                                         <ComboBox.ItemTemplate>
                                             <DataTemplate>
@@ -144,7 +145,7 @@
                               Header="Log">
                         <TextBox IsReadOnly="True"
                                  Text="{Binding Text, Source={x:Static local:WindowLogger.Default}}"
-                                 TextChanged="TextBox_TextChanged"/>
+                                 TextChanged="Log_TextChanged"/>
                     </GroupBox>
                 </Grid>
             </Grid>
@@ -159,14 +160,15 @@
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
-                    <RowDefinition Height="100"/>
+                    <RowDefinition Height="50"/>
                 </Grid.RowDefinitions>
                 
-                <GroupBox Header="CPU Sets">
+                <GroupBox Grid.Row="0"
+                          Header="CPU Sets">
                     <Grid Margin="5">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="220"/>
-                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="200"/>
+                            <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         
@@ -177,16 +179,18 @@
                                 <RowDefinition Height="50"/>
                             </Grid.RowDefinitions>
 
-                            <ListBox Grid.Row="0" Margin="0, 0, 0, 10"
+                            <!--List of CPU Set names-->
+                            <ListBox Grid.Row="0" Margin="0,0,0,10"
                                      ItemsSource="{Binding CpuSets, Source={x:Static local:Config.Default}}"
                                      SelectedValue="{Binding SettingsSelectedCpuSet, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding Name}"/>
+                                        <TextBlock Text="{Binding SettingsName}"/>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
 
+                            <!--Add/Remove button for CPU Sets-->
                             <Grid Grid.Row="1">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="*"/>
@@ -210,59 +214,92 @@
                             </Grid>
                         </Grid>
 
-                        <ItemsControl Grid.Column="1"
-                                      ItemsSource="{Binding SettingsSelectedCpuSet.SettingsTabMask}">
-                            
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
+                        <!--CPU Set Core list and hotkey-->
+                        <Grid Grid.Column="1">
+                            <Grid.Style>
+                                <Style TargetType="Grid">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SettingsSelectedCpuSet}" Value="{x:Null}">
+                                            <Setter Property="Visibility" Value="Hidden"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
 
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <ItemsControl ItemsSource="{Binding}">
-                                        
-                                        <ItemsControl.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <StackPanel Margin="0,0,20,0" Orientation="Vertical"/>
-                                            </ItemsPanelTemplate>
-                                        </ItemsControl.ItemsPanel>
-                                        
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <StackPanel Margin="0,0,0,8" Orientation="Horizontal">
-                                                    <CheckBox IsChecked="{Binding IsEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                    <TextBlock Margin="5,0,0,0" Text="{Binding Name}"/>
-                                                </StackPanel>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                        
-                                    </ItemsControl>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="23"/>
+                            </Grid.RowDefinitions>
 
-                        <!--<ItemsControl Grid.Column="1"
-                                      ItemsSource="{Binding SettingsSelectedCpuSet.Mask}">
-                            
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <UniformGrid Columns="{x:Static local:MainWindowViewModel.SettingsCoreColumnCount}"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <CheckBox IsChecked="{Binding IsEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <TextBlock Margin="5,0,0,0" Text="{Binding Name}"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>-->
+                            <!--Core list of the currently selected CPU Set-->
+                            <ItemsControl Grid.Row="0"
+                                          ItemsSource="{Binding SettingsSelectedCpuSet.SettingsTabMask}">
+
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <ItemsControl ItemsSource="{Binding}">
+
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <StackPanel Margin="0,0,15,0" Orientation="Vertical"/>
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
+                                                        <CheckBox IsChecked="{Binding IsEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                                        <TextBlock Margin="5,0,0,0" Text="{Binding Name}"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+
+                                        </ItemsControl>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <Grid Grid.Row="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="45"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0"
+                                           Text="Hotkey:"
+                                           VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="1" Margin="5,0"
+                                         IsReadOnly="True"
+                                         Text="{Binding SettingsSelectedCpuSet.SettingsHotkeyString, Mode=OneWay}"
+                                         GotKeyboardFocus="HotkeyInput_GotFocus"
+                                         LostKeyboardFocus="HotkeyInput_LostFocus"/>
+                                <Button Grid.Column="2"
+                                        Content="Clear"
+                                        Command="{Binding ClearHotkeyCommand}"/>
+                            </Grid>
+                        </Grid>
                     </Grid>
                 </GroupBox>
+
+                <Grid Grid.Row="1" Margin="5"
+                      ToolTip="Uncheck to only use the .exe names instead of the full path">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <CheckBox Grid.Column="0"
+                              IsChecked="{Binding MatchWholePath, Source={x:Static local:Config.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBlock Grid.Column="1" Margin="5,0,0,0"
+                               Text="Match full path"/>
+                </Grid>
             </Grid>
         </TabItem>
     </TabControl>

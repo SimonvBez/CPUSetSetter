@@ -10,8 +10,13 @@ namespace CPUSetSetter.UI
 {
     public partial class MainWindowViewModel : ObservableObject
     {
+        public static MainWindowViewModel? Instance { get; private set; }
+
         public static ObservableCollection<ProcessListEntry> RunningProcesses { get; } = [];
+        public static bool IsRunning { get; private set; } = false;
         private readonly Dispatcher _dispatcher;
+
+        public bool HotkeyInputSelected { get; private set; } = false;
 
         [ObservableProperty]
         private ICollectionView _runningProcessesView;
@@ -32,6 +37,7 @@ namespace CPUSetSetter.UI
         private void AddNewSet()
         {
             string newName = SettingsNewCpuSetName;
+            // Verify that this name is not invalid or already in use
             if (newName.Length == 0 || Config.Default.CpuSets.Any(s => s.Name == newName))
             {
                 return;
@@ -43,12 +49,21 @@ namespace CPUSetSetter.UI
         [RelayCommand]
         private void RemoveSet()
         {
-            SettingsSelectedCpuSet?.Remove();
+            if (SettingsSelectedCpuSet is null || SettingsSelectedCpuSet.IsUnset)
+                return;
+            SettingsSelectedCpuSet.Remove();
+        }
+
+        [RelayCommand]
+        private void ClearHotkey()
+        {
+            SettingsSelectedCpuSet?.Hotkey.Clear();
         }
 
         public MainWindowViewModel(Dispatcher dispatcher)
         {
             _dispatcher = dispatcher;
+            Instance = this;
 
             ProcessEvents processEvents = new();
             processEvents.OnNewProcess += (_, e) => OnNewProcess(e.Process);
@@ -57,10 +72,33 @@ namespace CPUSetSetter.UI
 
             RunningProcessesView = CollectionViewSource.GetDefaultView(RunningProcesses);
             RunningProcessesView.SortDescriptions.Add(new SortDescription(nameof(ProcessListEntry.CreationTime), ListSortDirection.Descending));
-
             RunningProcessesView.Filter = item => ((ProcessListEntry)item).Name.Contains(ProcessNameFilter, StringComparison.OrdinalIgnoreCase);
 
+            // Set up the key listener to enter new keystrokes in the hotkey TextBox when it is selected
+            HotkeyListener.Instance.KeyDown += (_, e) =>
+            {
+                if (HotkeyInputSelected && SettingsSelectedCpuSet is not null && !SettingsSelectedCpuSet.Hotkey.Contains(e.Key))
+                {
+                    SettingsSelectedCpuSet.Hotkey.Add(e.Key);
+                }
+            };
             Task.Run(ForegroundProcessUpdateLoop);
+
+            IsRunning = true;
+        }
+
+        public void OnHotkeyInputFocusChanged(bool isFocused)
+        {
+            HotkeyInputSelected = isFocused;
+            HotkeyListener.Instance.CallbacksEnabled = !isFocused;
+        }
+
+        public void OnCpuSetHotkeyPressed(CPUSet cpuSet)
+        {
+            if (CurrentForegroundProcess is not null)
+            {
+                CurrentForegroundProcess.CpuSet = cpuSet;
+            }
         }
 
         private void OnNewProcess(ProcessInfo pInfo)

@@ -4,9 +4,6 @@ using System.Windows.Controls;
 
 namespace CPUSetSetter.UI
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
         private readonly MainWindowViewModel viewModel;
@@ -18,9 +15,19 @@ namespace CPUSetSetter.UI
             InitializeComponent();
         }
 
-        private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
+        private void Log_TextChanged(object sender, TextChangedEventArgs e)
         {
             ((TextBox)sender).ScrollToEnd();
+        }
+
+        private void HotkeyInput_GotFocus(object sender, RoutedEventArgs e)
+        {
+            viewModel.OnHotkeyInputFocusChanged(true);
+        }
+
+        private void HotkeyInput_LostFocus(object sender, RoutedEventArgs e)
+        {
+            viewModel.OnHotkeyInputFocusChanged(false);
         }
     }
 }

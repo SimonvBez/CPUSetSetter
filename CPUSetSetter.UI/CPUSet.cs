@@ -1,4 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
 
@@ -8,20 +10,29 @@ namespace CPUSetSetter.UI
     public partial class CPUSet : ObservableObject, IJsonOnDeserialized
     {
         public static string UnsetName { get; } = "";
+        public static string UnsetSettingsName { get; } = "<unset>";
         public static CPUSet Unset { get; } = new CPUSet(UnsetName, []) { IsUnset = true };
 
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(SettingsName))]
         private string _name = "";
 
         public List<CPUSetCore> Mask { get; init; } = [];
 
-        [JsonIgnore]
-        public IEnumerable<IEnumerable<CPUSetCore>> SettingsTabMask => Mask.Chunk(8);
+        public ObservableCollection<VKey> Hotkey { get; init; } = [];
+        public bool IsUnset { get; init; } = false;
 
         [JsonIgnore]
-        public bool IsUnset { get; private set; } = false;
+        public string SettingsName => IsUnset ? UnsetSettingsName : Name;
 
-        private List<ProcessListEntry> _processesUsingSet = [];
+        [JsonIgnore]
+        public IEnumerable<IEnumerable<CPUSetCore>> SettingsTabMask => Mask.Chunk(16);
+
+        [JsonIgnore]
+        public string SettingsHotkeyString => string.Join("+", Hotkey);
+
+        private readonly List<ProcessListEntry> _processesUsingSet = [];
+        private HotkeyCallback? _hotkeyCallback;
 
 
         // Private constructor for Json loading
@@ -34,18 +45,56 @@ namespace CPUSetSetter.UI
             {
                 core.Parent = this;
             }
+            SetupHotkeyListener();
         }
 
         public CPUSet(string name)
         {
             _name = name;
             Mask = new(Enumerable.Range(0, Environment.ProcessorCount).Select(i => new CPUSetCore { Name = $"Core {i}", IsEnabled = true, Parent = this }));
+            SetupHotkeyListener();
         }
 
         public CPUSet(string name, IEnumerable<bool> mask)
         {
             _name = name;
             Mask = new(mask.Select((bool coreEnabled, int i) => new CPUSetCore { Name = $"Core {i}", IsEnabled = coreEnabled, Parent = this }));
+            SetupHotkeyListener();
+        }
+
+        private void SetupHotkeyListener()
+        {
+            if (IsUnset)
+                return;
+
+            _hotkeyCallback = new(Hotkey, (_, _) => OnHotkeyPressed());
+
+            Hotkey.CollectionChanged += (_, e) =>
+            {
+                switch (e.Action)
+                {
+                    case NotifyCollectionChangedAction.Add:
+                    case NotifyCollectionChangedAction.Remove:
+                        _hotkeyCallback.VKeys = [.. Hotkey]; // Apply the new hotkey to the callback
+                        break;
+                    case NotifyCollectionChangedAction.Reset:
+                        _hotkeyCallback.VKeys = [];
+                        break;
+                    case NotifyCollectionChangedAction.Replace:
+                    case NotifyCollectionChangedAction.Move:
+                    default:
+                        throw new NotImplementedException();
+                }
+                OnPropertyChanged(nameof(SettingsHotkeyString));
+                Config.Default?.Save();
+            };
+
+            HotkeyListener.Instance.AddCallback(_hotkeyCallback);
+        }
+
+        private void OnHotkeyPressed()
+        {
+            MainWindowViewModel.Instance?.OnCpuSetHotkeyPressed(this);
         }
 
         public void Remove()
@@ -56,6 +105,7 @@ namespace CPUSetSetter.UI
                 pEntry.CpuSet = Unset;
             }
             // Then remove this Set from the config
+            HotkeyListener.Instance.RemoveCallback(_hotkeyCallback!);
             Config.Default.CpuSets.Remove(this);
         }
 
@@ -73,7 +123,7 @@ namespace CPUSetSetter.UI
             _processesUsingSet.Remove(pEntry);
         }
 
-        public void ApplyToAllProcesses()
+        public void ApplyToAllBoundProcesses()
         {
             foreach (ProcessListEntry pEntry in _processesUsingSet)
             {
@@ -160,7 +210,7 @@ namespace CPUSetSetter.UI
         partial void OnIsEnabledChanged(bool value)
         {
             Config.Default?.Save(); // Config.Default has not been set yet while the Config is still loading
-            Parent?.ApplyToAllProcesses();
+            Parent?.ApplyToAllBoundProcesses();
         }
     }
 }
