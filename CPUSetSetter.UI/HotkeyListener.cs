@@ -54,42 +54,35 @@ namespace CPUSetSetter.UI
 
         private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
         {
-            try
+            if (nCode >= 0)
             {
-                if (nCode >= 0)
+                bool keyDown = wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN;
+
+                KBDLLHOOKSTRUCT kbd = Marshal.PtrToStructure<KBDLLHOOKSTRUCT>(lParam)!;
+                VKey vkCode = (VKey)kbd.vkCode;
+
+                if (keyDown)
                 {
-                    bool keyDown = wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN;
-
-                    KBDLLHOOKSTRUCT kbd = Marshal.PtrToStructure<KBDLLHOOKSTRUCT>(lParam)!;
-                    VKey vkCode = (VKey)kbd.vkCode;
-
-                    if (keyDown)
+                    bool isRepeat = !_pressedKeys.Add(vkCode);
+                    KeyDown?.Invoke(this, new() { Key = vkCode, IsRepeat = isRepeat });
+                    if (CallbacksEnabled)
                     {
-                        bool isRepeat = !_pressedKeys.Add(vkCode);
-                        KeyDown?.Invoke(this, new() { Key = vkCode, IsRepeat = isRepeat });
-                        if (CallbacksEnabled)
+                        foreach (HotkeyCallback callback in _hotkeyCallbacks)
                         {
-                            foreach (HotkeyCallback callback in _hotkeyCallbacks)
+                            if (_pressedKeys.SetEquals(callback.VKeys) && (!isRepeat || callback.AllowRepeats))
                             {
-                                if (_pressedKeys.SetEquals(callback.VKeys) && (!isRepeat || callback.AllowRepeats))
-                                {
-                                    callback.InvokePressed();
-                                }
+                                callback.InvokePressed();
                             }
                         }
                     }
-                    else
-                    {
-                        _pressedKeys.Remove(vkCode);
-                    }
                 }
+                else
+                {
+                    _pressedKeys.Remove(vkCode);
+                }
+            }
 
-                return NativeMethods.CallNextHookEx(_hookId, nCode, wParam, lParam);
-            }
-            catch (Exception ex)
-            {
-                return 1;
-            }
+            return NativeMethods.CallNextHookEx(_hookId, nCode, wParam, lParam);
         }
     }
 
