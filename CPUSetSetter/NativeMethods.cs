@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 
 
-namespace CPUSetSetter.UI
+namespace CPUSetSetter
 {
     internal static partial class NativeMethods
     {

@@ -2,7 +2,7 @@
 using System.Windows.Controls;
 
 
-namespace CPUSetSetter.UI
+namespace CPUSetSetter
 {
     public partial class MainWindow : Window
     {

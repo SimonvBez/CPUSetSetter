@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36327.8
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CPUSetSetter.UI", "CPUSetSetter.UI\CPUSetSetter.UI.csproj", "{E849FA1E-CCD5-4D8B-BCC6-E72DE0E18711}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CPUSetSetter", "CPUSetSetter\CPUSetSetter.csproj", "{E849FA1E-CCD5-4D8B-BCC6-E72DE0E18711}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

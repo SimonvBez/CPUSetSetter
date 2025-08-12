@@ -2,7 +2,7 @@
 using Microsoft.Win32.SafeHandles;
 
 
-namespace CPUSetSetter.UI
+namespace CPUSetSetter
 {
     public partial class ProcessListEntry : ObservableObject
     {

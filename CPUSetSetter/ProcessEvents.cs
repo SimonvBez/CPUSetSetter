@@ -2,7 +2,7 @@
 using System.Management;
 
 
-namespace CPUSetSetter.UI
+namespace CPUSetSetter
 {
     public class ProcessEvents
     {

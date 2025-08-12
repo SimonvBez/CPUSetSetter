@@ -2,7 +2,7 @@
 using System.Text.Json.Serialization;
 
 
-namespace CPUSetSetter.UI
+namespace CPUSetSetter
 {
     public partial class ProcessCPUSet : ObservableObject
     {

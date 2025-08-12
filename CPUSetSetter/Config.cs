@@ -8,7 +8,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 
-namespace CPUSetSetter.UI
+namespace CPUSetSetter
 {
     public partial class Config : ObservableObject, IJsonOnDeserialized
     {
@@ -117,7 +117,6 @@ namespace CPUSetSetter.UI
                     loadedConfig = JsonSerializer.Deserialize<Config>(fileStream, options: JsonOptions) ?? throw new NullReferenceException();
                     loadedConfig._isLoading = false;
                 }
-                loadedConfig.InitCpuSetNames();
                 loadedConfig.ValidateCPUSets();
                 return loadedConfig;
             }
@@ -205,19 +204,11 @@ namespace CPUSetSetter.UI
             }
         }
 
-        private void InitCpuSetNames()
-        {
-            foreach (CPUSet cpuSet in CpuSets)
-            {
-                CpuSets.Add(cpuSet);
-            }
-        }
-
         private void ValidateCPUSets()
         {
             for (int i = CpuSets.Count - 1; i >= 0; --i)
             {
-                if (CpuSets[i].Mask.Count != Environment.ProcessorCount)
+                if (!CpuSets[i].IsUnset && CpuSets[i].Mask.Count != Environment.ProcessorCount)
                 {
                     WindowLogger.Default.Write($"Set '{CpuSets[i].Name}' had an invalid number of cores and has been removed");
                     CpuSets.RemoveAt(i);

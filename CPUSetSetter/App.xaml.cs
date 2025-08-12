@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Markup;
 
 
-namespace CPUSetSetter.UI
+namespace CPUSetSetter
 {
     /// <summary>
     /// Interaction logic for App.xaml

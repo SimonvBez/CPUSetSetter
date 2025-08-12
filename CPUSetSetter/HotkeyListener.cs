@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 
 
-namespace CPUSetSetter.UI
+namespace CPUSetSetter
 {
     public partial class HotkeyListener : IDisposable
     {

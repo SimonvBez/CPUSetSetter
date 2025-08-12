@@ -6,7 +6,7 @@ using System.Windows.Data;
 using System.Windows.Threading;
 
 
-namespace CPUSetSetter.UI
+namespace CPUSetSetter
 {
     public partial class MainWindowViewModel : ObservableObject
     {
