@@ -160,7 +160,7 @@
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
-                    <RowDefinition Height="50"/>
+                    <RowDefinition Height="60"/>
                 </Grid.RowDefinitions>
                 
                 <GroupBox Grid.Row="0"
@@ -288,17 +288,36 @@
                     </Grid>
                 </GroupBox>
 
-                <Grid Grid.Row="1" Margin="5"
-                      ToolTip="Uncheck to only use the .exe names instead of the full path">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
+                <Grid Grid.Row="1" Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="20"/>
+                        <RowDefinition Height="20"/>
+                    </Grid.RowDefinitions>
 
-                    <CheckBox Grid.Column="0"
-                              IsChecked="{Binding MatchWholePath, Source={x:Static local:Config.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                    <TextBlock Grid.Column="1" Margin="5,0,0,0"
-                               Text="Match full path"/>
+                    <Grid Grid.Row="0"
+                          ToolTip="When disabled, only the .exe filename is used to apply CPU Set rules instead of the full path">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <CheckBox Grid.Column="0"
+                                  IsChecked="{Binding MatchWholePath, Source={x:Static local:Config.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        <TextBlock Grid.Column="1" Margin="5,0,0,0"
+                                   Text="Match full path"/>
+                    </Grid>
+
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <CheckBox Grid.Column="0"
+                                  IsChecked="{Binding StartMinimized, Source={x:Static local:Config.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        <TextBlock Grid.Column="1" Margin="5,0,0,0"
+                                   Text="Start minimized in tray"/>
+                    </Grid>
                 </Grid>
             </Grid>
         </TabItem>

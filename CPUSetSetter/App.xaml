@@ -1,9 +1,7 @@
 ﻿<Application x:Class="CPUSetSetter.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:CPUSetSetter"
-             StartupUri="MainWindow.xaml"
-             Startup="OnStartup">
+             xmlns:local="clr-namespace:CPUSetSetter">
     <Application.Resources>
          
     </Application.Resources>

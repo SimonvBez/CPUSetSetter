@@ -28,6 +28,9 @@ namespace CPUSetSetter
         [ObservableProperty]
         private bool _matchWholePath = true;
 
+        [ObservableProperty]
+        private bool _startMinimized = false;
+
         // Static getting for singleton instance
         public static Config Default { get; } = Load();
 

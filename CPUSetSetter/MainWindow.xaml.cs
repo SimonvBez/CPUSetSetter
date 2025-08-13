@@ -1,5 +1,7 @@
-﻿using System.Windows;
+﻿using System.ComponentModel;
+using System.Windows;
 using System.Windows.Controls;
+using TextBox = System.Windows.Controls.TextBox;
 
 
 namespace CPUSetSetter
@@ -28,6 +30,13 @@ namespace CPUSetSetter
         private void HotkeyInput_LostFocus(object sender, RoutedEventArgs e)
         {
             viewModel.OnHotkeyInputFocusChanged(false);
+        }
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            e.Cancel = true;
+            Hide();
+            base.OnClosing(e);
         }
     }
 }
