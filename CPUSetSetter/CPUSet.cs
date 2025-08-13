@@ -26,7 +26,18 @@ namespace CPUSetSetter
         public string SettingsName => IsUnset ? UnsetSettingsName : Name;
 
         [JsonIgnore]
-        public IEnumerable<IEnumerable<CPUSetCore>> SettingsTabMask => Mask.Chunk(16);
+        public IEnumerable<IEnumerable<CPUSetCore>> SettingsTabMask
+        {
+            get
+            {
+                int div = 2;
+                while (Mask.Count / div > 16)
+                {
+                    div += 2;
+                }
+                return Mask.Chunk(Mask.Count / div);
+            }
+        }
 
         [JsonIgnore]
         public string SettingsHotkeyString => string.Join("+", Hotkey);
