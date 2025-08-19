@@ -67,7 +67,7 @@ namespace CPUSetSetter
             uint pid = (uint)process["ProcessId"];
             DateTime creationTime = ManagementDateTimeConverter.ToDateTime((string)process["CreationDate"]);
 
-            using SafeProcessHandle hProcess = NativeMethods.OpenProcess(ProcessAccessFlags.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+            SafeProcessHandle hProcess = NativeMethods.OpenProcess(ProcessAccessFlags.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
             string exePath;
             if (!hProcess.IsInvalid)
             {
@@ -86,7 +86,8 @@ namespace CPUSetSetter
                 Name = name,
                 ImagePath = exePath,
                 PID = pid,
-                CreationTime = creationTime
+                CreationTime = creationTime,
+                QueryHandle = hProcess
             };
         }
     }
@@ -97,6 +98,7 @@ namespace CPUSetSetter
         public required string ImagePath { get; set; }
         public uint PID { get; set; }
         public DateTime CreationTime { get; set; }
+        public required SafeProcessHandle QueryHandle { get; set; }
     }
 
     public class NewProcessEventArgs : EventArgs

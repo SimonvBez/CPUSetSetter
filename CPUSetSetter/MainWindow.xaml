@@ -49,7 +49,8 @@
                           Margin="0,10,0,10"
                           ItemsSource="{Binding RunningProcessesView}"
                           AutoGenerateColumns="False"
-                          RowHeight="24">
+                          RowHeight="24"
+                          local:DataGridExtensions.SortDesc="True">
 
                     <DataGrid.RowStyle>
                         <Style TargetType="DataGridRow">
@@ -83,17 +84,26 @@
                             </DataGridTextColumn.CellStyle>
                         </DataGridTextColumn>
 
+                        <DataGridTextColumn Header="Avg CPU"
+                                            Binding="{Binding AverageCpuPercentageStr}"
+                                            IsReadOnly="True"
+                                            CanUserResize="False"
+                                            Width="60"
+                                            local:DataGridExtensions.SortDesc="True"/>
+
                         <!--Creation time column-->
                         <DataGridTextColumn Header="Creation time"
                                             Binding="{Binding CreationTime}"
                                             IsReadOnly="True"
                                             CanUserResize="False"
-                                            Width="Auto"/>
+                                            Width="Auto"
+                                            local:DataGridExtensions.SortDesc="True"/>
 
                         <!--CPU Set column-->
                         <DataGridTemplateColumn Header="CPU Set"
                                                 Width="120"
-                                                SortMemberPath="CpuSet.Name">
+                                                SortMemberPath="CpuSet.Name"
+                                                local:DataGridExtensions.SortDesc="True">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <ComboBox ItemsSource="{Binding CpuSets, Source={x:Static local:Config.Default}}"

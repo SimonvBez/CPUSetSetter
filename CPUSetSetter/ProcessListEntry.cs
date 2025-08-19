@@ -16,6 +16,10 @@ namespace CPUSetSetter
         private string _path;
 
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(AverageCpuPercentageStr))]
+        private double _averageCpuUsage;
+
+        [ObservableProperty]
         private DateTime _creationTime;
 
         [ObservableProperty]
@@ -23,9 +27,16 @@ namespace CPUSetSetter
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(FailedToOpen))]
-        public SafeProcessHandle? _handle;
+        public SafeProcessHandle? _setLimitedInfoHandle;
 
-        public bool FailedToOpen => Handle?.IsInvalid == true;
+        [ObservableProperty]
+        public SafeProcessHandle _queryLimitedInfoHandle;
+
+        public string AverageCpuPercentageStr => QueryLimitedInfoHandle.IsInvalid ? "" : $"{AverageCpuUsage * 100:F1}%";
+
+        public bool FailedToOpen => SetLimitedInfoHandle?.IsInvalid == true;
+
+        private readonly Queue<CpuTimeTimestamp> _cpuTimeMovingAverageBuffer = new();
 
         public ProcessListEntry(ProcessInfo pInfo)
         {
@@ -34,6 +45,7 @@ namespace CPUSetSetter
             Path = pInfo.ImagePath;
             CreationTime = pInfo.CreationTime;
             CpuSet = GetConfiguredCpuSet();
+            QueryLimitedInfoHandle = pInfo.QueryHandle;
         }
 
         partial void OnCpuSetChanged(CPUSet? oldValue, CPUSet newValue)
@@ -64,5 +76,53 @@ namespace CPUSetSetter
                 return Config.Default.GetCpuSetByName(processCPUSet.CpuSetName) ?? CPUSet.Unset;
             }
         }
+
+        public void UpdateCpuUsage()
+        {
+            if (QueryLimitedInfoHandle.IsInvalid)
+            {
+                return;
+            }
+
+            DateTime now = DateTime.Now;
+            // Remove datapoints older than 1 minute from the moving average buffer
+            while (_cpuTimeMovingAverageBuffer.Count > 0)
+            {
+                TimeSpan datapointAge = now - _cpuTimeMovingAverageBuffer.Peek().Timestamp;
+                if (datapointAge.TotalSeconds > 60)
+                {
+                    _cpuTimeMovingAverageBuffer.Dequeue();
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            // Get the current total CPU time of the process
+            bool success = NativeMethods.GetProcessTimes(QueryLimitedInfoHandle, out FILETIME _, out FILETIME _, out FILETIME kernelTime, out FILETIME userTime);
+            if (!success)
+            {
+                return;
+            }
+            TimeSpan totalCpuTime = TimeSpan.FromTicks((long)(kernelTime.ULong + userTime.ULong));
+            _cpuTimeMovingAverageBuffer.Enqueue(new() { Timestamp = now, TotalCpuTime = totalCpuTime });
+
+            // Take the CPU time from now and (up to) a minute ago, and get the average usage %
+            CpuTimeTimestamp startDatapoint = _cpuTimeMovingAverageBuffer.Peek();
+            TimeSpan deltaTime = now - startDatapoint.Timestamp;
+            TimeSpan deltaCpuTime = totalCpuTime - startDatapoint.TotalCpuTime;
+
+            if (deltaCpuTime.Ticks == 0)
+                AverageCpuUsage = 0;
+            else
+                AverageCpuUsage = (double)deltaCpuTime.Ticks / deltaTime.Ticks / Environment.ProcessorCount;
+        }
+    }
+
+    internal class CpuTimeTimestamp
+    {
+        public DateTime Timestamp { get; init; }
+        public TimeSpan TotalCpuTime { get; init; }
     }
 }

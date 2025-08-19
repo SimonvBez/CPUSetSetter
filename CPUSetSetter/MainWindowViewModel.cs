@@ -19,7 +19,7 @@ namespace CPUSetSetter
         public bool HotkeyInputSelected { get; private set; } = false;
 
         [ObservableProperty]
-        private ICollectionView _runningProcessesView;
+        private ListCollectionView _runningProcessesView;
 
         [ObservableProperty]
         private string _processNameFilter = "";
@@ -70,8 +70,10 @@ namespace CPUSetSetter
             processEvents.OnExitedProcess += (_, e) => OnExitedProcess(e.PID);
             processEvents.Start();
 
-            RunningProcessesView = CollectionViewSource.GetDefaultView(RunningProcesses);
-            RunningProcessesView.SortDescriptions.Add(new SortDescription(nameof(ProcessListEntry.CreationTime), ListSortDirection.Descending));
+            RunningProcessesView = (ListCollectionView)CollectionViewSource.GetDefaultView(RunningProcesses);
+            RunningProcessesView.SortDescriptions.Add(new(nameof(ProcessListEntry.AverageCpuUsage), ListSortDirection.Descending));
+            RunningProcessesView.IsLiveSorting = true;
+
             RunningProcessesView.Filter = item => ((ProcessListEntry)item).Name.Contains(ProcessNameFilter, StringComparison.OrdinalIgnoreCase);
 
             // Set up the key listener to enter new keystrokes in the hotkey TextBox when it is selected
@@ -83,6 +85,7 @@ namespace CPUSetSetter
                 }
             };
             Task.Run(ForegroundProcessUpdateLoop);
+            Task.Run(ProcessCpuUsageUpdateLoop);
 
             IsRunning = true;
         }
@@ -149,10 +152,22 @@ namespace CPUSetSetter
 
                 NativeMethods.GetWindowThreadProcessId(hwnd, out uint pid);
 
+                CurrentForegroundProcess = RunningProcesses.FirstOrDefault(x => x!.Pid == pid, null);
+            }
+        }
+
+        private async Task ProcessCpuUsageUpdateLoop()
+        {
+            while (true)
+            {
                 _dispatcher.Invoke(() =>
                 {
-                    CurrentForegroundProcess = RunningProcesses.FirstOrDefault(x => x!.Pid == pid, null);
+                    foreach (ProcessListEntry pEntry in RunningProcesses)
+                    {
+                        pEntry.UpdateCpuUsage();
+                    }
                 });
+                await Task.Delay(3000);
             }
         }
     }

@@ -147,17 +147,18 @@ namespace CPUSetSetter
         private void ApplyToProcess(ProcessListEntry pEntry)
         {
             // Open the process if it does not have a handle yet
-            if (pEntry.Handle is null)
+            if (pEntry.SetLimitedInfoHandle is null)
             {
-                pEntry.Handle = NativeMethods.OpenProcess(ProcessAccessFlags.PROCESS_SET_LIMITED_INFORMATION, false, pEntry.Pid);
-                if (pEntry.Handle.IsInvalid)
+                pEntry.SetLimitedInfoHandle = NativeMethods.OpenProcess(ProcessAccessFlags.PROCESS_SET_LIMITED_INFORMATION, false, pEntry.Pid);
+                if (pEntry.SetLimitedInfoHandle.IsInvalid)
                 {
                     int error = Marshal.GetLastWin32Error();
-                    WindowLogger.Default.Write($"ERROR: Could not open process '{pEntry.Name}': {new System.ComponentModel.Win32Exception(error).Message}");
+                    string extraHelpString = error == 5 ? " Try restarting as Admin" : "";
+                    WindowLogger.Default.Write($"ERROR: Could not open process '{pEntry.Name}': {new System.ComponentModel.Win32Exception(error).Message}{extraHelpString}");
                     return;
                 }
             }
-            else if (pEntry.Handle.IsInvalid)
+            else if (pEntry.SetLimitedInfoHandle.IsInvalid)
             {
                 // The handle was already made previously, don't bother trying again
                 return;
@@ -166,7 +167,7 @@ namespace CPUSetSetter
             bool success;
             if (IsUnset)
             {
-                success = NativeMethods.SetProcessDefaultCpuSetMasks(pEntry.Handle, null, 0);
+                success = NativeMethods.SetProcessDefaultCpuSetMasks(pEntry.SetLimitedInfoHandle, null, 0);
                 if (success)
                 {
                     WindowLogger.Default.Write($"Cleared CPU Set of '{pEntry.Name}'");
@@ -195,7 +196,7 @@ namespace CPUSetSetter
                     }
                 ];
 
-                success = NativeMethods.SetProcessDefaultCpuSetMasks(pEntry.Handle, affinity, 1);
+                success = NativeMethods.SetProcessDefaultCpuSetMasks(pEntry.SetLimitedInfoHandle, affinity, 1);
                 if (success)
                 {
                     WindowLogger.Default.Write($"Applied CPU Set of '{pEntry.Name}' to {Name}");

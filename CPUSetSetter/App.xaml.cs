@@ -3,6 +3,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Markup;
 using Application = System.Windows.Application;
+using MessageBox = System.Windows.MessageBox;
 
 
 namespace CPUSetSetter
@@ -13,16 +14,34 @@ namespace CPUSetSetter
     public partial class App : Application
     {
         private NotifyIcon? _trayIcon;
+        private Mutex? singleInstanceMutex;
+        private const string mutexName = "CPUSetSetterLock";
 
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
-            if (Environment.ProcessorCount > 64)
+            // Show unhandled exceptions in an error dialog box
+            AddDialogExceptionHandler();
+
+            // Check if the app is already running
+            singleInstanceMutex = new(true, mutexName, out bool isOwned);
+            if (!isOwned)
             {
-                throw new NotImplementedException("More than 64 logical CPU cores are not supported");
+                MessageBox.Show("Failed to open: App is already running", "CPU Set Setter", MessageBoxButton.OK, MessageBoxImage.Error);
+                ExitApp();
+                return;
             }
 
+            // Quit when this CPU is not supported
+            if (Environment.ProcessorCount > 64)
+            {
+                MessageBox.Show("Failed to open: More than 64 logical CPU cores are not supported", "CPU Set Setter", MessageBoxButton.OK, MessageBoxImage.Error);
+                ExitApp();
+                return;
+            }
+
+            // Set the app's culture to the local culture
             SetAppCulture();
 
             // Set up the tray icon
@@ -52,11 +71,20 @@ namespace CPUSetSetter
                 }
             };
 
+            // Create the rest of the app
             MainWindow = new MainWindow();
             if (!Config.Default.StartMinimized)
             {
                 ShowMainWindow();
             }
+        }
+
+        private void AddDialogExceptionHandler()
+        {
+            DispatcherUnhandledException += (_, e) =>
+            {
+                MessageBox.Show($"An error occurred: {e.Exception}\n{e.Exception.StackTrace}", "Unhandled error", MessageBoxButton.OK, MessageBoxImage.Error);
+            };
         }
 
         private static void SetAppCulture()
@@ -91,7 +119,5 @@ namespace CPUSetSetter
 
 /*
  * TODO:
- * - Program icon
- * - Add tray icon and starting as minimized
  * - Low priority: Add list of saved process settings
  */

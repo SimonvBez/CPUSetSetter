@@ -39,6 +39,10 @@ namespace CPUSetSetter
 
         [LibraryImport("kernel32.dll", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
         public static partial IntPtr GetModuleHandleW(string lpModuleName);
+
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static partial bool GetProcessTimes(SafeProcessHandle hProcess, out FILETIME lpCreationTime, out FILETIME lpExitTime, out FILETIME lpKernelTime, out FILETIME lpUserTime);
     }
 
     [Flags]
@@ -79,4 +83,13 @@ namespace CPUSetSetter
 
     [UnmanagedFunctionPointer(CallingConvention.Winapi)]
     internal delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct FILETIME
+    {
+        public uint dwLowDateTime;
+        public uint dwHighDateTime;
+
+        public readonly ulong ULong => (((ulong)dwHighDateTime) << 32) + dwLowDateTime;
+    }
 }
