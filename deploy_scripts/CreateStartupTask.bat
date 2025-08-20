@@ -1,6 +1,13 @@
 @echo off
 setlocal
 
+:: Restart with Admin rights if not already
+net session >nul 2>&1
+if %errorlevel% neq 0 (
+    powershell start -verb runas '%0'
+    exit /b
+)
+
 :: Get the folder where this script is located
 set "scriptDir=%~dp0"
 
