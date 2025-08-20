@@ -13,7 +13,7 @@ Dual CCD 3D V-Cache CPUs like the 9950X3D, 9900X3D, 7950X3D, and 7900X3D have tw
 
 By default, Windows and AMD's driver try to achieve better gaming performance by **turning off** the Frequency cores (called parking) - but this can sometimes hurt performance, especially when gaming and multitasking simultaneously. CPU Set Setter gives you control: you decide which cores your games and apps use.
 
-This tool is inspired by Process Lasso, bringing easy access to CPU Sets for free, while also providing Hotkey support to change/clear CPU Sets on the fly, so you don't have to leave your game.
+This tool is inspired by Process Lasso, bringing easy access to CPU Sets for free, and also providing Hotkey support to change/clear CPU Sets on the fly, so you don't have to leave your game.
 
 ## Use cases
 - Keep your game locked to Cache cores for maximum FPS.
@@ -26,7 +26,7 @@ This tool is inspired by Process Lasso, bringing easy access to CPU Sets for fre
 > **IMPORTANT!** When using this on games, **always** disable Windows Game Mode. Even if CPPC Preferred Cores is set to Frequency instead of Driver. Performance reductions may occur when Game Mode is left enabled.
 
 If you're on a supported dual-CCD CPU (9950X3D, 9900X3D, 7950X3D, 7900X3D), CPU Set Setter will auto-create a "Cache" and "Freq" CPU Set for you. Just:
-1. Download, extract and run the program.
+1. Download the [latest Release](https://github.com/SimonvBez/CPUSetSetter/releases/latest), extract and run.
 2. Open the **Processes tab**.
 3. Apply the "Cache" CPU Set to your open game.
 4. (Optional) Apply the "Freq" CPU Set to heavy background apps like OBS.
