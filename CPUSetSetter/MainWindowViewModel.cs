@@ -42,7 +42,9 @@ namespace CPUSetSetter
             {
                 return;
             }
-            Config.Default.CpuSets.Add(new CPUSet(SettingsNewCpuSetName));
+            CPUSet newCpuSet = new CPUSet(SettingsNewCpuSetName);
+            Config.Default.CpuSets.Add(newCpuSet);
+            SettingsSelectedCpuSet = newCpuSet;
             SettingsNewCpuSetName = "";
         }
 
@@ -160,11 +162,14 @@ namespace CPUSetSetter
         {
             while (true)
             {
-                foreach (ProcessListEntry pEntry in RunningProcesses)
+                _dispatcher.Invoke(() =>
                 {
-                    pEntry.UpdateCpuUsage();
-                }
-                await Task.Delay(3000);
+                    foreach (ProcessListEntry pEntry in RunningProcesses)
+                    {
+                        pEntry.UpdateCpuUsage();
+                    }
+                });
+                await Task.Delay(4000);
             }
         }
     }

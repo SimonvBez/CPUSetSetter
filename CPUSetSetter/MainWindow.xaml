@@ -224,7 +224,7 @@
                             </Grid>
                         </Grid>
 
-                        <!--CPU Set Core list and hotkey-->
+                        <!--CPU Set Processor list and hotkey-->
                         <Grid Grid.Column="1">
                             <Grid.Style>
                                 <Style TargetType="Grid">
@@ -241,7 +241,7 @@
                                 <RowDefinition Height="23"/>
                             </Grid.RowDefinitions>
 
-                            <!--Core list of the currently selected CPU Set-->
+                            <!--Processor list of the currently selected CPU Set-->
                             <ItemsControl Grid.Row="0"
                                           ItemsSource="{Binding SettingsSelectedCpuSet.SettingsTabMask}">
 

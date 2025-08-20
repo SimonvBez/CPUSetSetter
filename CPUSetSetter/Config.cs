@@ -195,11 +195,11 @@ namespace CPUSetSetter
                 // If this CPU is known to have 2 CCDs, and CCD0 has extra cache, add a default Cache and Freq Cpu Set
                 if (knownDuoHybridCpus.Any(knownCpu => cpuName.Contains(knownCpu)))
                 {
-                    int logicalCoreCount = Environment.ProcessorCount;
-                    IEnumerable<bool> cacheMask = Enumerable.Repeat(true, logicalCoreCount / 2)
-                                                            .Concat(Enumerable.Repeat(false, logicalCoreCount / 2));
-                    IEnumerable<bool> freqMask = Enumerable.Repeat(false, logicalCoreCount / 2)
-                                                           .Concat(Enumerable.Repeat(true, logicalCoreCount / 2));
+                    int logicalProcessorCount = Environment.ProcessorCount;
+                    IEnumerable<bool> cacheMask = Enumerable.Repeat(true, logicalProcessorCount / 2)
+                                                            .Concat(Enumerable.Repeat(false, logicalProcessorCount / 2));
+                    IEnumerable<bool> freqMask = Enumerable.Repeat(false, logicalProcessorCount / 2)
+                                                           .Concat(Enumerable.Repeat(true, logicalProcessorCount / 2));
                     CpuSets.Add(new("Cache", cacheMask));
                     CpuSets.Add(new("Freq", freqMask));
                     WindowLogger.Default.Write("Detected a hybrid cache CPU, added a default Cache and Freq Set");
@@ -213,7 +213,7 @@ namespace CPUSetSetter
             {
                 if (!CpuSets[i].IsUnset && CpuSets[i].Mask.Count != Environment.ProcessorCount)
                 {
-                    WindowLogger.Default.Write($"Set '{CpuSets[i].Name}' had an invalid number of cores and has been removed");
+                    WindowLogger.Default.Write($"Set '{CpuSets[i].Name}' had an invalid number of processors and has been removed");
                     CpuSets.RemoveAt(i);
                 }
             }

@@ -17,7 +17,7 @@ namespace CPUSetSetter
         [NotifyPropertyChangedFor(nameof(SettingsName))]
         private string _name = "";
 
-        public List<CPUSetCore> Mask { get; init; } = [];
+        public List<CPUSetProcessor> Mask { get; init; } = [];
 
         public ObservableCollection<VKey> Hotkey { get; init; } = [];
         public bool IsUnset { get; init; } = false;
@@ -26,7 +26,7 @@ namespace CPUSetSetter
         public string SettingsName => IsUnset ? UnsetSettingsName : Name;
 
         [JsonIgnore]
-        public IEnumerable<IEnumerable<CPUSetCore>> SettingsTabMask
+        public IEnumerable<IEnumerable<CPUSetProcessor>> SettingsTabMask
         {
             get
             {
@@ -52,9 +52,9 @@ namespace CPUSetSetter
 
         public void OnDeserialized()
         {
-            foreach (CPUSetCore core in Mask)
+            foreach (CPUSetProcessor processor in Mask)
             {
-                core.Parent = this;
+                processor.Parent = this;
             }
             SetupHotkeyListener();
         }
@@ -62,14 +62,14 @@ namespace CPUSetSetter
         public CPUSet(string name)
         {
             _name = name;
-            Mask = new(Enumerable.Range(0, Environment.ProcessorCount).Select(i => new CPUSetCore { Name = $"Core {i}", IsEnabled = true, Parent = this }));
+            Mask = new(Enumerable.Range(0, Environment.ProcessorCount).Select(i => new CPUSetProcessor { Name = $"CPU {i}", IsEnabled = true, Parent = this }));
             SetupHotkeyListener();
         }
 
         public CPUSet(string name, IEnumerable<bool> mask)
         {
             _name = name;
-            Mask = new(mask.Select((bool coreEnabled, int i) => new CPUSetCore { Name = $"Core {i}", IsEnabled = coreEnabled, Parent = this }));
+            Mask = new(mask.Select((bool cpuEnabled, int i) => new CPUSetProcessor { Name = $"CPU {i}", IsEnabled = cpuEnabled, Parent = this }));
             SetupHotkeyListener();
         }
 
@@ -210,7 +210,7 @@ namespace CPUSetSetter
         }
     }
 
-    public partial class CPUSetCore : ObservableObject
+    public partial class CPUSetProcessor : ObservableObject
     {
         [ObservableProperty]
         private string _name = "";

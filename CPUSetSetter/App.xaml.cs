@@ -36,7 +36,7 @@ namespace CPUSetSetter
             // Quit when this CPU is not supported
             if (Environment.ProcessorCount > 64)
             {
-                MessageBox.Show("Failed to open: More than 64 logical CPU cores are not supported", "CPU Set Setter", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Failed to open: More than 64 logical processors are not supported", "CPU Set Setter", MessageBoxButton.OK, MessageBoxImage.Error);
                 ExitApp();
                 return;
             }
