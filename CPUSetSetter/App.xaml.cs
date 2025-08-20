@@ -21,6 +21,8 @@ namespace CPUSetSetter
         {
             base.OnStartup(e);
 
+            Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+
             // Show unhandled exceptions in an error dialog box
             AddDialogExceptionHandler();
 
