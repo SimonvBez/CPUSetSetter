@@ -86,6 +86,7 @@
 
                         <DataGridTextColumn Header="Avg CPU"
                                             Binding="{Binding AverageCpuPercentageStr}"
+                                            SortMemberPath="AverageCpuUsage"
                                             IsReadOnly="True"
                                             CanUserResize="False"
                                             Width="60"

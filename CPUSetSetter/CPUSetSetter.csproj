@@ -3,6 +3,7 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0-windows</TargetFramework>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
@@ -18,12 +19,12 @@
   <ItemGroup>
     <Content Include="icon.ico" />
   </ItemGroup>
-	
+    
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="System.Management" Version="9.0.8" />
   </ItemGroup>
-	
+    
   <ItemGroup>
     <Resource Include="tray.ico">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
