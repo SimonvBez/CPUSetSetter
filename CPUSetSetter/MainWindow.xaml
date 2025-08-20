@@ -217,10 +217,14 @@
 
                                 <Button Grid.Row="0" Grid.Column="1" Margin="0,0,0,2"
                                         Content="Add"
-                                        Command="{Binding AddNewSetCommand}"/>
+                                        Command="{Binding AddNewSetCommand}"
+                                        IsEnabled="{Binding SettingsCanAddNewSet}">
+                                </Button>
                                 <Button Grid.Row="1" Grid.Column="1" Margin="0,2,0,0"
                                         Content="Remove"
-                                        Command="{Binding RemoveSetCommand}"/>
+                                        Command="{Binding RemoveSetCommand}"
+                                        IsEnabled="{Binding SettingsCanRemoveSet}"/>
+
                             </Grid>
                         </Grid>
 

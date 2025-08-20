@@ -35,7 +35,8 @@ namespace CPUSetSetter
                 {
                     div += 2;
                 }
-                return Mask.Chunk(Mask.Count / div);
+                int colums = Math.Max(1, Mask.Count / div);
+                return Mask.Chunk(colums);
             }
         }
 

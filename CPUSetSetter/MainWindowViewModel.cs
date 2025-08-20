@@ -28,21 +28,25 @@ namespace CPUSetSetter
         private ProcessListEntry? _currentForegroundProcess;
 
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(SettingsCanRemoveSet))]
         private CPUSet? _settingsSelectedCpuSet;
 
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(SettingsCanAddNewSet))]
         private string _settingsNewCpuSetName = "";
+
+        public bool SettingsCanAddNewSet => SettingsNewCpuSetName.Length > 0 && !Config.Default.CpuSets.Any(s => s.SettingsName == SettingsNewCpuSetName);
+        public bool SettingsCanRemoveSet => SettingsSelectedCpuSet is not null && !SettingsSelectedCpuSet.IsUnset;
 
         [RelayCommand]
         private void AddNewSet()
         {
-            string newName = SettingsNewCpuSetName;
             // Verify that this name is not invalid or already in use
-            if (newName.Length == 0 || Config.Default.CpuSets.Any(s => s.Name == newName))
+            if (!SettingsCanAddNewSet)
             {
                 return;
             }
-            CPUSet newCpuSet = new CPUSet(SettingsNewCpuSetName);
+            CPUSet newCpuSet = new(SettingsNewCpuSetName);
             Config.Default.CpuSets.Add(newCpuSet);
             SettingsSelectedCpuSet = newCpuSet;
             SettingsNewCpuSetName = "";
@@ -51,9 +55,9 @@ namespace CPUSetSetter
         [RelayCommand]
         private void RemoveSet()
         {
-            if (SettingsSelectedCpuSet is null || SettingsSelectedCpuSet.IsUnset)
+            if (!SettingsCanRemoveSet)
                 return;
-            SettingsSelectedCpuSet.Remove();
+            SettingsSelectedCpuSet?.Remove();
         }
 
         [RelayCommand]
@@ -86,6 +90,13 @@ namespace CPUSetSetter
                     SettingsSelectedCpuSet.Hotkey.Add(e.Key);
                 }
             };
+
+            // Update the SettingsCanAddNewSet property when CPU Sets are added/removed
+            Config.Default.CpuSets.CollectionChanged += (_, _) =>
+            {
+                OnPropertyChanged(nameof(SettingsCanAddNewSet));
+            };
+
             Task.Run(ForegroundProcessUpdateLoop);
             Task.Run(ProcessCpuUsageUpdateLoop);
 
