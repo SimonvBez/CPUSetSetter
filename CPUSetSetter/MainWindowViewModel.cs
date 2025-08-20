@@ -71,7 +71,7 @@ namespace CPUSetSetter
             processEvents.Start();
 
             RunningProcessesView = (ListCollectionView)CollectionViewSource.GetDefaultView(RunningProcesses);
-            RunningProcessesView.SortDescriptions.Add(new(nameof(ProcessListEntry.AverageCpuUsage), ListSortDirection.Descending));
+            RunningProcessesView.SortDescriptions.Add(new(nameof(ProcessListEntry.AverageCpuPercentageStr), ListSortDirection.Descending));
             RunningProcessesView.IsLiveSorting = true;
 
             RunningProcessesView.Filter = item => ((ProcessListEntry)item).Name.Contains(ProcessNameFilter, StringComparison.OrdinalIgnoreCase);
@@ -160,13 +160,10 @@ namespace CPUSetSetter
         {
             while (true)
             {
-                _dispatcher.Invoke(() =>
+                foreach (ProcessListEntry pEntry in RunningProcesses)
                 {
-                    foreach (ProcessListEntry pEntry in RunningProcesses)
-                    {
-                        pEntry.UpdateCpuUsage();
-                    }
-                });
+                    pEntry.UpdateCpuUsage();
+                }
                 await Task.Delay(3000);
             }
         }

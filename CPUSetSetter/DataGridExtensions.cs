@@ -15,7 +15,8 @@ namespace CPUSetSetter
             var grid = d as DataGrid;
             if (grid != null)
             {
-                grid.Sorting += (source, args) => {
+                grid.Sorting += (source, args) =>
+                {
                     if (args.Column.SortDirection == null)
                     {
                         // here we check an attached property value of target column
