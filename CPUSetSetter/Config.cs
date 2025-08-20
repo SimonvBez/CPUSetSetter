@@ -10,7 +10,7 @@ using System.Text.Json.Serialization;
 
 namespace CPUSetSetter
 {
-    public partial class Config : ObservableObject, IJsonOnDeserialized
+    public partial class Config : ObservableObject
     {
         private static JsonSerializerOptions JsonOptions { get; } = CreateJsonOptions();
         private static JsonSerializerOptions CreateJsonOptions()
@@ -31,6 +31,9 @@ namespace CPUSetSetter
         [ObservableProperty]
         private bool _startMinimized = false;
 
+        [ObservableProperty]
+        private bool _disableWelcomeMessage = false;
+
         // Static getting for singleton instance
         public static Config Default { get; } = Load();
 
@@ -38,14 +41,6 @@ namespace CPUSetSetter
 
         [JsonConstructor]
         private Config() { }
-
-        /// <summary>
-        /// After the JSON desterilizer has constructed the Config, set up the collection listeners
-        /// </summary>
-        public void OnDeserialized()
-        {
-            SetupListener();
-        }
 
         private void SetupListener()
         {
@@ -109,27 +104,41 @@ namespace CPUSetSetter
             }
         }
 
-        public static Config Load()
+        private static Config Load()
         {
+            Config config;
+            bool isExisting;
             try
             {
-                // Try to load the config .json file
-                Config loadedConfig;
-                {
-                    using FileStream fileStream = File.OpenRead("CPUSetSetter_config.json");
-                    loadedConfig = JsonSerializer.Deserialize<Config>(fileStream, options: JsonOptions) ?? throw new NullReferenceException();
-                    loadedConfig._isLoading = false;
-                }
-                loadedConfig.ValidateCPUSets();
-                return loadedConfig;
+                using FileStream fileStream = File.OpenRead("CPUSetSetter_config.json");
+                config = JsonSerializer.Deserialize<Config>(fileStream, options: JsonOptions) ?? throw new NullReferenceException();
+                isExisting = true;
             }
             catch (Exception)
             {
-                Config newConfig = new() { _isLoading = false };
-                newConfig.SetupListener();
-                newConfig.PopulateDefaultConfig();
-                return newConfig;
+                // The config file does not exist yet or was corrupt
+                config = new();
+                isExisting = false;
             }
+            config._isLoading = false;
+            config.SetupListener();
+
+            if (!config.DisableWelcomeMessage)
+            {
+                WindowLogger.Default.Write(
+                    "Welcome! To start, head to the Settings tab to define a CPU Set. This Set can then be applied to processes.\n" +
+                    "To apply a CPU Set, choose it in the Processes list, or configure a Hotkey to apply it to the current foreground process.");
+            }
+
+            if (isExisting)
+            {
+                config.ValidateCPUSets();
+            }
+            else
+            {
+                config.PopulateDefaultConfig();
+            }
+            return config;
         }
 
         public CPUSet? GetCpuSetByName(string name)
@@ -202,7 +211,7 @@ namespace CPUSetSetter
                                                            .Concat(Enumerable.Repeat(true, logicalProcessorCount / 2));
                     CpuSets.Add(new("Cache", cacheMask));
                     CpuSets.Add(new("Freq", freqMask));
-                    WindowLogger.Default.Write("Detected a hybrid cache CPU, added a default Cache and Freq Set");
+                    WindowLogger.Default.Write("Detected a hybrid cache CPU, added a default Cache and Freq CPU Set");
                 }
             }
         }
