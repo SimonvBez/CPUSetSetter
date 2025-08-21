@@ -152,7 +152,7 @@ namespace CPUSetSetter
             while (true)
             {
                 Inner();
-                await Task.Delay(20000);
+                await Task.Delay(2000);
             }
 
             void Inner()

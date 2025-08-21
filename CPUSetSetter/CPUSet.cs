@@ -154,7 +154,7 @@ namespace CPUSetSetter
                 if (pEntry.SetLimitedInfoHandle.IsInvalid)
                 {
                     int error = Marshal.GetLastWin32Error();
-                    string extraHelpString = error == 5 ? " Try restarting as Admin" : "";
+                    string extraHelpString = error == 5 && !App.IsElevated ? " Try restarting as Admin" : "";
                     WindowLogger.Default.Write($"ERROR: Could not open process '{pEntry.Name}': {new System.ComponentModel.Win32Exception(error).Message}{extraHelpString}");
                     return;
                 }

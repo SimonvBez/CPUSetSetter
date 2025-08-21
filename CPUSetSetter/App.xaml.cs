@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.IO;
+using System.Security.Principal;
 using System.Windows;
 using System.Windows.Markup;
 using Application = System.Windows.Application;
@@ -17,11 +18,19 @@ namespace CPUSetSetter
         private Mutex? singleInstanceMutex;
         private const string mutexName = "CPUSetSetterLock";
 
+        public static bool IsElevated { get; private set; }
+
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
             Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+
+            using (WindowsIdentity identity = WindowsIdentity.GetCurrent())
+            {
+                WindowsPrincipal principal = new(identity);
+                IsElevated = principal.IsInRole(WindowsBuiltInRole.Administrator);
+            }
 
             // Show unhandled exceptions in an error dialog box
             AddDialogExceptionHandler();

@@ -46,6 +46,11 @@ namespace CPUSetSetter
             CreationTime = pInfo.CreationTime;
             CpuSet = GetConfiguredCpuSet();
             QueryLimitedInfoHandle = pInfo.QueryHandle;
+
+            if (QueryLimitedInfoHandle.IsInvalid)
+            {
+                AverageCpuUsage = -1;
+            }
         }
 
         partial void OnCpuSetChanged(CPUSet? oldValue, CPUSet newValue)
