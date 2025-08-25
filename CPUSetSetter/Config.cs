@@ -29,6 +29,9 @@ namespace CPUSetSetter
         private bool _matchWholePath = true;
 
         [ObservableProperty]
+        private bool _muteHotkeySound = false;
+
+        [ObservableProperty]
         private bool _startMinimized = false;
 
         [ObservableProperty]

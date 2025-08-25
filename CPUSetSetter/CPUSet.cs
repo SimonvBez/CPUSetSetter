@@ -108,6 +108,17 @@ namespace CPUSetSetter
 
         private void OnHotkeyPressed()
         {
+            if (IsUnset)
+            {
+                // Play cleared sound
+                HotkeySoundPlayer.Default.PlayCleared();
+            }
+            else
+            {
+                // Plat applied sound
+                HotkeySoundPlayer.Default.PlayApplied();
+            }
+
             MainWindowViewModel.Instance?.OnCpuSetHotkeyPressed(this);
         }
 

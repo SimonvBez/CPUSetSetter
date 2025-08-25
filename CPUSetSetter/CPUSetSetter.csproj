@@ -10,12 +10,8 @@
     <UseWindowsForms>true</UseWindowsForms>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ApplicationIcon>icon.ico</ApplicationIcon>
-    <FileVersion>1.0.1</FileVersion>
+    <FileVersion>1.0.2</FileVersion>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Remove="tray.ico" />
-  </ItemGroup>
 
   <ItemGroup>
     <Content Include="icon.ico" />
@@ -27,9 +23,7 @@
   </ItemGroup>
     
   <ItemGroup>
-    <Resource Include="tray.ico">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
+    <Resource Include="Resources\*" CopyToOutputDirectory="Never" LogicalName="%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>

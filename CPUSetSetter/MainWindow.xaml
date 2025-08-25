@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         Title="CPU Set Setter"
         Height="547"
-        MinHeight="510"
+        MinHeight="547"
         Width="940"
         MinWidth="700">
 
@@ -172,7 +172,7 @@
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
-                    <RowDefinition Height="65"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 
                 <GroupBox Grid.Row="0"
@@ -309,6 +309,7 @@
                         <RowDefinition Height="20"/>
                         <RowDefinition Height="20"/>
                         <RowDefinition Height="20"/>
+                        <RowDefinition Height="20"/>
                     </Grid.RowDefinitions>
 
                     <Grid Grid.Row="0"
@@ -331,12 +332,24 @@
                         </Grid.ColumnDefinitions>
 
                         <CheckBox Grid.Column="0"
+                                  IsChecked="{Binding MuteHotkeySound, Source={x:Static local:Config.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        <TextBlock Grid.Column="1" Margin="5,0,0,0"
+                                   Text="Mute hotkey sound"/>
+                    </Grid>
+
+                    <Grid Grid.Row="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <CheckBox Grid.Column="0"
                                   IsChecked="{Binding StartMinimized, Source={x:Static local:Config.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                         <TextBlock Grid.Column="1" Margin="5,0,0,0"
                                    Text="Start minimized in tray"/>
                     </Grid>
 
-                    <Grid Grid.Row="2">
+                    <Grid Grid.Row="3">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>

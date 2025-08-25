@@ -56,7 +56,7 @@ namespace CPUSetSetter
             SetAppCulture();
 
             // Set up the tray icon
-            ContextMenuStrip trayMenu = new ContextMenuStrip();
+            ContextMenuStrip trayMenu = new();
             trayMenu.Items.Add("Open", null, (_, _) => ShowMainWindow());
             trayMenu.Items.Add("Close", null, (_, _) => ExitApp());
             using Stream iconStream = GetResourceStream(new Uri("pack://application:,,,/CPUSetSetter;component/tray.ico")).Stream;
