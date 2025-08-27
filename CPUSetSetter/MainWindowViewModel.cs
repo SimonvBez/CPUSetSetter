@@ -2,8 +2,10 @@
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Windows;
 using System.Windows.Data;
 using System.Windows.Threading;
+using Application = System.Windows.Application;
 
 
 namespace CPUSetSetter
@@ -174,14 +176,17 @@ namespace CPUSetSetter
         {
             while (true)
             {
-                _dispatcher.Invoke(() =>
+                bool windowIsVisible = false;
+                await _dispatcher.InvokeAsync(() =>
                 {
+                    windowIsVisible = Application.Current.MainWindow.Visibility == Visibility.Visible;
                     foreach (ProcessListEntry pEntry in RunningProcesses)
                     {
                         pEntry.UpdateCpuUsage();
                     }
                 });
-                await Task.Delay(4000);
+                int delayTime = windowIsVisible ? 1000 : 5000; // Poll the CPU usage less often when not visible
+                await Task.Delay(delayTime);
             }
         }
     }
