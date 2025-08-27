@@ -45,6 +45,7 @@ namespace CPUSetSetter
 
         private readonly List<ProcessListEntry> _processesUsingSet = [];
         private HotkeyCallback? _hotkeyCallback;
+        private bool _hadApplyError;
 
 
         // Private constructor for Json loading
@@ -108,18 +109,22 @@ namespace CPUSetSetter
 
         private void OnHotkeyPressed()
         {
-            if (IsUnset)
+            _hadApplyError = false;
+            MainWindowViewModel.Instance?.OnCpuSetHotkeyPressed(this);
+            
+            // Play a sound to indicate that the hotkey was received
+            if (_hadApplyError)
             {
-                // Play cleared sound
+                HotkeySoundPlayer.Default.PlayError();
+            }
+            else if (IsUnset)
+            {
                 HotkeySoundPlayer.Default.PlayCleared();
             }
             else
             {
-                // Plat applied sound
                 HotkeySoundPlayer.Default.PlayApplied();
             }
-
-            MainWindowViewModel.Instance?.OnCpuSetHotkeyPressed(this);
         }
 
         public void Remove()
@@ -167,12 +172,14 @@ namespace CPUSetSetter
                     int error = Marshal.GetLastWin32Error();
                     string extraHelpString = error == 5 && !App.IsElevated ? " Try restarting as Admin" : "";
                     WindowLogger.Default.Write($"ERROR: Could not open process '{pEntry.Name}': {new System.ComponentModel.Win32Exception(error).Message}{extraHelpString}");
+                    _hadApplyError = true;
                     return;
                 }
             }
             else if (pEntry.SetLimitedInfoHandle.IsInvalid)
             {
                 // The handle was already made previously, don't bother trying again
+                _hadApplyError = true;
                 return;
             }
 
@@ -188,6 +195,7 @@ namespace CPUSetSetter
                 {
                     int error = Marshal.GetLastWin32Error();
                     WindowLogger.Default.Write($"ERROR: Could not clear CPU Set of '{pEntry.Name}': {new System.ComponentModel.Win32Exception(error).Message}");
+                    _hadApplyError = true;
                 }
             }
             else
@@ -217,6 +225,7 @@ namespace CPUSetSetter
                 {
                     int error = Marshal.GetLastWin32Error();
                     WindowLogger.Default.Write($"ERROR: Could not apply CPU Set to '{pEntry.Name}': {new System.ComponentModel.Win32Exception(error).Message}");
+                    _hadApplyError = true;
                 }
             }
         }

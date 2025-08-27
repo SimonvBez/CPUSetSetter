@@ -111,6 +111,7 @@ namespace CPUSetSetter
 
         public void OnCpuSetHotkeyPressed(CPUSet cpuSet)
         {
+            UpdateCurrentForegroundProcess();
             if (CurrentForegroundProcess is not null)
             {
                 CurrentForegroundProcess.CpuSet = cpuSet;
@@ -151,22 +152,22 @@ namespace CPUSetSetter
         {
             while (true)
             {
-                Inner();
+                UpdateCurrentForegroundProcess();
                 await Task.Delay(2000);
             }
+        }
 
-            void Inner()
+        private void UpdateCurrentForegroundProcess()
+        {
+            IntPtr hwnd = NativeMethods.GetForegroundWindow();
+            if (hwnd == 0)
             {
-                IntPtr hwnd = NativeMethods.GetForegroundWindow();
-                if (hwnd == 0)
-                {
-                    return;
-                }
-
-                NativeMethods.GetWindowThreadProcessId(hwnd, out uint pid);
-
-                CurrentForegroundProcess = RunningProcesses.FirstOrDefault(x => x!.Pid == pid, null);
+                return;
             }
+
+            NativeMethods.GetWindowThreadProcessId(hwnd, out uint pid);
+
+            CurrentForegroundProcess = RunningProcesses.FirstOrDefault(x => x!.Pid == pid, null);
         }
 
         private async Task ProcessCpuUsageUpdateLoop()
