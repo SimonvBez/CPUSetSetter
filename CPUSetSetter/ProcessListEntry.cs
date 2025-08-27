@@ -90,11 +90,11 @@ namespace CPUSetSetter
             }
 
             DateTime now = DateTime.Now;
-            // Remove datapoints older than 1 minute from the moving average buffer
+            // Remove datapoints older than 30 seconds from the moving average buffer
             while (_cpuTimeMovingAverageBuffer.Count > 0)
             {
                 TimeSpan datapointAge = now - _cpuTimeMovingAverageBuffer.Peek().Timestamp;
-                if (datapointAge.TotalSeconds > 60)
+                if (datapointAge.TotalSeconds > 30)
                 {
                     _cpuTimeMovingAverageBuffer.Dequeue();
                 }
