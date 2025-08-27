@@ -1,0 +1,66 @@
+name: Build and Release
+
+permissions:
+  contents: write
+
+on:
+  # push:
+  #   tags:
+  #     - "v*"
+
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Git tag to release (e.g., v1.2.3)
+        required: true
+      release_description:
+        description: Release notes/description
+        required: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Set version variable
+        run: |
+          if ($env:GITHUB_EVENT_NAME -eq "workflow_dispatch") {
+              $tag = '${{ github.event.inputs.release_tag }}'
+              $desc = '${{ github.event.inputs.release_description }}'
+          } else {
+              $tag = $env:GITHUB_REF_NAME
+              $desc = "Release $tag"
+          }
+          $version = $tag.TrimStart('v')
+          echo "VERSION=$version" >> $env:GITHUB_ENV
+          echo "RELEASE_TAG=$tag" >> $env:GITHUB_ENV
+          echo "RELEASE_DESC=$desc" >> $env:GITHUB_ENV
+        shell: pwsh
+
+      - name: Publish
+        run: dotnet publish CPUSetSetter/CPUSetSetter.csproj -c Release /p:DebugType=None /p:DebugSymbols=false /p:FileVersion=${{ env.VERSION }} -o publish/CPUSetSetter
+
+      - name: Prepare Release
+        run: Copy-Item -Path "deploy_scripts\CreateStartupTask.bat" -Destination "publish\CPUSetSetter\"
+
+      - name: Compress Release files
+        run: Compress-Archive -Path publish\* -DestinationPath CPUSetSetter.zip
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: ${{ env.RELEASE_TAG }}
+          body: ${{ env.RELEASE_DESC }}
+          files: CPUSetSetter.zip
+          overwrite: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
