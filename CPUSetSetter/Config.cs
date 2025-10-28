@@ -98,8 +98,10 @@ namespace CPUSetSetter
 
             try
             {
-                using FileStream fileStream = File.Create("CPUSetSetter_config.json");
+                FileStream fileStream = File.Create("CPUSetSetter_config_new.json");
                 JsonSerializer.Serialize(fileStream, this, options: JsonOptions);
+                fileStream.Dispose();
+                File.Move("CPUSetSetter_config_new.json", "CPUSetSetter_config.json", true);
             }
             catch (Exception ex)
             {
