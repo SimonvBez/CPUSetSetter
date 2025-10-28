@@ -70,7 +70,8 @@ namespace CPUSetSetter
                         foreach (HotkeyCallback callback in _hotkeyCallbacks)
                         {
                             // Remove any 'pressed' keys that aren't actually pressed anymore
-                            if (_pressedKeys.IsSupersetOf(callback.VKeys)) {
+                            if (_pressedKeys.IsSupersetOf(callback.VKeys))
+                            {
                                 foreach (VKey pressedKey in _pressedKeys)
                                 {
                                     // The just pressed vkCode has not been registered by GetAsyncKeyState yet, so it is excluded

@@ -111,7 +111,7 @@ namespace CPUSetSetter
         {
             _hadApplyError = false;
             MainWindowViewModel.Instance?.OnCpuSetHotkeyPressed(this);
-            
+
             // Play a sound to indicate that the hotkey was received
             if (_hadApplyError)
             {

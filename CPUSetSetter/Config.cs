@@ -192,9 +192,6 @@ namespace CPUSetSetter
             // Add the special <unset> Set
             CpuSets.Add(CPUSet.CreateUnset());
 
-            // Add a default Cache and Freq Set if this is a known hybrid cache CPU
-            string[] knownDuoHybridCpus = ["7950X3D", "7900X3D", "9950X3D", "9900X3D"];
-
             ManagementObjectSearcher searcher = new("root\\CIMV2", "SELECT * FROM Win32_Processor");
             int resultCount = 0;
             string cpuName = "";
@@ -204,19 +201,41 @@ namespace CPUSetSetter
                 resultCount++;
             }
 
+            string[] cpuNameParts = cpuName.Split(' ');
+
             if (resultCount == 1)
             {
-                // If this CPU is known to have 2 CCDs, and CCD0 has extra cache, add a default Cache and Freq Cpu Set
-                if (knownDuoHybridCpus.Any(knownCpu => cpuName.Contains(knownCpu)))
+                string[] knownDuoCcdCpus = [
+                    "3950X", "3900XT", "3900X", "3900",
+                    "5950X", "5900XT", "5900X", "5900",
+                    "7950X3D", "7950X", "7900X3D", "7900X", "7900",
+                    "9950X3D", "9950X", "9900X3D", "9900X"
+                ];
+
+                // If this CPU is known to have 2 CCDs, add a default CCD0/Cache and CCD1/Freq Cpu Set
+                foreach (string knownCpu in knownDuoCcdCpus)
                 {
-                    int logicalProcessorCount = Environment.ProcessorCount;
-                    IEnumerable<bool> cacheMask = Enumerable.Repeat(true, logicalProcessorCount / 2)
-                                                            .Concat(Enumerable.Repeat(false, logicalProcessorCount / 2));
-                    IEnumerable<bool> freqMask = Enumerable.Repeat(false, logicalProcessorCount / 2)
-                                                           .Concat(Enumerable.Repeat(true, logicalProcessorCount / 2));
-                    CpuSets.Add(new("Cache", cacheMask));
-                    CpuSets.Add(new("Freq", freqMask));
-                    WindowLogger.Default.Write("Detected a hybrid cache CPU, added a default Cache and Freq CPU Set");
+                    if (cpuNameParts.Contains(knownCpu))
+                    {
+                        int logicalProcessorCount = Environment.ProcessorCount;
+                        IEnumerable<bool> ccd0Mask = Enumerable.Repeat(true, logicalProcessorCount / 2)
+                                                               .Concat(Enumerable.Repeat(false, logicalProcessorCount / 2));
+                        IEnumerable<bool> ccd1Mask = Enumerable.Repeat(false, logicalProcessorCount / 2)
+                                                               .Concat(Enumerable.Repeat(true, logicalProcessorCount / 2));
+                        if (knownCpu.EndsWith("X3D", StringComparison.Ordinal))
+                        {
+                            CpuSets.Add(new("Cache", ccd0Mask));
+                            CpuSets.Add(new("Freq", ccd1Mask));
+                            WindowLogger.Default.Write("Detected a hybrid cache CPU, added a default Cache and Freq CPU Set");
+                        }
+                        else
+                        {
+                            CpuSets.Add(new("CCD0", ccd0Mask));
+                            CpuSets.Add(new("CCD1", ccd1Mask));
+                            WindowLogger.Default.Write("Detected a dual CCD CPU, added a default CCD0 and CCD1 CPU Set");
+                        }
+                        break;
+                    }
                 }
             }
         }
