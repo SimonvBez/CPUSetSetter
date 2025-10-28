@@ -43,6 +43,9 @@ namespace CPUSetSetter
         [LibraryImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static partial bool GetProcessTimes(SafeProcessHandle hProcess, out FILETIME lpCreationTime, out FILETIME lpExitTime, out FILETIME lpKernelTime, out FILETIME lpUserTime);
+
+        [LibraryImport("user32.dll")]
+        public static partial short GetAsyncKeyState(int vKey);
     }
 
     [Flags]
