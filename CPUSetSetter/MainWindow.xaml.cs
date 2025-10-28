@@ -15,11 +15,13 @@ namespace CPUSetSetter
             viewModel = new MainWindowViewModel(Dispatcher);
             DataContext = viewModel;
             InitializeComponent();
+
+            Loaded += (_, _) => logBox.ScrollToEnd();
         }
 
         private void Log_TextChanged(object sender, TextChangedEventArgs e)
         {
-            ((TextBox)sender).ScrollToEnd();
+            logBox.ScrollToEnd();
         }
 
         private void HotkeyInput_GotFocus(object sender, RoutedEventArgs e)

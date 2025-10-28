@@ -154,7 +154,8 @@
                     <!--Log-->
                     <GroupBox Grid.Column="1"
                               Header="Log">
-                        <TextBox IsReadOnly="True"
+                        <TextBox x:Name="logBox"
+                                 IsReadOnly="True"
                                  Text="{Binding Text, Source={x:Static local:WindowLogger.Default}}"
                                  TextChanged="Log_TextChanged"
                                  TextWrapping="Wrap"/>
