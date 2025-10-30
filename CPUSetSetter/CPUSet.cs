@@ -134,6 +134,12 @@ namespace CPUSetSetter
             {
                 pEntry.CpuSet = Unset;
             }
+            // If this CPU Set is the currently selected one in the settings, unselect it
+            if (MainWindowViewModel.Instance?.SettingsSelectedCpuSet == this)
+            {
+                MainWindowViewModel.Instance.SettingsSelectedCpuSet = null;
+            }
+
             // Then remove this Set from the config
             HotkeyListener.Instance.RemoveCallback(_hotkeyCallback!);
             Config.Default.CpuSets.Remove(this);
