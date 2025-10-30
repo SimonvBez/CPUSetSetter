@@ -190,6 +190,7 @@ namespace CPUSetSetter
                 await Task.Delay(delayTime);
             }
         }
+
         public void PauseListUpdates()
         {
             if (RunningProcessesView != null)
