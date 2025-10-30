@@ -14,7 +14,7 @@ namespace CPUSetSetter
     {
         public static MainWindowViewModel? Instance { get; private set; }
 
-        public static ObservableCollection<ProcessListEntry> RunningProcesses { get; } = [];
+        public static PausableObservableCollection<ProcessListEntry> RunningProcesses { get; } = [];
         public static bool IsRunning { get; private set; } = false;
         private readonly Dispatcher _dispatcher;
 
@@ -81,6 +81,7 @@ namespace CPUSetSetter
             RunningProcessesView = (ListCollectionView)CollectionViewSource.GetDefaultView(RunningProcesses);
             RunningProcessesView.SortDescriptions.Add(new(nameof(ProcessListEntry.AverageCpuUsage), ListSortDirection.Descending));
             RunningProcessesView.IsLiveSorting = true;
+            RunningProcessesView.LiveSortingProperties.Add(nameof(ProcessListEntry.AverageCpuUsage));
 
             RunningProcessesView.Filter = item => ((ProcessListEntry)item).Name.Contains(ProcessNameFilter, StringComparison.OrdinalIgnoreCase);
 
@@ -187,6 +188,23 @@ namespace CPUSetSetter
                 });
                 int delayTime = windowIsVisible ? 1000 : 5000; // Poll the CPU usage less often when not visible
                 await Task.Delay(delayTime);
+            }
+        }
+        public void PauseListUpdates()
+        {
+            if (RunningProcessesView != null)
+            {
+                RunningProcessesView.IsLiveSorting = false;
+                RunningProcesses.SuppressNotifications(true);
+            }
+        }
+
+        public void ResumeListUpdates()
+        {
+            if (RunningProcessesView != null)
+            {
+                RunningProcesses.SuppressNotifications(false);
+                RunningProcessesView.IsLiveSorting = true;
             }
         }
     }
