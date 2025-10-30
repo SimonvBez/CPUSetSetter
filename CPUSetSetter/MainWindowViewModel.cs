@@ -60,6 +60,7 @@ namespace CPUSetSetter
             if (!SettingsCanRemoveSet)
                 return;
             SettingsSelectedCpuSet?.Remove();
+            SettingsSelectedCpuSet = null;
         }
 
         [RelayCommand]
