@@ -32,11 +32,11 @@
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    
+
                     <TextBlock Grid.Column="0"
                                Text="Search:"
                                VerticalAlignment="Center"/>
-                    
+
                     <TextBox Grid.Column="1"
                              Margin="5,0,0,0"
                              MaxLines="1"
@@ -53,18 +53,15 @@
                           local:DataGridExtensions.SortDesc="True">
 
                     <DataGrid.RowStyle>
-                        <Style TargetType="DataGridRow">
+                        <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding FailedToOpen}" Value="True">
-                                    <Setter Property="Background" Value="#D83E3B"></Setter>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding FailedToOpen}" Value="False">
-                                    <Setter Property="Background" Value="White"></Setter>
+                                    <Setter Property="Background" Value="{DynamicResource ErrorBrush}"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </DataGrid.RowStyle>
-                    
+
                     <DataGrid.Columns>
                         <!--Name column-->
                         <DataGridTextColumn Header="Name"
@@ -76,12 +73,8 @@
                         <DataGridTextColumn Header="Path"
                                             Binding="{Binding Path}"
                                             IsReadOnly="True"
+                                            ToolTipService.ToolTip="{Binding Path}"
                                             Width="3*">
-                            <DataGridTextColumn.CellStyle>
-                                <Style TargetType="DataGridCell">
-                                    <Setter Property="ToolTip" Value="{Binding Path}" />
-                                </Style>
-                            </DataGridTextColumn.CellStyle>
                         </DataGridTextColumn>
 
                         <DataGridTextColumn Header="Avg CPU"
@@ -175,7 +168,7 @@
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                
+
                 <GroupBox Grid.Row="0"
                           Header="CPU Sets">
                     <Grid Margin="5">
@@ -184,7 +177,7 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        
+
                         <!--CPU Set name selector-->
                         <Grid Margin="0,0,10,0" Grid.Column="0">
                             <Grid.RowDefinitions>
@@ -311,6 +304,7 @@
                         <RowDefinition Height="20"/>
                         <RowDefinition Height="20"/>
                         <RowDefinition Height="20"/>
+                        <RowDefinition Height="25"/>
                     </Grid.RowDefinitions>
 
                     <Grid Grid.Row="0"
@@ -360,6 +354,26 @@
                                   IsChecked="{Binding DisableWelcomeMessage, Source={x:Static local:Config.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                         <TextBlock Grid.Column="1" Margin="5,0,0,0"
                                    Text="Disable welcome message"/>
+                    </Grid>
+
+                    <!-- Theme Selection ComboBox -->
+                    <Grid Grid.Row="4" Margin="0,0,0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="80"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                           Text="Theme:"
+                           VerticalAlignment="Center"/>
+                        <ComboBox Grid.Column="1"
+                                  SelectedValuePath="Tag"
+                                  HorizontalContentAlignment="Center"
+                                  Padding="0"
+                                  SelectedValue="{Binding Theme, Source={x:Static local:Config.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                            <ComboBoxItem Content="Light" Tag="Light"/>
+                            <ComboBoxItem Content="Dark" Tag="Dark"/>
+                        </ComboBox>
                     </Grid>
                 </Grid>
             </Grid>
