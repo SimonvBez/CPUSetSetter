@@ -348,15 +348,15 @@ namespace CPUSetSetter
                         ["14450HX"] = (10, 6),  // 5P+6E
 
                         // 15th Gen Arrow Lake (no hyperthreading on P-cores)
-                        ["285K"] = (8, 16),     // 4P+16E (Lion Cove + Skymont)
-                        ["285KF"] = (8, 16),    // 4P+16E
-                        ["285"] = (8, 16),      // 4P+16E
-                        ["265K"] = (8, 12),     // 4P+12E
-                        ["265KF"] = (8, 12),    // 4P+12E
-                        ["265"] = (8, 12),      // 4P+12E
-                        ["245K"] = (6, 8),      // 3P+8E
-                        ["245KF"] = (6, 8),     // 3P+8E
-                        ["245"] = (6, 8)        // 3P+8E
+                        ["285K"] = (8, 16),     // 8P+16E (Lion Cove + Skymont)
+                        ["285KF"] = (8, 16),    // 8P+16E
+                        ["285"] = (8, 16),      // 8P+16E
+                        ["265K"] = (8, 12),     // 8P+12E
+                        ["265KF"] = (8, 12),    // 8P+12E
+                        ["265"] = (8, 12),      // 8P+12E
+                        ["245K"] = (6, 8),      // 6P+8E
+                        ["245KF"] = (6, 8),     // 6P+8E
+                        ["245"] = (6, 8)        // 6P+8E
                     };
 
                     foreach (var kvp in intelPECoreLayouts)
@@ -371,35 +371,33 @@ namespace CPUSetSetter
                             if (pThreads + eThreads != logicalProcessorCount)
                             {
                                 WindowLogger.Default.Write($"Warning: Expected {pThreads + eThreads} threads but detected {logicalProcessorCount}");
+                                //return;
                             }
 
-                            bool[] pCoreMask = new bool[logicalProcessorCount];
-                            bool[] eCoreMask = new bool[logicalProcessorCount];
+                            // TODO: Also apply the P and E suffixes when creating a new CPUSet through the UI
+                            bool[] pOnlyMask = new bool[logicalProcessorCount];
+                            bool[] eOnlyMask = new bool[logicalProcessorCount];
+                            string[] cpuNames = new string[logicalProcessorCount];
 
                             // P-cores are typically indexed first
-                            for (int i = 0; i < logicalProcessorCount; i++)
+                            for (int i = 0; i < logicalProcessorCount; ++i)
                             {
-                                if (i < pThreads)
-                                {
-                                    pCoreMask[i] = true;
-                                    eCoreMask[i] = false;
-                                }
-                                else
-                                {
-                                    pCoreMask[i] = false;
-                                    eCoreMask[i] = true;
-                                }
+                                string suffix = i < pThreads ? "P" : "E";
+                                pOnlyMask[i] = i < pThreads;
+                                eOnlyMask[i] = i >= pThreads;
+                                cpuNames[i] = $"CPU {i}{suffix}";
                             }
 
-                            CpuSets.Add(new("P-Cores", pCoreMask));
-                            CpuSets.Add(new("E-Cores", eCoreMask));
+                            CpuSets.Add(new("P-Cores", pOnlyMask, cpuNames));
+                            CpuSets.Add(new("E-Cores", eOnlyMask, cpuNames));
+
                             WindowLogger.Default.Write($"Detected Intel hybrid CPU ({kvp.Key}), added P-Cores and E-Cores CPU Sets");
                             return;
                         }
                     }
                 }
 
-                if (isAMD)
+                else if (isAMD)
                 {
                     // AMD dual CCD detection
                     string[] knownDuoCcdCpus = [
@@ -436,7 +434,6 @@ namespace CPUSetSetter
                 }
                 // Not Supported or no special sets detected, just add the <all> Set
                 WindowLogger.Default.Write("No special CPU Sets detected for this CPU");
-
             }
         }
 
