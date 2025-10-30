@@ -426,3 +426,4 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+/CPUSetSetter_config.json

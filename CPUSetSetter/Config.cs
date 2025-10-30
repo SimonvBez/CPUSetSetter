@@ -6,6 +6,8 @@ using System.IO;
 using System.Management;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Windows;
+using Application = System.Windows.Application;
 
 
 namespace CPUSetSetter
@@ -17,6 +19,7 @@ namespace CPUSetSetter
         {
             JsonSerializerOptions options = new() { WriteIndented = true };
             options.Converters.Add(new JsonStringEnumConverter());
+            options.Converters.Add(new ThemeModeJsonConverter());
             return options;
         }
 
@@ -36,6 +39,19 @@ namespace CPUSetSetter
 
         [ObservableProperty]
         private bool _disableWelcomeMessage = false;
+
+        [ObservableProperty]
+        private ThemeMode _theme = ThemeMode.System;
+
+        [ObservableProperty]
+        private bool _runInBackground = true;
+
+        public ObservableCollection<ThemeMode> AvailableThemes { get; } =
+        [
+            ThemeMode.Light,
+            ThemeMode.Dark,
+            ThemeMode.System
+        ];
 
         // Static getting for singleton instance
         public static Config Default { get; } = Load();
@@ -90,6 +106,13 @@ namespace CPUSetSetter
             Save();
         }
 
+        partial void OnThemeChanged(ThemeMode value)
+        {
+            if(Application.Current is not null)
+                Application.Current.ThemeMode = value;
+        }
+
+
         public void Save()
         {
             // Don't save the Config when properties are changing while it is still being loaded by Load()
@@ -125,6 +148,7 @@ namespace CPUSetSetter
                 config = new();
                 isExisting = false;
             }
+            config.OnThemeChanged(config.Theme);
             config._isLoading = false;
             config.SetupListener();
 

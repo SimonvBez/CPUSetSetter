@@ -12,76 +12,137 @@
         Width="940"
         MinWidth="700">
 
-    <TabControl>
+    <Window.Resources>
+        <!-- Style to fix DataGrid cell padding for Fluent theme -->
+        <Style x:Key="DataGridCellStyle" TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border Padding="{TemplateBinding Padding}"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Fix ComboBox padding in DataGrid for Fluent theme -->
+        <Style x:Key="DataGridComboBoxStyle" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+        </Style>
+
+        <!-- Consistent spacing for search/filter grids -->
+        <Style x:Key="FilterGridStyle" TargetType="Grid">
+            <Setter Property="Margin" Value="8,8,8,4"/>
+        </Style>
+
+        <!-- Group box with consistent margins -->
+        <Style x:Key="ContentGroupBoxStyle" TargetType="GroupBox" BasedOn="{StaticResource {x:Type GroupBox}}">
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="Margin" Value="4"/>
+        </Style>
+
+        <!-- Settings option grid style -->
+        <Style x:Key="SettingsRowStyle" TargetType="Grid">
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+
+        <!-- Consistent button spacing -->
+        <Style x:Key="StandardButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="MinWidth" Value="60"/>
+            <Setter Property="Padding" Value="12,4"/>
+            <Setter Property="Margin" Value="2"/>
+        </Style>
+    </Window.Resources>
+
+    <TabControl Padding="0">
         <!--Processes Tab-->
         <TabItem>
             <TabItem.Header>
-                <TextBlock Text="Processes"/>
+                <TextBlock Text="Processes" Margin="4,2"/>
             </TabItem.Header>
 
-            <Grid>
+            <Grid Margin="4">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
-                    <RowDefinition Height="121"/>
+                    <RowDefinition Height="130"/>
                 </Grid.RowDefinitions>
 
                 <!--Search Bar-->
-                <Grid Margin="3,5,0,0">
+                <Grid Grid.Row="0" Style="{StaticResource FilterGridStyle}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    
+
                     <TextBlock Grid.Column="0"
                                Text="Search:"
-                               VerticalAlignment="Center"/>
-                    
+                               VerticalAlignment="Center"
+                               Margin="0,0,8,0"/>
+
                     <TextBox Grid.Column="1"
-                             Margin="5,0,0,0"
                              MaxLines="1"
                              FontSize="14"
+                             Padding="6,4"
+                             VerticalContentAlignment="Center"
                              Text="{Binding ProcessNameFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 </Grid>
 
                 <!--Process list-->
                 <DataGrid Grid.Row="1"
-                          Margin="0,10,0,10"
+                          Margin="4,8"
                           ItemsSource="{Binding RunningProcessesView}"
                           AutoGenerateColumns="False"
-                          RowHeight="24"
+                          RowHeight="32"
+                          Background="Transparent"
+                          RowBackground="Transparent"
+                          AlternatingRowBackground="Transparent"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal"
                           local:DataGridExtensions.SortDesc="True">
 
                     <DataGrid.RowStyle>
                         <Style TargetType="DataGridRow">
+                            <Setter Property="MinHeight" Value="32"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding FailedToOpen}" Value="True">
-                                    <Setter Property="Background" Value="#D83E3B"></Setter>
+                                    <Setter Property="Background" Value="#D83E3B"/>
                                 </DataTrigger>
                                 <DataTrigger Binding="{Binding FailedToOpen}" Value="False">
-                                    <Setter Property="Background" Value="White"></Setter>
+                                    <Setter Property="Background" Value="Transparent"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </DataGrid.RowStyle>
-                    
+
                     <DataGrid.Columns>
                         <!--Name column-->
                         <DataGridTextColumn Header="Name"
                                             Binding="{Binding Name}"
                                             IsReadOnly="True"
-                                            Width="1*"/>
+                                            Width="1*"
+                                            CellStyle="{StaticResource DataGridCellStyle}"/>
 
                         <!--Path column-->
                         <DataGridTextColumn Header="Path"
                                             Binding="{Binding Path}"
                                             IsReadOnly="True"
-                                            Width="3*">
-                            <DataGridTextColumn.CellStyle>
-                                <Style TargetType="DataGridCell">
-                                    <Setter Property="ToolTip" Value="{Binding Path}" />
+                                            Width="3*"
+                                            CellStyle="{StaticResource DataGridCellStyle}">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="ToolTip" Value="{Binding Path}"/>
+                                    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
                                 </Style>
-                            </DataGridTextColumn.CellStyle>
+                            </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
 
                         <DataGridTextColumn Header="Avg CPU"
@@ -89,7 +150,8 @@
                                             SortMemberPath="AverageCpuUsage"
                                             IsReadOnly="True"
                                             CanUserResize="False"
-                                            Width="60"
+                                            Width="70"
+                                            CellStyle="{StaticResource DataGridCellStyle}"
                                             local:DataGridExtensions.SortDesc="True"/>
 
                         <!--Creation time column-->
@@ -98,20 +160,22 @@
                                             IsReadOnly="True"
                                             CanUserResize="False"
                                             Width="Auto"
+                                            CellStyle="{StaticResource DataGridCellStyle}"
                                             local:DataGridExtensions.SortDesc="True"/>
 
                         <!--CPU Set column-->
                         <DataGridTemplateColumn Header="CPU Set"
-                                                Width="120"
+                                                Width="130"
                                                 SortMemberPath="CpuSet.Name"
                                                 local:DataGridExtensions.SortDesc="True">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <ComboBox ItemsSource="{Binding CpuSets, Source={x:Static local:Config.Default}}"
-                                              SelectedValue="{Binding CpuSet, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                              SelectedValue="{Binding CpuSet, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              Style="{StaticResource DataGridComboBoxStyle}">
                                         <ComboBox.ItemTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding Name}"/>
+                                                <TextBlock Text="{Binding Name}" Margin="2,0"/>
                                             </DataTemplate>
                                         </ComboBox.ItemTemplate>
                                     </ComboBox>
@@ -122,25 +186,31 @@
                 </DataGrid>
 
                 <!--Current foreground process and Log-->
-                <Grid Grid.Row="2">
+                <Grid Grid.Row="2" Margin="4,8">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="270"/>
+                        <ColumnDefinition Width="280"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
                     <!--Current foreground process-->
                     <GroupBox Grid.Column="0"
-                              Header="Current foreground process">
-                        <Grid>
+                              Header="Current foreground process"
+                              Style="{StaticResource ContentGroupBoxStyle}"
+                              Margin="0,0,4,0">
+                        <Grid Margin="4">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="60"/>
+                                <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Column="0" Margin="5"
+                            <TextBlock Grid.Column="0" 
+                                       Margin="0,0,8,0"
+                                       VerticalAlignment="Top"
                                        Text="Name:&#x0a;CPU Set:"/>
 
-                            <TextBlock Grid.Column="1" Margin="5">
+                            <TextBlock Grid.Column="1" 
+                                       VerticalAlignment="Top"
+                                       TextWrapping="Wrap">
                                 <TextBlock.Text>
                                     <MultiBinding StringFormat="{}{0}&#x0a;{1}">
                                         <Binding Path="CurrentForegroundProcess.Name"/>
@@ -153,12 +223,16 @@
 
                     <!--Log-->
                     <GroupBox Grid.Column="1"
-                              Header="Log">
+                              Header="Log"
+                              Style="{StaticResource ContentGroupBoxStyle}"
+                              Margin="4,0,0,0">
                         <TextBox x:Name="logBox"
                                  IsReadOnly="True"
+                                 Padding="4"
                                  Text="{Binding Text, Source={x:Static local:WindowLogger.Default}}"
                                  TextChanged="Log_TextChanged"
-                                 TextWrapping="Wrap"/>
+                                 TextWrapping="Wrap"
+                                 VerticalScrollBarVisibility="Auto"/>
                     </GroupBox>
                 </Grid>
             </Grid>
@@ -167,38 +241,41 @@
         <!--Settings Tab-->
         <TabItem>
             <TabItem.Header>
-                <TextBlock Text="Settings"/>
+                <TextBlock Text="Settings" Margin="4,2"/>
             </TabItem.Header>
 
-            <Grid>
+            <Grid Margin="4">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                
+
                 <GroupBox Grid.Row="0"
-                          Header="CPU Sets">
-                    <Grid Margin="5">
+                          Header="CPU Sets"
+                          Style="{StaticResource ContentGroupBoxStyle}">
+                    <Grid Margin="4">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="200"/>
+                            <ColumnDefinition Width="210"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        
+
                         <!--CPU Set name selector-->
-                        <Grid Margin="0,0,10,0" Grid.Column="0">
+                        <Grid Grid.Column="0" Margin="0,0,8,0">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="*"/>
-                                <RowDefinition Height="50"/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
                             <!--List of CPU Set names-->
-                            <ListBox Grid.Row="0" Margin="0,0,0,10"
+                            <ListBox Grid.Row="0" 
+                                     Margin="0,0,0,8"
+                                     Padding="2"
                                      ItemsSource="{Binding CpuSets, Source={x:Static local:Config.Default}}"
                                      SelectedValue="{Binding SettingsSelectedCpuSet, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding SettingsName}"/>
+                                        <TextBlock Text="{Binding SettingsName}" Margin="4,2"/>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
@@ -206,33 +283,39 @@
                             <!--Add/Remove button for CPU Sets-->
                             <Grid Grid.Row="1">
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="*"/>
-                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="60"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
-                                <TextBox Grid.Row="0" Grid.Column="0" Margin="0,0,10,2"
+                                <TextBox Grid.Row="0" Grid.Column="0" 
+                                         Margin="0,0,8,4"
+                                         Padding="6,4"
                                          FontSize="14"
+                                         VerticalContentAlignment="Center"
                                          Text="{Binding SettingsNewCpuSetName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
-                                <Button Grid.Row="0" Grid.Column="1" Margin="0,0,0,2"
+                                <Button Grid.Row="0" Grid.Column="1" 
+                                        Margin="0,0,0,4"
                                         Content="Add"
+                                        Style="{StaticResource StandardButtonStyle}"
                                         Command="{Binding AddNewSetCommand}"
-                                        IsEnabled="{Binding SettingsCanAddNewSet}">
-                                </Button>
-                                <Button Grid.Row="1" Grid.Column="1" Margin="0,2,0,0"
+                                        IsEnabled="{Binding SettingsCanAddNewSet}"/>
+
+                                <Button Grid.Row="1" Grid.Column="1" 
+                                        Margin="0,4,0,0"
                                         Content="Remove"
+                                        Style="{StaticResource StandardButtonStyle}"
                                         Command="{Binding RemoveSetCommand}"
                                         IsEnabled="{Binding SettingsCanRemoveSet}"/>
-
                             </Grid>
                         </Grid>
 
                         <!--CPU Set Processor list and hotkey-->
-                        <Grid Grid.Column="1">
+                        <Grid Grid.Column="1" Margin="8,0" Grid.ColumnSpan="2">
                             <Grid.Style>
                                 <Style TargetType="Grid">
                                     <Style.Triggers>
@@ -245,123 +328,159 @@
 
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="*"/>
-                                <RowDefinition Height="23"/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
                             <!--Processor list of the currently selected CPU Set-->
-                            <ItemsControl Grid.Row="0"
-                                          ItemsSource="{Binding SettingsSelectedCpuSet.SettingsTabMask}">
+                            <ScrollViewer Grid.Row="0" 
+                                          Grid.Column="0"
+                                          Grid.ColumnSpan="2"
+                                          VerticalScrollBarVisibility="Auto"
+                                          HorizontalScrollBarVisibility="Auto"
+                                          Margin="0,0,0,8">
+                                <ItemsControl ItemsSource="{Binding SettingsSelectedCpuSet.SettingsTabMask}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
 
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <ItemsControl ItemsSource="{Binding}" Margin="0,0,16,0">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Orientation="Vertical"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
 
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <ItemsControl ItemsSource="{Binding}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                                            <CheckBox IsChecked="{Binding IsEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                                      VerticalAlignment="Center"/>
+                                                            <TextBlock Margin="6,0,0,0" 
+                                                                       Text="{Binding Name}"
+                                                                       VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
 
-                                            <ItemsControl.ItemsPanel>
-                                                <ItemsPanelTemplate>
-                                                    <StackPanel Margin="0,0,15,0" Orientation="Vertical"/>
-                                                </ItemsPanelTemplate>
-                                            </ItemsControl.ItemsPanel>
-
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate>
-                                                    <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
-                                                        <CheckBox IsChecked="{Binding IsEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                                        <TextBlock Margin="5,0,0,0" Text="{Binding Name}"/>
-                                                    </StackPanel>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-
-                                        </ItemsControl>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-
-                            <Grid Grid.Row="1">
+                            <Grid Grid.Row="1"
+                                  Grid.Column="0"
+                                  Grid.ColumnSpan="1">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="45"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
 
                                 <TextBlock Grid.Column="0"
                                            Text="Hotkey:"
-                                           VerticalAlignment="Center"/>
-                                <TextBox Grid.Column="1" Margin="5,0"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,8,0"/>
+
+                                <TextBox Grid.Column="1" 
+                                         Margin="0,0,8,0"
+                                         Padding="6,4"
                                          IsReadOnly="True"
+                                         VerticalContentAlignment="Center"
                                          Text="{Binding SettingsSelectedCpuSet.SettingsHotkeyString, Mode=OneWay}"
                                          GotKeyboardFocus="HotkeyInput_GotFocus"
                                          LostKeyboardFocus="HotkeyInput_LostFocus"/>
+
                                 <Button Grid.Column="2"
                                         Content="Clear"
+                                        Style="{StaticResource StandardButtonStyle}"
                                         Command="{Binding ClearHotkeyCommand}"/>
                             </Grid>
                         </Grid>
                     </Grid>
                 </GroupBox>
 
-                <Grid Grid.Row="1" Margin="5,5,5,0">
+                <Grid Grid.Row="1" 
+                      Margin="8,8,8,4">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="20"/>
-                        <RowDefinition Height="20"/>
-                        <RowDefinition Height="20"/>
-                        <RowDefinition Height="20"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-                    <Grid Grid.Row="0"
-                          ToolTip="When disabled, only the .exe filename is used to apply CPU Set rules instead of the full path">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
+                    <!-- Match full path -->
+                    <CheckBox Grid.Row="0" Grid.Column="0"
+                              VerticalAlignment="Center"
+                              HorizontalAlignment="Center"
+                              IsChecked="{Binding MatchWholePath, Source={x:Static local:Config.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1"
+                               VerticalAlignment="Center"
+                               Text="Match full path"
+                               ToolTip="When disabled, only the .exe filename is used to apply CPU Set rules instead of the full path"/>
 
-                        <CheckBox Grid.Column="0"
-                                  IsChecked="{Binding MatchWholePath, Source={x:Static local:Config.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                        <TextBlock Grid.Column="1" Margin="5,0,0,0"
-                                   Text="Match full path"/>
-                    </Grid>
+                    <!-- Mute hotkey sound -->
+                    <CheckBox Grid.Row="1" Grid.Column="0"
+                              VerticalAlignment="Center"
+                              HorizontalAlignment="Center"
+                              IsChecked="{Binding MuteHotkeySound, Source={x:Static local:Config.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1"
+                               VerticalAlignment="Center"
+                               Text="Mute hotkey sound"/>
 
-                    <Grid Grid.Row="1">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
+                    <!-- Start minimized -->
+                    <CheckBox Grid.Row="2" Grid.Column="0"
+                              VerticalAlignment="Center"
+                              HorizontalAlignment="Center"
+                              IsChecked="{Binding StartMinimized, Source={x:Static local:Config.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBlock Grid.Row="2" Grid.Column="1"
+                               VerticalAlignment="Center"
+                               Text="Start minimized in tray"/>
 
-                        <CheckBox Grid.Column="0"
-                                  IsChecked="{Binding MuteHotkeySound, Source={x:Static local:Config.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                        <TextBlock Grid.Column="1" Margin="5,0,0,0"
-                                   Text="Mute hotkey sound"/>
-                    </Grid>
+                    <!-- Disable welcome message -->
+                    <CheckBox Grid.Row="3" Grid.Column="0"
+                              VerticalAlignment="Center"
+                              HorizontalAlignment="Center"
+                              IsChecked="{Binding DisableWelcomeMessage, Source={x:Static local:Config.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBlock Grid.Row="3" Grid.Column="1"
+                               VerticalAlignment="Center"
+                               Text="Disable welcome message"/>
+                    
+                    <!-- Run in Background -->
+                    <CheckBox Grid.Row="4" Grid.Column="0"
+                              VerticalAlignment="Center"
+                              HorizontalAlignment="Center"
+                              IsChecked="{Binding RunInBackground, Source={x:Static local:Config.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBlock Grid.Row="4" Grid.Column="1"
+                               VerticalAlignment="Center"
+                               Text="Run in Background "/>
 
-                    <Grid Grid.Row="2">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-
-                        <CheckBox Grid.Column="0"
-                                  IsChecked="{Binding StartMinimized, Source={x:Static local:Config.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                        <TextBlock Grid.Column="1" Margin="5,0,0,0"
-                                   Text="Start minimized in tray"/>
-                    </Grid>
-
-                    <Grid Grid.Row="3">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-
-                        <CheckBox Grid.Column="0"
-                                  IsChecked="{Binding DisableWelcomeMessage, Source={x:Static local:Config.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                        <TextBlock Grid.Column="1" Margin="5,0,0,0"
-                                   Text="Disable welcome message"/>
-                    </Grid>
+                    <!-- Application theme -->
+                    <ComboBox Grid.Row="5" Grid.Column="0"
+                              VerticalContentAlignment="Center"
+                              HorizontalAlignment="Center"
+                              Margin="0,0,15,0"
+                              ItemsSource="{Binding AvailableThemes, Source={x:Static local:Config.Default}}"
+                              SelectedItem="{Binding Theme, Source={x:Static local:Config.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBlock Grid.Row="6" Grid.Column="1"
+                               VerticalAlignment="Center"
+                               Text="Application theme"/>
                 </Grid>
+
             </Grid>
         </TabItem>
     </TabControl>
