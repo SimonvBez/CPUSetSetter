@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 
+
 namespace CPUSetSetter
 {
     public class PausableObservableCollection<T> : ObservableCollection<T>

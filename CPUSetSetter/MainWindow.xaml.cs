@@ -8,7 +8,7 @@ namespace CPUSetSetter
 {
     public partial class MainWindow : Window
     {
-        private readonly MainWindowViewModel viewModel; 
+        private readonly MainWindowViewModel viewModel;
         private bool isCtrlPressed = false;
 
         public MainWindow()
@@ -17,7 +17,7 @@ namespace CPUSetSetter
             DataContext = viewModel;
             InitializeComponent();
 
-            Loaded += (_, _) => logBox.ScrollToEnd(); 
+            Loaded += (_, _) => logBox.ScrollToEnd();
             PreviewKeyDown += MainWindow_PreviewKeyDown;
             PreviewKeyUp += MainWindow_PreviewKeyUp;
         }
