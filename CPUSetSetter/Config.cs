@@ -195,48 +195,248 @@ namespace CPUSetSetter
             ManagementObjectSearcher searcher = new("root\\CIMV2", "SELECT * FROM Win32_Processor");
             int resultCount = 0;
             string cpuName = "";
+            string manufacturer = "";
+
             foreach (ManagementBaseObject cpu in searcher.Get())
             {
                 cpuName = (string)cpu["Name"] ?? "";
+                manufacturer = (string)cpu["Manufacturer"] ?? "";
                 resultCount++;
             }
 
             string[] cpuNameParts = cpuName.Split(' ');
+            bool isIntel = cpuName.Contains("Intel", StringComparison.OrdinalIgnoreCase) ||
+                           manufacturer.Contains("Intel", StringComparison.OrdinalIgnoreCase);
+            bool isAMD = cpuName.Contains("AMD", StringComparison.OrdinalIgnoreCase) ||
+                         manufacturer.Contains("AMD", StringComparison.OrdinalIgnoreCase);
 
             if (resultCount == 1)
             {
-                string[] knownDuoCcdCpus = [
-                    "3950X", "3900XT", "3900X", "3900",
-                    "5950X", "5900XT", "5900X", "5900",
-                    "7950X3D", "7950X", "7900X3D", "7900X", "7900",
-                    "9950X3D", "9950X", "9900X3D", "9900X"
-                ];
-
-                // If this CPU is known to have 2 CCDs, add a default CCD0/Cache and CCD1/Freq Cpu Set
-                foreach (string knownCpu in knownDuoCcdCpus)
+                // Intel hybrid P/E core CPUs with thread counts (P-cores with HT, E-cores without)
+                if (isIntel)
                 {
-                    if (cpuNameParts.Contains(knownCpu))
+                    // Dictionary: Model -> (P-core threads, E-core threads)
+                    Dictionary<string, (int pThreads, int eThreads)> intelPECoreLayouts = new()
                     {
-                        int logicalProcessorCount = Environment.ProcessorCount;
-                        IEnumerable<bool> ccd0Mask = Enumerable.Repeat(true, logicalProcessorCount / 2)
-                                                               .Concat(Enumerable.Repeat(false, logicalProcessorCount / 2));
-                        IEnumerable<bool> ccd1Mask = Enumerable.Repeat(false, logicalProcessorCount / 2)
-                                                               .Concat(Enumerable.Repeat(true, logicalProcessorCount / 2));
-                        if (knownCpu.EndsWith("X3D", StringComparison.Ordinal))
+                        // 12th Gen Alder Lake Desktop
+                        ["12900KS"] = (16, 8),  // 8P+8E
+                        ["12900K"] = (16, 8),   // 8P+8E
+                        ["12900KF"] = (16, 8),  // 8P+8E
+                        ["12900"] = (16, 8),    // 8P+8E
+                        ["12900F"] = (16, 8),   // 8P+8E
+                        ["12900T"] = (16, 8),   // 8P+8E
+                        ["12700K"] = (16, 4),   // 8P+4E
+                        ["12700KF"] = (16, 4),  // 8P+4E
+                        ["12700"] = (16, 4),    // 8P+4E
+                        ["12700F"] = (16, 4),   // 8P+4E
+                        ["12700T"] = (16, 4),   // 8P+4E
+                        ["12600K"] = (12, 4),   // 6P+4E
+                        ["12600KF"] = (12, 4),  // 6P+4E
+                        ["12600"] = (12, 0),    // 6P+0E
+                        ["12600T"] = (12, 0),   // 6P+0E
+                        ["12490F"] = (12, 0),   // 6P+0E
+                        ["12400"] = (12, 0),    // 6P+0E
+                        ["12400F"] = (12, 0),   // 6P+0E
+                        ["12400T"] = (12, 0),   // 6P+0E
+                        ["12100"] = (8, 0),     // 4P+0E
+                        ["12100F"] = (8, 0),    // 4P+0E
+                        ["12100T"] = (8, 0),    // 4P+0E
+
+                        // 12th Gen Mobile
+                        ["12900HK"] = (14, 6),  // 7P+6E (some 6P+8E)
+                        ["12900H"] = (14, 6),   // 7P+6E
+                        ["12800H"] = (14, 6),   // 7P+6E (some 6P+8E)
+                        ["12700H"] = (14, 6),   // 7P+6E
+                        ["12650H"] = (10, 4),   // 5P+4E
+                        ["12600H"] = (12, 4),   // 6P+4E
+                        ["12950HX"] = (16, 8),  // 8P+8E
+                        ["12900HX"] = (16, 8),  // 8P+8E
+                        ["12850HX"] = (16, 8),  // 8P+8E
+                        ["12800HX"] = (16, 8),  // 8P+8E
+                        ["12650HX"] = (14, 6),  // 7P+6E
+                        ["1280P"] = (12, 8),    // 6P+8E
+                        ["1270P"] = (12, 8),    // 6P+8E
+                        ["1260P"] = (12, 8),    // 6P+8E
+                        ["1250P"] = (12, 8),    // 6P+8E
+                        ["1240P"] = (12, 8),    // 6P+8E
+                        ["1265U"] = (10, 8),    // 5P+8E (some 2P+8E)
+                        ["1255U"] = (10, 8),    // 5P+8E (some 2P+8E)
+                        ["1245U"] = (10, 8),    // 5P+8E (some 2P+8E)
+                        ["1240U"] = (10, 8),    // 5P+8E (some 2P+8E)
+                        ["1235U"] = (10, 8),    // 5P+8E
+                        ["1230U"] = (10, 8),    // 5P+8E
+
+                        // 13th Gen Raptor Lake Desktop
+                        ["13900KS"] = (16, 16), // 8P+16E
+                        ["13900K"] = (16, 16),  // 8P+16E
+                        ["13900KF"] = (16, 16), // 8P+16E
+                        ["13900"] = (16, 16),   // 8P+16E
+                        ["13900F"] = (16, 16),  // 8P+16E
+                        ["13900T"] = (16, 16),  // 8P+16E
+                        ["13790F"] = (16, 16),  // 8P+16E
+                        ["13700K"] = (16, 8),   // 8P+8E
+                        ["13700KF"] = (16, 8),  // 8P+8E
+                        ["13700"] = (16, 8),    // 8P+8E
+                        ["13700F"] = (16, 8),   // 8P+8E
+                        ["13700T"] = (16, 8),   // 8P+8E
+                        ["13600K"] = (12, 8),   // 6P+8E
+                        ["13600KF"] = (12, 8),  // 6P+8E
+                        ["13600"] = (12, 8),    // 6P+8E
+                        ["13600T"] = (12, 8),   // 6P+8E
+                        ["13500"] = (12, 8),    // 6P+8E
+                        ["13500T"] = (12, 8),   // 6P+8E
+                        ["13490F"] = (10, 6),   // 5P+6E
+                        ["13400"] = (10, 6),    // 5P+6E
+                        ["13400F"] = (10, 6),   // 5P+6E
+                        ["13400T"] = (10, 6),   // 5P+6E
+                        ["13100"] = (8, 0),     // 4P+0E
+                        ["13100F"] = (8, 0),    // 4P+0E
+                        ["13100T"] = (8, 0),    // 4P+0E
+
+                        // 13th Gen Mobile
+                        ["13980HX"] = (16, 16), // 8P+16E
+                        ["13950HX"] = (16, 16), // 8P+16E
+                        ["13900HX"] = (16, 16), // 8P+16E
+                        ["13850HX"] = (12, 8),  // 6P+8E
+                        ["13700HX"] = (16, 8),  // 8P+8E
+                        ["13650HX"] = (14, 6),  // 7P+6E
+                        ["13600HX"] = (12, 8),  // 6P+8E
+                        ["13500HX"] = (12, 8),  // 6P+8E
+                        ["13450HX"] = (10, 6),  // 5P+6E
+                        ["13900HK"] = (14, 6),  // 7P+6E
+                        ["13900H"] = (14, 6),   // 7P+6E
+                        ["13800H"] = (14, 6),   // 7P+6E
+                        ["13700H"] = (14, 6),   // 7P+6E
+                        ["13620H"] = (10, 6),   // 5P+6E
+                        ["13600H"] = (12, 8),   // 6P+8E
+                        ["13500H"] = (8, 8),    // 4P+8E
+                        ["13420H"] = (8, 4),    // 4P+4E
+                        ["1370P"] = (12, 8),    // 6P+8E
+                        ["1360P"] = (8, 8),     // 4P+8E
+                        ["1350P"] = (12, 8),    // 6P+8E
+                        ["1340P"] = (12, 8),    // 6P+8E
+
+                        // 14th Gen Raptor Lake Refresh Desktop
+                        ["14900KS"] = (16, 16), // 8P+16E
+                        ["14900K"] = (16, 16),  // 8P+16E
+                        ["14900KF"] = (16, 16), // 8P+16E
+                        ["14900"] = (16, 16),   // 8P+16E
+                        ["14900F"] = (16, 16),  // 8P+16E
+                        ["14900T"] = (16, 16),  // 8P+16E
+                        ["14790F"] = (16, 16),  // 8P+16E
+                        ["14700K"] = (16, 12),  // 8P+12E
+                        ["14700KF"] = (16, 12), // 8P+12E
+                        ["14700"] = (16, 12),   // 8P+12E
+                        ["14700F"] = (16, 12),  // 8P+12E
+                        ["14700T"] = (16, 12),  // 8P+12E
+                        ["14600K"] = (12, 8),   // 6P+8E
+                        ["14600KF"] = (12, 8),  // 6P+8E
+                        ["14600"] = (12, 8),    // 6P+8E
+                        ["14600T"] = (12, 8),   // 6P+8E
+                        ["14500"] = (14, 6),    // 7P+6E
+                        ["14500T"] = (14, 6),   // 7P+6E
+                        ["14490F"] = (10, 6),   // 5P+6E
+                        ["14400"] = (10, 6),    // 5P+6E
+                        ["14400F"] = (10, 6),   // 5P+6E
+                        ["14400T"] = (10, 6),   // 5P+6E
+
+                        // 14th Gen Mobile
+                        ["14900HX"] = (16, 16), // 8P+16E
+                        ["14700HX"] = (16, 12), // 8P+12E
+                        ["14650HX"] = (16, 8),  // 8P+8E
+                        ["14500HX"] = (14, 8),  // 7P+8E
+                        ["14450HX"] = (10, 6),  // 5P+6E
+
+                        // 15th Gen Arrow Lake (no hyperthreading on P-cores)
+                        ["285K"] = (8, 16),     // 4P+16E (Lion Cove + Skymont)
+                        ["285KF"] = (8, 16),    // 4P+16E
+                        ["285"] = (8, 16),      // 4P+16E
+                        ["265K"] = (8, 12),     // 4P+12E
+                        ["265KF"] = (8, 12),    // 4P+12E
+                        ["265"] = (8, 12),      // 4P+12E
+                        ["245K"] = (6, 8),      // 3P+8E
+                        ["245KF"] = (6, 8),     // 3P+8E
+                        ["245"] = (6, 8)        // 3P+8E
+                    };
+
+                    foreach (var kvp in intelPECoreLayouts)
+                    {
+                        if (cpuNameParts.Contains(kvp.Key))
                         {
-                            CpuSets.Add(new("Cache", ccd0Mask));
-                            CpuSets.Add(new("Freq", ccd1Mask));
-                            WindowLogger.Default.Write("Detected a hybrid cache CPU, added a default Cache and Freq CPU Set");
+                            int logicalProcessorCount = Environment.ProcessorCount;
+                            int pThreads = kvp.Value.pThreads;
+                            int eThreads = kvp.Value.eThreads;
+
+                            // Verify the total matches
+                            if (pThreads + eThreads != logicalProcessorCount)
+                            {
+                                WindowLogger.Default.Write($"Warning: Expected {pThreads + eThreads} threads but detected {logicalProcessorCount}");
+                            }
+
+                            bool[] pCoreMask = new bool[logicalProcessorCount];
+                            bool[] eCoreMask = new bool[logicalProcessorCount];
+
+                            // P-cores are typically indexed first
+                            for (int i = 0; i < logicalProcessorCount; i++)
+                            {
+                                if (i < pThreads)
+                                {
+                                    pCoreMask[i] = true;
+                                    eCoreMask[i] = false;
+                                }
+                                else
+                                {
+                                    pCoreMask[i] = false;
+                                    eCoreMask[i] = true;
+                                }
+                            }
+
+                            CpuSets.Add(new("P-Cores", pCoreMask));
+                            CpuSets.Add(new("E-Cores", eCoreMask));
+                            WindowLogger.Default.Write($"Detected Intel hybrid CPU ({kvp.Key}), added P-Cores and E-Cores CPU Sets");
+                            return;
                         }
-                        else
-                        {
-                            CpuSets.Add(new("CCD0", ccd0Mask));
-                            CpuSets.Add(new("CCD1", ccd1Mask));
-                            WindowLogger.Default.Write("Detected a dual CCD CPU, added a default CCD0 and CCD1 CPU Set");
-                        }
-                        break;
                     }
                 }
+
+                if (isAMD)
+                {
+                    // AMD dual CCD detection
+                    string[] knownDuoCcdCpus = [
+                        "3950X", "3900XT", "3900X", "3900",
+                        "5950X", "5900XT", "5900X", "5900",
+                        "7950X3D", "7950X", "7900X3D", "7900X", "7900",
+                        "9950X3D", "9950X", "9900X3D", "9900X"
+                    ];
+
+                    foreach (string knownCpu in knownDuoCcdCpus)
+                    {
+                        if (cpuNameParts.Contains(knownCpu))
+                        {
+                            int logicalProcessorCount = Environment.ProcessorCount;
+                            IEnumerable<bool> ccd0Mask = Enumerable.Repeat(true, logicalProcessorCount / 2)
+                                                                   .Concat(Enumerable.Repeat(false, logicalProcessorCount / 2));
+                            IEnumerable<bool> ccd1Mask = Enumerable.Repeat(false, logicalProcessorCount / 2)
+                                                                   .Concat(Enumerable.Repeat(true, logicalProcessorCount / 2));
+                            if (knownCpu.EndsWith("X3D", StringComparison.Ordinal))
+                            {
+                                CpuSets.Add(new("Cache", ccd0Mask));
+                                CpuSets.Add(new("Freq", ccd1Mask));
+                                WindowLogger.Default.Write($"Detected a hybrid cache CPU ({knownCpu}), added a default Cache and Freq CPU Set");
+                            }
+                            else
+                            {
+                                CpuSets.Add(new("CCD0", ccd0Mask));
+                                CpuSets.Add(new("CCD1", ccd1Mask));
+                                WindowLogger.Default.Write($"Detected a dual CCD CPU ({knownCpu}), added a default CCD0 and CCD1 CPU Set");
+                            }
+                            break;
+                        }
+                    }
+                }
+                // Not Supported or no special sets detected, just add the <all> Set
+                WindowLogger.Default.Write("No special CPU Sets detected for this CPU");
+
             }
         }
 
