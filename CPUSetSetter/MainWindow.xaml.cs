@@ -1,14 +1,15 @@
 ﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
-using TextBox = System.Windows.Controls.TextBox;
+using System.Windows.Input;
 
 
 namespace CPUSetSetter
 {
     public partial class MainWindow : Window
     {
-        private readonly MainWindowViewModel viewModel;
+        private readonly MainWindowViewModel viewModel; 
+        private bool isCtrlPressed = false;
 
         public MainWindow()
         {
@@ -16,7 +17,9 @@ namespace CPUSetSetter
             DataContext = viewModel;
             InitializeComponent();
 
-            Loaded += (_, _) => logBox.ScrollToEnd();
+            Loaded += (_, _) => logBox.ScrollToEnd(); 
+            PreviewKeyDown += MainWindow_PreviewKeyDown;
+            PreviewKeyUp += MainWindow_PreviewKeyUp;
         }
 
         private void Log_TextChanged(object sender, TextChangedEventArgs e)
@@ -39,6 +42,23 @@ namespace CPUSetSetter
             e.Cancel = true;
             Hide();
             base.OnClosing(e);
+        }
+
+        private void MainWindow_PreviewKeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if ((e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl) && isCtrlPressed)
+            {
+                isCtrlPressed = false;
+                viewModel.ResumeListUpdates();
+            }
+        }
+        private void MainWindow_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if ((e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl) && !isCtrlPressed)
+            {
+                isCtrlPressed = true;
+                viewModel.PauseListUpdates();
+            }
         }
     }
 }
