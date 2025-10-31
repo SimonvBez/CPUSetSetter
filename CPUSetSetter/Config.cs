@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Win32;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -6,6 +7,8 @@ using System.IO;
 using System.Management;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Windows;
+using Application = System.Windows.Application;
 
 
 namespace CPUSetSetter
@@ -36,6 +39,9 @@ namespace CPUSetSetter
 
         [ObservableProperty]
         private bool _disableWelcomeMessage = false;
+
+        [ObservableProperty]
+        private string _theme = "Light";
 
         // Static getting for singleton instance
         public static Config Default { get; } = Load();
@@ -90,6 +96,23 @@ namespace CPUSetSetter
             Save();
         }
 
+        partial void OnThemeChanged(string value)
+        {
+            ApplyTheme(value);
+        }
+        private void ApplyTheme(string theme)
+        {
+            var themePath = theme == "Light"
+                ? "Themes/LightTheme.xaml"
+                : "Themes/DarkTheme.xaml";
+
+            Application.Current.Resources.MergedDictionaries.Clear();
+            Application.Current.Resources.MergedDictionaries.Add(
+                new ResourceDictionary
+                {
+                    Source = new Uri(themePath, UriKind.Relative)
+                });
+        }
         public void Save()
         {
             // Don't save the Config when properties are changing while it is still being loaded by Load()
@@ -126,6 +149,7 @@ namespace CPUSetSetter
                 isExisting = false;
             }
             config._isLoading = false;
+            config.Theme = config.Theme;
             config.SetupListener();
 
             if (!config.DisableWelcomeMessage)
@@ -192,6 +216,8 @@ namespace CPUSetSetter
             // Add the special <unset> Set
             CpuSets.Add(CPUSet.CreateUnset());
 
+            Theme = IsLightTheme() ? "Light" : "Dark";
+
             ManagementObjectSearcher searcher = new("root\\CIMV2", "SELECT * FROM Win32_Processor");
             int resultCount = 0;
             string cpuName = "";
@@ -250,6 +276,12 @@ namespace CPUSetSetter
                     CpuSets.RemoveAt(i);
                 }
             }
+        }
+        private static bool IsLightTheme()
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+            var value = key?.GetValue("AppsUseLightTheme");
+            return value is int i && i > 0;
         }
     }
 }
