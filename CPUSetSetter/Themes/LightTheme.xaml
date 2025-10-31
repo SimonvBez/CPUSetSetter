@@ -328,8 +328,9 @@
 
                         <!-- Up/Left Button -->
                         <RepeatButton Grid.Row="0" Height="18"
-                                    Background="{StaticResource ControlBackgroundBrush}"
-                                    Command="ScrollBar.LineUpCommand">
+                                      Background="{StaticResource ControlBackgroundBrush}"
+                                      BorderBrush="{StaticResource BorderBrush}"
+                                      Command="ScrollBar.LineUpCommand">
                             <Path Fill="{StaticResource ForegroundBrush}"
                                   Data="M 0 4 L 4 0 L 8 4 Z"
                                   HorizontalAlignment="Center"
@@ -365,8 +366,9 @@
 
                         <!-- Down/Right Button -->
                         <RepeatButton Grid.Row="2" Height="18"
-                                    Background="{StaticResource ControlBackgroundBrush}"
-                                    Command="ScrollBar.LineDownCommand">
+                                      Background="{StaticResource ControlBackgroundBrush}"
+                                      BorderBrush="{StaticResource BorderBrush}"
+                                      Command="ScrollBar.LineDownCommand">
                             <Path Fill="{StaticResource ForegroundBrush}"
                                   Data="M 0 0 L 4 4 L 8 0 Z"
                                   HorizontalAlignment="Center"
