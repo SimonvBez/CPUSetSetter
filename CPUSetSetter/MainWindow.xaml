@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         Title="CPU Set Setter"
         Height="547"
-        MinHeight="547"
+        MinHeight="574"
         Width="940"
         MinWidth="700">
 
@@ -53,15 +53,18 @@
                           HeadersVisibility="Column"
                           local:DataGridExtensions.SortDesc="True">
 
-                    <DataGrid.RowStyle>
-                        <Style TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                    <!--KNOWN VISUAL BUG: The Cell Style here is not re-made on a theme change
+                        The fix would be to have a single Styles.xaml, and a Dark/LightTheme.xaml
+                        with only color definitions-->
+                    <DataGrid.CellStyle>
+                        <Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding FailedToOpen}" Value="True">
                                     <Setter Property="Background" Value="{DynamicResource ErrorBrush}"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
-                    </DataGrid.RowStyle>
+                    </DataGrid.CellStyle>
 
                     <DataGrid.Columns>
                         <!--Name column-->
@@ -74,7 +77,6 @@
                         <DataGridTextColumn Header="Path"
                                             Binding="{Binding Path}"
                                             IsReadOnly="True"
-                                            ToolTipService.ToolTip="{Binding Path}"
                                             Width="3*">
                         </DataGridTextColumn>
 
@@ -209,14 +211,13 @@
                                 </Grid.ColumnDefinitions>
 
                                 <TextBox Grid.Row="0" Grid.Column="0" Margin="0,0,10,2"
-                                         FontSize="14"
+                                         FontSize="12"
                                          Text="{Binding SettingsNewCpuSetName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
                                 <Button Grid.Row="0" Grid.Column="1" Margin="0,0,0,2"
                                         Content="Add"
                                         Command="{Binding AddNewSetCommand}"
-                                        IsEnabled="{Binding SettingsCanAddNewSet}">
-                                </Button>
+                                        IsEnabled="{Binding SettingsCanAddNewSet}"/>
                                 <Button Grid.Row="1" Grid.Column="1" Margin="0,2,0,0"
                                         Content="Remove"
                                         Command="{Binding RemoveSetCommand}"

@@ -8,11 +8,15 @@
     <SolidColorBrush x:Key="BorderBrush" Color="#CCCCCC"/>
     <SolidColorBrush x:Key="AccentBrush" Color="#0078D4"/>
     <SolidColorBrush x:Key="ErrorBrush" Color="#D83E3B"/>
-    <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#F3F3F3"/>
-    <SolidColorBrush x:Key="HoverBrush" Color="#E5E5E5"/>
+    <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#EEEEEE"/>
+    <SolidColorBrush x:Key="ClickableBackgroundBrush" Color="#DDDDDD"/>
+    <SolidColorBrush x:Key="ClickableBorderBrush" Color="#707070"/>
+    <SolidColorBrush x:Key="HoverBrush" Color="#BEE6FD"/>
+    <SolidColorBrush x:Key="HoverBorderBrush" Color="#3C7FB1"/>
     <SolidColorBrush x:Key="SelectedBrush" Color="#CCE8FF"/>
-    <SolidColorBrush x:Key="DisabledBackgroundBrush" Color="#F0F0F0"/>
-    <SolidColorBrush x:Key="DisabledForegroundBrush" Color="#A0A0A0"/>
+    <SolidColorBrush x:Key="DisabledBackgroundBrush" Color="#F4F4F4"/>
+    <SolidColorBrush x:Key="DisabledForegroundBrush" Color="#838383"/>
+    <SolidColorBrush x:Key="DisabledBorderBrush" Color="#ADB2B5"/>
 
     <!-- Window Style -->
     <Style TargetType="local:MainWindow">
@@ -23,6 +27,11 @@
     <!-- TextBlock Style -->
     <Style TargetType="TextBlock">
         <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
+        <Style.Triggers>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Foreground" Value="{StaticResource DisabledForegroundBrush}"/>
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
     <!-- TextBox Style -->
@@ -36,9 +45,8 @@
 
     <!-- Button Style with Disabled State -->
     <Style TargetType="Button">
-        <Setter Property="Background" Value="{StaticResource ControlBackgroundBrush}"/>
-        <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+        <Setter Property="Background" Value="{StaticResource ClickableBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ClickableBorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="5,2"/>
         <Setter Property="Template">
@@ -53,14 +61,14 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter Property="Background" Value="{StaticResource HoverBrush}"/>
+                            <Setter Property="BorderBrush" Value="{StaticResource HoverBorderBrush}"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
                             <Setter Property="Background" Value="{StaticResource SelectedBrush}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Background" Value="{StaticResource DisabledBackgroundBrush}"/>
-                            <Setter Property="Foreground" Value="{StaticResource DisabledForegroundBrush}"/>
-                            <Setter Property="BorderBrush" Value="{StaticResource DisabledForegroundBrush}"/>
+                            <Setter Property="BorderBrush" Value="{StaticResource DisabledBorderBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -269,7 +277,7 @@
     <!-- DataGridCell Style -->
     <Style TargetType="DataGridCell">
         <Setter Property="Background" Value="{StaticResource BackgroundBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource BackgroundBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
         <Style.Triggers>
             <Trigger Property="IsSelected" Value="True">
@@ -341,8 +349,8 @@
                         <Track Grid.Row="1" Name="PART_Track" IsDirectionReversed="True">
                             <Track.DecreaseRepeatButton>
                                 <RepeatButton Command="ScrollBar.PageUpCommand"
-                                            Background="White"
-                                            Opacity="0"/>
+                                              Background="White"
+                                              Opacity="0"/>
                             </Track.DecreaseRepeatButton>
                             <Track.Thumb>
                                 <Thumb Background="{StaticResource HoverBrush}"
@@ -359,8 +367,8 @@
                             </Track.Thumb>
                             <Track.IncreaseRepeatButton>
                                 <RepeatButton Command="ScrollBar.PageDownCommand"
-                                            Background="White"
-                                            Opacity="0"/>
+                                              Background="White"
+                                              Opacity="0"/>
                             </Track.IncreaseRepeatButton>
                         </Track>
 

@@ -5,14 +5,18 @@
     <!-- Color Resources -->
     <SolidColorBrush x:Key="BackgroundBrush" Color="#1E1E1E"/>
     <SolidColorBrush x:Key="ForegroundBrush" Color="#E0E0E0"/>
-    <SolidColorBrush x:Key="BorderBrush" Color="#3F3F46"/>
+    <SolidColorBrush x:Key="BorderBrush" Color="Transparent"/>
     <SolidColorBrush x:Key="AccentBrush" Color="#0078D4"/>
-    <SolidColorBrush x:Key="ErrorBrush" Color="#F14C4C"/>
-    <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#2D2D30"/>
-    <SolidColorBrush x:Key="HoverBrush" Color="#3E3E42"/>
+    <SolidColorBrush x:Key="ErrorBrush" Color="#C12424"/>
+    <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#2B2B2B"/>
+    <SolidColorBrush x:Key="ClickableBackgroundBrush" Color="#202020"/>
+    <SolidColorBrush x:Key="ClickableBorderBrush" Color="#707070"/>
+    <SolidColorBrush x:Key="HoverBrush" Color="#213038"/>
+    <SolidColorBrush x:Key="HoverBorderBrush" Color="#3C7FB1"/>
     <SolidColorBrush x:Key="SelectedBrush" Color="#094771"/>
     <SolidColorBrush x:Key="DisabledBackgroundBrush" Color="#252526"/>
     <SolidColorBrush x:Key="DisabledForegroundBrush" Color="#656565"/>
+    <SolidColorBrush x:Key="DisabledBorderBrush" Color="#404040"/>
 
     <!-- Window Style -->
     <Style TargetType="local:MainWindow">
@@ -23,6 +27,11 @@
     <!-- TextBlock Style -->
     <Style TargetType="TextBlock">
         <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
+        <Style.Triggers>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Foreground" Value="{StaticResource DisabledForegroundBrush}"/>
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
     <!-- TextBox Style -->
@@ -37,9 +46,8 @@
 
     <!-- Button Style with Disabled State -->
     <Style TargetType="Button">
-        <Setter Property="Background" Value="{StaticResource ControlBackgroundBrush}"/>
-        <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+        <Setter Property="Background" Value="{StaticResource ClickableBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ClickableBorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="5,2"/>
         <Setter Property="Template">
@@ -54,14 +62,45 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter Property="Background" Value="{StaticResource HoverBrush}"/>
+                            <Setter Property="BorderBrush" Value="{StaticResource HoverBorderBrush}"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
                             <Setter Property="Background" Value="{StaticResource SelectedBrush}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Background" Value="{StaticResource DisabledBackgroundBrush}"/>
-                            <Setter Property="Foreground" Value="{StaticResource DisabledForegroundBrush}"/>
-                            <Setter Property="BorderBrush" Value="{StaticResource DisabledForegroundBrush}"/>
+                            <Setter Property="BorderBrush" Value="{StaticResource DisabledBorderBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="RepeatButton">
+        <Setter Property="Background" Value="{StaticResource ClickableBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ClickableBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RepeatButton">
+                    <Border x:Name="border" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource HoverBrush}"/>
+                            <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource HoverBorderBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource SelectedBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource DisabledBackgroundBrush}"/>
+                            <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource DisabledBorderBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -173,7 +212,7 @@
     <!-- GroupBox Style -->
     <Style TargetType="GroupBox">
         <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
-        <Setter Property="BorderThickness" Value=".5"/>
+        <Setter Property="BorderThickness" Value="0.1"/>
         <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
     </Style>
 
@@ -270,7 +309,7 @@
     <!-- DataGridCell Style -->
     <Style TargetType="DataGridCell">
         <Setter Property="Background" Value="{StaticResource ControlBackgroundBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource ControlBackgroundBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
         <Style.Triggers>
             <Trigger Property="IsSelected" Value="True">
@@ -299,7 +338,7 @@
     <Style TargetType="DataGridColumnHeader">
         <Setter Property="Background" Value="{StaticResource ControlBackgroundBrush}"/>
         <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
+        <Setter Property="BorderBrush" Value="#606060"/>
         <Setter Property="BorderThickness" Value="0,0,1,1"/>
         <Setter Property="Padding" Value="5,3"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
@@ -329,8 +368,6 @@
 
                         <!-- Up/Left Button -->
                         <RepeatButton Grid.Row="0" Height="18"
-                                      Background="{StaticResource ControlBackgroundBrush}"
-                                      BorderBrush="{StaticResource BorderBrush}"
                                       Command="ScrollBar.LineUpCommand">
                             <Path Fill="{StaticResource ForegroundBrush}"
                                   Data="M 0 4 L 4 0 L 8 4 Z"
@@ -342,11 +379,10 @@
                         <Track Grid.Row="1" Name="PART_Track" IsDirectionReversed="True">
                             <Track.DecreaseRepeatButton>
                                 <RepeatButton Command="ScrollBar.PageUpCommand"
-                                            Background="{StaticResource BackgroundBrush}"
-                                            Opacity="0"/>
+                                              Opacity="0"/>
                             </Track.DecreaseRepeatButton>
                             <Track.Thumb>
-                                <Thumb Background="{StaticResource HoverBrush}"
+                                <Thumb Background="{StaticResource BackgroundBrush}"
                                        BorderBrush="{StaticResource BorderBrush}"
                                        BorderThickness="1">
                                     <Thumb.Template>
@@ -360,15 +396,12 @@
                             </Track.Thumb>
                             <Track.IncreaseRepeatButton>
                                 <RepeatButton Command="ScrollBar.PageDownCommand"
-                                            Background="{StaticResource BackgroundBrush}"
-                                            Opacity="0"/>
+                                              Opacity="0"/>
                             </Track.IncreaseRepeatButton>
                         </Track>
 
                         <!-- Down/Right Button -->
                         <RepeatButton Grid.Row="2" Height="18"
-                                      Background="{StaticResource ControlBackgroundBrush}"
-                                      BorderBrush="{StaticResource BorderBrush}"
                                       Command="ScrollBar.LineDownCommand">
                             <Path Fill="{StaticResource ForegroundBrush}"
                                   Data="M 0 0 L 4 4 L 8 0 Z"
