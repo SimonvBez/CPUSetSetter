@@ -50,6 +50,7 @@
                           ItemsSource="{Binding RunningProcessesView}"
                           AutoGenerateColumns="False"
                           RowHeight="24"
+                          HeadersVisibility="Column"
                           local:DataGridExtensions.SortDesc="True">
 
                     <DataGrid.RowStyle>
