@@ -9,6 +9,8 @@ namespace CPUSetSetter.Platforms
 
         public static IReadOnlyCollection<string> LogicalProcessorNames => Default.LogicalProcessorNames;
 
+        public static int LogicalProcessorCount = Default.LogicalProcessorNames.Count;
+
         public static IReadOnlyCollection<LogicalProcessorMask> DefaultLogicalProcessorMasks => Default.DefaultLogicalProcessorMasks;
 
         public static bool IsSupported => Default.IsSupported;

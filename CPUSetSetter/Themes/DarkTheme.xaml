@@ -7,7 +7,7 @@
     <SolidColorBrush x:Key="ForegroundBrush" Color="#E0E0E0"/>
     <SolidColorBrush x:Key="BorderBrush" Color="Transparent"/>
     <SolidColorBrush x:Key="AccentBrush" Color="#0078D4"/>
-    <SolidColorBrush x:Key="ErrorBrush" Color="#C12424"/>
+    <SolidColorBrush x:Key="ErrorBrush" Color="#7F1818"/>
     <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#2B2B2B"/>
     <SolidColorBrush x:Key="ClickableBackgroundBrush" Color="#202020"/>
     <SolidColorBrush x:Key="ClickableBorderBrush" Color="#707070"/>
@@ -311,13 +311,6 @@
         <Setter Property="Background" Value="{StaticResource ControlBackgroundBrush}"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
-        <Style.Triggers>
-            <Trigger Property="IsSelected" Value="True">
-                <Setter Property="Background" Value="{StaticResource SelectedBrush}"/>
-                <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
-                <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
-            </Trigger>
-        </Style.Triggers>
     </Style>
 
     <!-- DataGridRow Style -->

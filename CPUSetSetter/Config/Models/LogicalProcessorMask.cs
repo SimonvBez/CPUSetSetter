@@ -9,7 +9,7 @@ namespace CPUSetSetter.Config.Models
     /// </summary>
     public partial class LogicalProcessorMask : ObservableObject
     {
-        private static LogicalProcessorMask? _clearMask = null;
+        private static readonly LogicalProcessorMask _clearMask = new([]);
 
         [ObservableProperty]
         private string _name;
@@ -21,7 +21,7 @@ namespace CPUSetSetter.Config.Models
 
         public ObservableCollection<VKey> Hotkeys { get; init; }
 
-        public bool IsClearMask;
+        public bool IsClearMask { get; }
 
         private LogicalProcessorMask(List<VKey> hotkeys)
         {
@@ -41,13 +41,14 @@ namespace CPUSetSetter.Config.Models
             IsClearMask = false;
         }
 
-        public static LogicalProcessorMask InitClearMask(List<VKey> hotkeys)
+        public static LogicalProcessorMask PrepareClearMask(List<VKey> hotkeys)
         {
-            if (_clearMask is not null)
+            // Overwrite the existing hotkeys, in case the config was corrupt and got reset to the defaults
+            _clearMask.Hotkeys.Clear();
+            foreach (VKey key in hotkeys)
             {
-                throw new InvalidOperationException("A ClearMask can only be created once");
+                _clearMask.Hotkeys.Add(key);
             }
-            _clearMask = new(hotkeys);
             return _clearMask;
         }
     }

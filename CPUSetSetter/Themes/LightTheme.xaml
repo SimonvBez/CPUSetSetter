@@ -279,13 +279,6 @@
         <Setter Property="Background" Value="{StaticResource BackgroundBrush}"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
-        <Style.Triggers>
-            <Trigger Property="IsSelected" Value="True">
-                <Setter Property="Background" Value="{StaticResource SelectedBrush}"/>
-                <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
-                <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
-            </Trigger>
-        </Style.Triggers>
     </Style>
 
     <!-- DataGridRow Style -->

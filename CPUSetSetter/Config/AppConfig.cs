@@ -55,5 +55,10 @@ namespace CPUSetSetter.Config
                 }
             }
         }
+
+        public void Save()
+        {
+            AppConfigFile.Save(this);
+        }
     }
 }

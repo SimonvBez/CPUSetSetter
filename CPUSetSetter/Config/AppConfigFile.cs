@@ -1,4 +1,5 @@
 ﻿using CPUSetSetter.Config.Models;
+using CPUSetSetter.Platforms;
 using CPUSetSetter.Themes;
 using System.IO;
 using System.Text.Json;
@@ -38,19 +39,35 @@ namespace CPUSetSetter.Config
             if (!File.Exists(fileName))
             {
                 // The config file does not exist yet, use the defaults
-                return JsonToConfig(ConfigJson.Default, true);
+                return JsonToConfig(ConfigJson.Default, true, out bool _);
             }
 
             try
             {
                 using FileStream fileStream = File.OpenRead(fileName);
                 ConfigJson configJson = JsonSerializer.Deserialize<ConfigJson>(fileStream, options: jsonOptions) ?? throw new NullReferenceException();
-                return JsonToConfig(configJson, false); // The config file was loaded successfully
+                AppConfig config = JsonToConfig(configJson, false, out bool hadSoftError);
+
+                if (hadSoftError)
+                {
+                    try
+                    {
+                        string backupName = BackupConfig();
+                        WindowLogger.Write($"Your config contained an error. The old config was backed up to '{backupName}'");
+                    }
+                    catch (Exception backupEx)
+                    {
+                        WindowLogger.Write($"Unable to make a backup of your old config: {backupEx}\n");
+                        WindowLogger.Write("Your config contained an error. What did you do to make even the backup fail??");
+                    }
+                }
+
+                return config;
             }
             catch (Exception readEx)
             {
                 // The config file was likely corrupt
-                WindowLogger.Write($"Failed to read config: {readEx}");
+                WindowLogger.Write($"Failed to read config: {readEx}\n");
                 try
                 {
                     string backupName = BackupConfig();
@@ -58,11 +75,11 @@ namespace CPUSetSetter.Config
                 }
                 catch (Exception backupEx)
                 {
-                    WindowLogger.Write($"Unable to make a backup of your old config: {backupEx}");
-                    WindowLogger.Write("Your config has been reset. What did you do to even make the backup fail??");
+                    WindowLogger.Write($"Unable to make a backup of your old config: {backupEx}\n");
+                    WindowLogger.Write("Your config has been reset. What did you do to make even the backup fail??");
                 }
                 // Use the defaults
-                return JsonToConfig(ConfigJson.Default, true);
+                return JsonToConfig(ConfigJson.Default, true, out bool _);
             }
         }
 
@@ -85,18 +102,33 @@ namespace CPUSetSetter.Config
             }
         }
 
-        private static AppConfig JsonToConfig(ConfigJson configJson, bool generateDefaultMasks)
+        private static AppConfig JsonToConfig(ConfigJson configJson, bool generateDefaultMasks, out bool hadSoftError)
         {
+            hadSoftError = false;
+
             List<VKey> clearMaskHotkeys = configJson.ClearMaskHotkey.Select(hotkey => Enum.Parse<VKey>(hotkey)).ToList();
             // Put the ClearMask Mask at the front of the logicalProcessorMasks
-            List<LogicalProcessorMask> logicalProcessorMasks = [LogicalProcessorMask.InitClearMask(clearMaskHotkeys)];
+            List<LogicalProcessorMask> logicalProcessorMasks = [LogicalProcessorMask.PrepareClearMask(clearMaskHotkeys)];
 
             // Construct the LogicalProcessorMask models from the config
-            logicalProcessorMasks.AddRange(configJson.LogicalProcessorMasks.Select(jsonMask =>
+            foreach (LogicalProcessorMaskJson jsonMask in configJson.LogicalProcessorMasks)
             {
+                if (logicalProcessorMasks.Any(existingMask => existingMask.Name == jsonMask.Name))
+                {
+                    WindowLogger.Write($"Config file contained multiple masks with the same name '{jsonMask.Name}'. The duplicate was removed.");
+                    hadSoftError = true;
+                    continue;
+                }
+                if (jsonMask.Mask.Count != CpuInfo.LogicalProcessorCount)
+                {
+                    WindowLogger.Write($"Config file contained incorrect mask length in mask '{jsonMask.Name}'. The invalid mask was removed.");
+                    hadSoftError = true;
+                    continue;
+                }
+
                 List<VKey> hotkeys = jsonMask.Hotkeys.Select(hotkey => Enum.Parse<VKey>(hotkey)).ToList();
-                return new LogicalProcessorMask(jsonMask.Name, jsonMask.Mask, hotkeys);
-            }));
+                logicalProcessorMasks.Add(new(jsonMask.Name, jsonMask.Mask, hotkeys));
+            }
 
             // Construct the ProgramMaskRule models from the config
             List<ProgramMaskRule> programMaskRules = configJson.ProgramMaskRules.Select(jsonProgramRule =>
