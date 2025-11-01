@@ -39,7 +39,7 @@ namespace CPUSetSetter
 
         public void PlayError()
         {
-            if (!Config.Default.MuteHotkeySound)
+            if (!ConfigOld.Default.MuteHotkeySound)
             {
                 SystemSounds.Hand.Play();
             }
@@ -47,7 +47,7 @@ namespace CPUSetSetter
 
         private static void PlaySound(SoundPlayer player)
         {
-            if (!Config.Default.MuteHotkeySound)
+            if (!ConfigOld.Default.MuteHotkeySound)
             {
                 player.Play();
             }

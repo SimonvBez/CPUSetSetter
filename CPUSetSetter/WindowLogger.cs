@@ -14,7 +14,12 @@ namespace CPUSetSetter
 
         public static WindowLogger Default { get; } = new WindowLogger();
 
-        public void Write(string message)
+        public static void Write(string message)
+        {
+            Default.WriteImp(message);
+        }
+
+        private void WriteImp(string message)
         {
             using (_lock.EnterScope())
             {

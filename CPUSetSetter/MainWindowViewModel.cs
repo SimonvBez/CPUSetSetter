@@ -37,7 +37,7 @@ namespace CPUSetSetter
         [NotifyPropertyChangedFor(nameof(SettingsCanAddNewSet))]
         private string _settingsNewCpuSetName = "";
 
-        public bool SettingsCanAddNewSet => SettingsNewCpuSetName.Length > 0 && !Config.Default.CpuSets.Any(s => s.SettingsName == SettingsNewCpuSetName);
+        public bool SettingsCanAddNewSet => SettingsNewCpuSetName.Length > 0 && !ConfigOld.Default.CpuSets.Any(s => s.SettingsName == SettingsNewCpuSetName);
         public bool SettingsCanRemoveSet => SettingsSelectedCpuSet is not null && !SettingsSelectedCpuSet.IsUnset;
 
         [RelayCommand]
@@ -49,7 +49,7 @@ namespace CPUSetSetter
                 return;
             }
             CPUSet newCpuSet = new(SettingsNewCpuSetName);
-            Config.Default.CpuSets.Add(newCpuSet);
+            ConfigOld.Default.CpuSets.Add(newCpuSet);
             SettingsSelectedCpuSet = newCpuSet;
             SettingsNewCpuSetName = "";
         }
@@ -96,7 +96,7 @@ namespace CPUSetSetter
             };
 
             // Update the SettingsCanAddNewSet property when CPU Sets are added/removed
-            Config.Default.CpuSets.CollectionChanged += (_, _) =>
+            ConfigOld.Default.CpuSets.CollectionChanged += (_, _) =>
             {
                 OnPropertyChanged(nameof(SettingsCanAddNewSet));
             };

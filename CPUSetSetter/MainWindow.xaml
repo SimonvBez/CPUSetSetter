@@ -103,7 +103,7 @@
                                                 local:DataGridExtensions.SortDesc="True">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <ComboBox ItemsSource="{Binding CpuSets, Source={x:Static local:Config.Default}}"
+                                    <ComboBox ItemsSource="{Binding CpuSets, Source={x:Static local:ConfigOld.Default}}"
                                               SelectedValue="{Binding CpuSet, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                                         <ComboBox.ItemTemplate>
                                             <DataTemplate>
@@ -190,7 +190,7 @@
 
                             <!--List of CPU Set names-->
                             <ListBox Grid.Row="0" Margin="0,0,0,10"
-                                     ItemsSource="{Binding CpuSets, Source={x:Static local:Config.Default}}"
+                                     ItemsSource="{Binding CpuSets, Source={x:Static local:ConfigOld.Default}}"
                                      SelectedValue="{Binding SettingsSelectedCpuSet, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
@@ -317,7 +317,7 @@
                         </Grid.ColumnDefinitions>
 
                         <CheckBox Grid.Column="0"
-                                  IsChecked="{Binding MatchWholePath, Source={x:Static local:Config.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                  IsChecked="{Binding MatchWholePath, Source={x:Static local:ConfigOld.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                         <TextBlock Grid.Column="1" Margin="5,0,0,0"
                                    Text="Match full path"/>
                     </Grid>
@@ -329,7 +329,7 @@
                         </Grid.ColumnDefinitions>
 
                         <CheckBox Grid.Column="0"
-                                  IsChecked="{Binding MuteHotkeySound, Source={x:Static local:Config.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                  IsChecked="{Binding MuteHotkeySound, Source={x:Static local:ConfigOld.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                         <TextBlock Grid.Column="1" Margin="5,0,0,0"
                                    Text="Mute hotkey sound"/>
                     </Grid>
@@ -341,7 +341,7 @@
                         </Grid.ColumnDefinitions>
 
                         <CheckBox Grid.Column="0"
-                                  IsChecked="{Binding StartMinimized, Source={x:Static local:Config.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                  IsChecked="{Binding StartMinimized, Source={x:Static local:ConfigOld.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                         <TextBlock Grid.Column="1" Margin="5,0,0,0"
                                    Text="Start minimized in tray"/>
                     </Grid>
@@ -353,7 +353,7 @@
                         </Grid.ColumnDefinitions>
 
                         <CheckBox Grid.Column="0"
-                                  IsChecked="{Binding DisableWelcomeMessage, Source={x:Static local:Config.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                  IsChecked="{Binding DisableWelcomeMessage, Source={x:Static local:ConfigOld.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                         <TextBlock Grid.Column="1" Margin="5,0,0,0"
                                    Text="Disable welcome message"/>
                     </Grid>
@@ -372,7 +372,7 @@
                                   SelectedValuePath="Tag"
                                   HorizontalContentAlignment="Center"
                                   Padding="0"
-                                  SelectedValue="{Binding Theme, Source={x:Static local:Config.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                  SelectedValue="{Binding Theme, Source={x:Static local:ConfigOld.Default}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                             <ComboBoxItem Content="Light" Tag="Light"/>
                             <ComboBoxItem Content="Dark" Tag="Dark"/>
                         </ComboBox>

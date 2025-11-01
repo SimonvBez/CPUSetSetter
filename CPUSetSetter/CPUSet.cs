@@ -11,7 +11,7 @@ namespace CPUSetSetter
     {
         public static string UnsetName { get; } = "";
         public static string UnsetSettingsName { get; } = "<unset>";
-        public static CPUSet Unset => Config.Default.GetCpuSetByName(UnsetName)!;
+        public static CPUSet Unset => ConfigOld.Default.GetCpuSetByName(UnsetName)!;
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(SettingsName))]
@@ -101,7 +101,7 @@ namespace CPUSetSetter
                         throw new NotImplementedException();
                 }
                 OnPropertyChanged(nameof(SettingsHotkeyString));
-                Config.Default?.Save();
+                ConfigOld.Default?.Save();
             };
 
             HotkeyListener.Instance.AddCallback(_hotkeyCallback);
@@ -136,7 +136,7 @@ namespace CPUSetSetter
             }
             // Then remove this Set from the config
             HotkeyListener.Instance.RemoveCallback(_hotkeyCallback!);
-            Config.Default.CpuSets.Remove(this);
+            ConfigOld.Default.CpuSets.Remove(this);
         }
 
         public void AddProcess(ProcessListEntry pEntry, bool applyNow)
@@ -171,7 +171,7 @@ namespace CPUSetSetter
                 {
                     int error = Marshal.GetLastWin32Error();
                     string extraHelpString = error == 5 && !App.IsElevated ? " Try restarting as Admin" : "";
-                    WindowLogger.Default.Write($"ERROR: Could not open process '{pEntry.Name}': {new System.ComponentModel.Win32Exception(error).Message}{extraHelpString}");
+                    WindowLogger.Write($"ERROR: Could not open process '{pEntry.Name}': {new System.ComponentModel.Win32Exception(error).Message}{extraHelpString}");
                     _hadApplyError = true;
                     return;
                 }
@@ -189,12 +189,12 @@ namespace CPUSetSetter
                 success = NativeMethods.SetProcessDefaultCpuSetMasks(pEntry.SetLimitedInfoHandle, null, 0);
                 if (success)
                 {
-                    WindowLogger.Default.Write($"Cleared CPU Set of '{pEntry.Name}'");
+                    WindowLogger.Write($"Cleared CPU Set of '{pEntry.Name}'");
                 }
                 else
                 {
                     int error = Marshal.GetLastWin32Error();
-                    WindowLogger.Default.Write($"ERROR: Could not clear CPU Set of '{pEntry.Name}': {new System.ComponentModel.Win32Exception(error).Message}");
+                    WindowLogger.Write($"ERROR: Could not clear CPU Set of '{pEntry.Name}': {new System.ComponentModel.Win32Exception(error).Message}");
                     _hadApplyError = true;
                 }
             }
@@ -219,12 +219,12 @@ namespace CPUSetSetter
                 success = NativeMethods.SetProcessDefaultCpuSetMasks(pEntry.SetLimitedInfoHandle, affinity, 1);
                 if (success)
                 {
-                    WindowLogger.Default.Write($"Applied CPU Set of '{pEntry.Name}' to {Name}");
+                    WindowLogger.Write($"Applied CPU Set of '{pEntry.Name}' to {Name}");
                 }
                 else
                 {
                     int error = Marshal.GetLastWin32Error();
-                    WindowLogger.Default.Write($"ERROR: Could not apply CPU Set to '{pEntry.Name}': {new System.ComponentModel.Win32Exception(error).Message}");
+                    WindowLogger.Write($"ERROR: Could not apply CPU Set to '{pEntry.Name}': {new System.ComponentModel.Win32Exception(error).Message}");
                     _hadApplyError = true;
                 }
             }
@@ -244,7 +244,7 @@ namespace CPUSetSetter
 
         partial void OnIsEnabledChanged(bool value)
         {
-            Config.Default?.Save(); // Config.Default has not been set yet while the Config is still loading
+            ConfigOld.Default?.Save(); // ConfigOld.Default has not been set yet while the Config is still loading
             Parent?.ApplyToAllBoundProcesses();
         }
     }

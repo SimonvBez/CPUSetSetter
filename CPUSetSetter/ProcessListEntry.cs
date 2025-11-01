@@ -60,17 +60,17 @@ namespace CPUSetSetter
 
             if (newValue == CPUSet.Unset)
             {
-                Config.Default.RemoveProcessCpuSet(Name, Path); // Cpu set was cleared
+                ConfigOld.Default.RemoveProcessCpuSet(Name, Path); // Cpu set was cleared
             }
             else
             {
-                Config.Default.SetProcessCpuSet(Name, Path, CpuSet.Name); // Find the process CPU Set definition and change its CPU set
+                ConfigOld.Default.SetProcessCpuSet(Name, Path, CpuSet.Name); // Find the process CPU Set definition and change its CPU set
             }
         }
 
         public CPUSet GetConfiguredCpuSet()
         {
-            ProcessCPUSet? processCPUSet = Config.Default.GetProcessCpuSetByName(Name, Path);
+            ProcessCPUSet? processCPUSet = ConfigOld.Default.GetProcessCpuSetByName(Name, Path);
             if (processCPUSet is null)
             {
                 return CPUSet.Unset; // No process definition, go with Unset
@@ -78,7 +78,7 @@ namespace CPUSetSetter
             else
             {
                 // Process CPU Set definition exists, take the belonging CPUSet
-                return Config.Default.GetCpuSetByName(processCPUSet.CpuSetName) ?? CPUSet.Unset;
+                return ConfigOld.Default.GetCpuSetByName(processCPUSet.CpuSetName) ?? CPUSet.Unset;
             }
         }
 

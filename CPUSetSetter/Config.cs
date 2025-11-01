@@ -13,7 +13,7 @@ using Application = System.Windows.Application;
 
 namespace CPUSetSetter
 {
-    public partial class Config : ObservableObject
+    public partial class ConfigOld : ObservableObject
     {
         private static JsonSerializerOptions JsonOptions { get; } = CreateJsonOptions();
         private static JsonSerializerOptions CreateJsonOptions()
@@ -44,12 +44,12 @@ namespace CPUSetSetter
         private string _theme = "Light";
 
         // Static getting for singleton instance
-        public static Config Default { get; } = Load();
+        public static ConfigOld Default { get; } = Load();
 
         private bool _isLoading = true;
 
         [JsonConstructor]
-        private Config() { }
+        private ConfigOld() { }
 
         private void SetupListener()
         {
@@ -128,18 +128,18 @@ namespace CPUSetSetter
             }
             catch (Exception ex)
             {
-                WindowLogger.Default.Write($"Failed to write config: {ex}");
+                WindowLogger.Write($"Failed to write config: {ex}");
             }
         }
 
-        private static Config Load()
+        private static ConfigOld Load()
         {
-            Config config;
+            ConfigOld config;
             bool isExisting;
             try
             {
                 using FileStream fileStream = File.OpenRead("CPUSetSetter_config.json");
-                config = JsonSerializer.Deserialize<Config>(fileStream, options: JsonOptions) ?? throw new NullReferenceException();
+                config = JsonSerializer.Deserialize<ConfigOld>(fileStream, options: JsonOptions) ?? throw new NullReferenceException();
                 isExisting = true;
             }
             catch (Exception)
@@ -154,7 +154,7 @@ namespace CPUSetSetter
 
             if (!config.DisableWelcomeMessage)
             {
-                WindowLogger.Default.Write(
+                WindowLogger.Write(
                     "Welcome! To start, head to the Settings tab to define a CPU Set. This Set can then be applied to processes.\n" +
                     "To apply a CPU Set, choose it in the Processes list, or configure a Hotkey to apply it to the current foreground process.");
             }
@@ -252,13 +252,13 @@ namespace CPUSetSetter
                         {
                             CpuSets.Add(new("Cache", ccd0Mask));
                             CpuSets.Add(new("Freq", ccd1Mask));
-                            WindowLogger.Default.Write("Detected a hybrid cache CPU, added a default Cache and Freq CPU Set");
+                            WindowLogger.Write("Detected a hybrid cache CPU, added a default Cache and Freq CPU Set");
                         }
                         else
                         {
                             CpuSets.Add(new("CCD0", ccd0Mask));
                             CpuSets.Add(new("CCD1", ccd1Mask));
-                            WindowLogger.Default.Write("Detected a dual CCD CPU, added a default CCD0 and CCD1 CPU Set");
+                            WindowLogger.Write("Detected a dual CCD CPU, added a default CCD0 and CCD1 CPU Set");
                         }
                         break;
                     }
@@ -272,7 +272,7 @@ namespace CPUSetSetter
             {
                 if (!CpuSets[i].IsUnset && CpuSets[i].Mask.Count != Environment.ProcessorCount)
                 {
-                    WindowLogger.Default.Write($"Set '{CpuSets[i].Name}' had an invalid number of processors and has been removed");
+                    WindowLogger.Write($"Set '{CpuSets[i].Name}' had an invalid number of processors and has been removed");
                     CpuSets.RemoveAt(i);
                 }
             }

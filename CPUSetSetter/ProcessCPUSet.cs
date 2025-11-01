@@ -43,8 +43,8 @@ namespace CPUSetSetter
 
             try
             {
-                CPUSet newCpuSet = Config.Default.GetCpuSetByName(CpuSetName) ?? throw new NullReferenceException();
-                bool matchPath = Config.Default.MatchWholePath;
+                CPUSet newCpuSet = ConfigOld.Default.GetCpuSetByName(CpuSetName) ?? throw new NullReferenceException();
+                bool matchPath = ConfigOld.Default.MatchWholePath;
 
                 foreach (ProcessListEntry pEntry in MainWindowViewModel.RunningProcesses)
                 {
@@ -57,7 +57,7 @@ namespace CPUSetSetter
             }
             catch (NullReferenceException)
             {
-                WindowLogger.Default.Write($"Unable to apply CPU Set '{CpuSetName}', as it does not exist");
+                WindowLogger.Write($"Unable to apply CPU Set '{CpuSetName}', as it does not exist");
             }
         }
     }

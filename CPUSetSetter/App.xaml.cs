@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.IO;
 using System.Security.Principal;
 using System.Windows;
@@ -24,6 +24,7 @@ namespace CPUSetSetter
         {
             base.OnStartup(e);
 
+            // Set the working directory to the directory of the executable, so the config .json file will always be in the right place
             Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
 
             using (WindowsIdentity identity = WindowsIdentity.GetCurrent())
@@ -84,7 +85,7 @@ namespace CPUSetSetter
 
             // Create the rest of the app
             MainWindow = new MainWindow();
-            if (!Config.Default.StartMinimized)
+            if (!ConfigOld.Default.StartMinimized)
             {
                 ShowMainWindow();
             }

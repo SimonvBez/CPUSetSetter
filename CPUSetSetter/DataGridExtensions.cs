@@ -5,6 +5,10 @@ using System.Windows.Controls;
 
 namespace CPUSetSetter
 {
+    /// <summary>
+    /// Extension to set the default sorting direction of DataGrid column when it is clicked for the first time
+    /// The extension can be applied to a DataGrid in XAML
+    /// </summary>
     public static class DataGridExtensions
     {
         public static readonly DependencyProperty SortDescProperty = DependencyProperty.RegisterAttached(
