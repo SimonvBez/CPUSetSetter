@@ -4,9 +4,12 @@ using System.Collections.ObjectModel;
 
 namespace CPUSetSetter.Config.Models
 {
-    public partial class CoreMask : ObservableObject
+    /// <summary>
+    /// Represents a boolean mask of the logical processors, indicating which ones should be enabled, and which ones disabled
+    /// </summary>
+    public partial class LogicalProcessorMask : ObservableObject
     {
-        private static CoreMask? _clearMask = null;
+        private static LogicalProcessorMask? _clearMask = null;
 
         [ObservableProperty]
         private string _name;
@@ -20,7 +23,7 @@ namespace CPUSetSetter.Config.Models
 
         public bool IsClearMask;
 
-        private CoreMask(List<VKey> hotkeys)
+        private LogicalProcessorMask(List<VKey> hotkeys)
         {
             _name = string.Empty;
             _settingsName = "<clear mask>";
@@ -29,7 +32,7 @@ namespace CPUSetSetter.Config.Models
             IsClearMask = true;
         }
 
-        public CoreMask(string name, List<bool> mask, List<VKey> hotkeys)
+        public LogicalProcessorMask(string name, List<bool> mask, List<VKey> hotkeys)
         {
             _name = name;
             _settingsName = name;
@@ -38,7 +41,7 @@ namespace CPUSetSetter.Config.Models
             IsClearMask = false;
         }
 
-        public static CoreMask InitClearMask(List<VKey> hotkeys)
+        public static LogicalProcessorMask InitClearMask(List<VKey> hotkeys)
         {
             if (_clearMask is not null)
             {

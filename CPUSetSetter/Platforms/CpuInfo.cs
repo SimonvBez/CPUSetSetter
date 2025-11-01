@@ -7,9 +7,9 @@ namespace CPUSetSetter.Platforms
     {
         public static Manufacturer Manufacturer => Default.Manufacturer;
 
-        public static IReadOnlyCollection<string> ThreadNames => Default.ThreadNames;
+        public static IReadOnlyCollection<string> LogicalProcessorNames => Default.LogicalProcessorNames;
 
-        public static IReadOnlyCollection<CoreMask> DefaultCoreMasks => Default.DefaultCoreMasks;
+        public static IReadOnlyCollection<LogicalProcessorMask> DefaultLogicalProcessorMasks => Default.DefaultLogicalProcessorMasks;
 
         public static bool IsSupported => Default.IsSupported;
 

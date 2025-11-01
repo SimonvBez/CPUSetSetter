@@ -6,8 +6,8 @@ namespace CPUSetSetter.Platforms
     public interface ICpuInfo
     {
         Manufacturer Manufacturer { get; }
-        IReadOnlyCollection<string> ThreadNames { get; }
-        IReadOnlyCollection<CoreMask> DefaultCoreMasks { get; }
+        IReadOnlyCollection<string> LogicalProcessorNames { get; }
+        IReadOnlyCollection<LogicalProcessorMask> DefaultLogicalProcessorMasks { get; }
         bool IsSupported { get; }
     }
 

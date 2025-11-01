@@ -1,4 +1,5 @@
 ﻿using CPUSetSetter.Config.Models;
+using System.Globalization;
 using System.Management;
 using System.Runtime.InteropServices;
 
@@ -9,17 +10,20 @@ namespace CPUSetSetter.Platforms
     {
         public Manufacturer Manufacturer { get; }
 
-        public IReadOnlyCollection<string> ThreadNames { get; }
+        public IReadOnlyCollection<string> LogicalProcessorNames { get; }
 
-        public IReadOnlyCollection<CoreMask> DefaultCoreMasks { get; }
+        public IReadOnlyCollection<LogicalProcessorMask> DefaultLogicalProcessorMasks { get; }
 
         public bool IsSupported { get; } = true;
+
+        private List<ProcessorRelationship> _coreRelations = [];
+        private bool _hasECores = false;
 
         public CpuInfoWindows()
         {
             Manufacturer = GetManufacturer();
-            ThreadNames = GetThreadNames();
-            DefaultCoreMasks = GetDefaultCoreMasks();
+            LogicalProcessorNames = GetLogicalProcessorNames();
+            DefaultLogicalProcessorMasks = GetDefaultLogicalProcessorMasks();
         }
 
         private static Manufacturer GetManufacturer()
@@ -42,61 +46,129 @@ namespace CPUSetSetter.Platforms
                 return Manufacturer.Other;
         }
 
-        private List<string> GetThreadNames()
+        private List<string> GetLogicalProcessorNames()
         {
             // Get information about the cores, like if they have SMT or are P/E cores
-            List<ProcessorRelationship> coreRelations = GetCoreRelationships();
-            if (coreRelations[0].Affinities.Count != 1)
+            _coreRelations = GetCoreRelationships(); // Store the core relations so they can be reused by GetDefaultCoreMasks()
+            if (_coreRelations[0].Affinities.Count != 1)
             {
-                throw new UnsupportedCpu($"Only systems with a single processor group are supported. {coreRelations[0].Affinities.Count} detected.\n" +
-                    "(Do you have more than 64 CPU threads?)");
+                throw new UnsupportedCpu($"Only systems with a single processor group are supported. {_coreRelations[0].Affinities.Count} detected.\n" +
+                    "(Do you have more than 64 CPU threads/logical cores?)");
             }
 
-            bool hasECores = coreRelations.Any(core => core.EfficiencyClass >= 1);
+            _hasECores = _coreRelations.Any(core => core.EfficiencyClass >= 1);
 
-            List<string> threadNames = [];
-            int threadNum = 0;
+            List<string> logicalProcessorNames = [];
+            int logicalProcessorsNum = 0;
+            // Count up the logicalProcessorsNum, find what core it belongs to and if there should be any prefix/suffix to the name
             while (true)
             {
-                UIntPtr threadMask = (UIntPtr)1 << threadNum;
-                int coreNum = coreRelations.FindIndex(core => (core.Affinities[0] & threadMask) != 0);
+                UIntPtr logicalProcessorMask = (UIntPtr)1 << logicalProcessorsNum;
+                int coreNum = _coreRelations.FindIndex(core => (core.Affinities[0] & logicalProcessorMask) != 0);
                 if (coreNum == -1)
                 {
                     break;
                 }
 
+                // Prefix with P- or E- on Intel
                 string prefix = string.Empty;
-                if (Manufacturer == Manufacturer.Intel && hasECores)
+                if (Manufacturer == Manufacturer.Intel && _hasECores)
                 {
-                    prefix = coreRelations[coreNum].EfficiencyClass >= 1 ? "P-" : "E-";
+                    prefix = _coreRelations[coreNum].EfficiencyClass >= 1 ? "P-" : "E-";
                 }
 
+                // Suffix with T0 or T1 if it is an SMT/HT core
                 string suffix = string.Empty;
-                if (coreRelations[coreNum].IsSMT)
+                if (_coreRelations[coreNum].IsSMT)
                 {
-                    // Count what thread number this is on this core
-                    int threadIndexOnCore = 0;
-                    for (int i = 0; i < threadNum; ++i)
+                    // Count what logical processor number this is on this core
+                    int logicalProcessorIndexOnCore = 0;
+                    for (int i = 0; i < logicalProcessorsNum; ++i)
                     {
                         UIntPtr checkMask = (UIntPtr)1 << i;
-                        threadIndexOnCore += (coreRelations[coreNum].Affinities[0] & checkMask) > 0 ? 1 : 0;
+                        logicalProcessorIndexOnCore += (_coreRelations[coreNum].Affinities[0] & checkMask) > 0 ? 1 : 0;
                     }
-                    suffix = $" T{threadIndexOnCore}";
+                    suffix = $" T{logicalProcessorIndexOnCore}";
                 }
 
-                threadNames.Add($"{prefix}Core {coreNum}{suffix}");
-                threadNum++;
+                logicalProcessorNames.Add($"{prefix}Core {coreNum}{suffix}");
+                logicalProcessorsNum++;
             }
 
-            return threadNames;
+            return logicalProcessorNames;
         }
 
-        private static List<CoreMask> GetDefaultCoreMasks()
+        private List<LogicalProcessorMask> GetDefaultLogicalProcessorMasks()
         {
-            List<ProcessorRelationship> dieRelations = GetDieRelationships();
-            List<CacheRelationship> cacheRelations = GetCacheRelationships();
+            List<LogicalProcessorMask> result = [];
 
-            return [];
+            // Add a P-Cores and E-Cores default core mask for supported Intel CPUs
+            if (Manufacturer == Manufacturer.Intel && _hasECores)
+            {
+                UIntPtr pMask = 0;
+                UIntPtr eMask = 0;
+                foreach (ProcessorRelationship core in _coreRelations)
+                {
+                    if (core.EfficiencyClass >= 1)
+                        pMask |= core.Affinities[0];
+                    else
+                        eMask |= core.Affinities[0];
+                }
+                result.Add(new("P-Cores", BitMaskToBoolMask(pMask, LogicalProcessorNames.Count), []));
+                result.Add(new("E-Cores", BitMaskToBoolMask(eMask, LogicalProcessorNames.Count), []));
+            }
+
+            // Add CCD default core masks for multi-CCD CPUs
+            List<ProcessorRelationship> dieRelations = GetDieRelationships();
+            if (dieRelations.Count >= 2)
+            {
+                List<CacheRelationship> cacheRelations = GetCacheRelationships();
+                List<CacheRelationship> l3Caches = cacheRelations.Where(cache => cache.Level == 3).ToList();
+
+                // Get the L3 cache size for each Die
+                List<long> cachePerDie = dieRelations.Select(die =>
+                    l3Caches.Where(cache => cache.Affinities[0] == die.Affinities[0])
+                    .Sum(cache => cache.CacheSize)
+                ).ToList();
+
+                long minDieCacheSize = cachePerDie.Min();
+
+                // Split the Cache from the Freq dies if there are any
+                List<ProcessorRelationship> cacheDies = dieRelations.Zip(cachePerDie, (die, cacheSize) => (die, cacheSize))
+                    .Where(item => item.cacheSize > minDieCacheSize * 2)
+                    .Select(item => item.die).ToList();
+
+                // If there are no dies with extra cache, every die will be in the freqDies list
+                List<ProcessorRelationship> freqDies = dieRelations.Where(die => !cacheDies.Contains(die)).ToList();
+
+                // Add the Cache dies, if there are any
+                for (int i = 0; i < cacheDies.Count; ++i)
+                {
+                    string maskName = "Cache";
+                    if (cacheDies.Count >= 2)
+                        maskName += i.ToString(CultureInfo.InvariantCulture);
+                    result.Add(new(maskName, BitMaskToBoolMask(cacheDies[i].Affinities[0], LogicalProcessorNames.Count), []));
+                }
+
+                // Add the remaining dies, calling them Freq if there were any Cache dies
+                for (int i = 0; i < freqDies.Count; ++i)
+                {
+                    string maskName = cacheDies.Count >= 1 ? "Freq" : "CCD";
+                    if (freqDies.Count >= 2)
+                        maskName += i.ToString(CultureInfo.InvariantCulture);
+                    result.Add(new(maskName, BitMaskToBoolMask(freqDies[i].Affinities[0], LogicalProcessorNames.Count), []));
+                }
+            }
+
+            return result;
+        }
+
+        private static List<bool> BitMaskToBoolMask(UIntPtr mask, int maskLength)
+        {
+            if (maskLength > UIntPtr.Size * 8)
+                throw new ArgumentException($"maskLength cannot be greater than {UIntPtr.Size * 8} (the bit size of UIntPtr)");
+
+            return Enumerable.Range(0, maskLength).Select(i => (mask & ((UIntPtr)1 << i)) != 0).ToList();
         }
 
         private static List<ProcessorRelationship> GetCoreRelationships()
@@ -154,6 +226,7 @@ namespace CPUSetSetter.Platforms
             long remaining = bufferLength;
             int headerSize = Marshal.SizeOf<SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX_Header>();
             int processRelationSize = Marshal.SizeOf<PROCESSOR_RELATIONSHIP>();
+            // Iterate over the modified buffer
             while (remaining >= headerSize)
             {
                 SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX_Header header = Marshal.PtrToStructure<SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX_Header>(current);
@@ -186,7 +259,7 @@ namespace CPUSetSetter.Platforms
                         affinityMasks = ReadGroupMasks(groupMasksPtr, pRelation.GroupCount);
                         result.Add(new ProcessorRelationship(pRelation.Flags == 1, pRelation.EfficiencyClass, affinityMasks));
                         break;
-                    
+
                     case LOGICAL_PROCESSOR_RELATIONSHIP.RelationCache:
                         CACHE_RELATIONSHIP cRelation = Marshal.PtrToStructure<CACHE_RELATIONSHIP>(payloadPtr);
                         // Read the group affinity masks right after the CACHE_RELATIONSHIP structure
@@ -194,7 +267,7 @@ namespace CPUSetSetter.Platforms
                         affinityMasks = ReadGroupMasks(groupMasksPtr, cRelation.GroupCount);
                         result.Add(new CacheRelationship(cRelation.Level, cRelation.CacheSize, affinityMasks));
                         break;
-                    
+
                     default:
                         throw new NotImplementedException($"Parsing of {header.Relationship} is not implemented");
                 }
@@ -206,6 +279,9 @@ namespace CPUSetSetter.Platforms
             return result;
         }
 
+        /// <summary>
+        /// Read the GROUP_AFFINITY GroupMask[GroupCount] array at a given memory address
+        /// </summary>
         private static List<UIntPtr> ReadGroupMasks(IntPtr groupMasksPtr, int groupCount)
         {
             List<UIntPtr> affinityMasks = [];

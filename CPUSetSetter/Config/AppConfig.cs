@@ -11,9 +11,9 @@ namespace CPUSetSetter.Config
     {
         public static readonly AppConfig Instance = AppConfigFile.Load();
 
-        public ObservableCollection<CoreMask> CoreMasks { get; }
+        public ObservableCollection<LogicalProcessorMask> LogicalProcessorMasks { get; }
 
-        public ObservableCollection<ProgramCoreMaskRule> ProgramCoreMaskRules { get; }
+        public ObservableCollection<ProgramMaskRule> ProgramMaskRules { get; }
 
         [ObservableProperty]
         private bool _matchWholePath;
@@ -30,8 +30,8 @@ namespace CPUSetSetter.Config
         [ObservableProperty]
         private ThemeMode _theme;
 
-        public AppConfig(List<CoreMask> coreMasks,
-            List<ProgramCoreMaskRule> programCoreMaskRules,
+        public AppConfig(List<LogicalProcessorMask> logicalProcessorMasks,
+            List<ProgramMaskRule> programMaskRules,
             bool matchWholePath,
             bool muteHotkeySound,
             bool startMinimized,
@@ -39,8 +39,8 @@ namespace CPUSetSetter.Config
             ThemeMode theme,
             bool generateDefaultMasks)
         {
-            CoreMasks = new(coreMasks);
-            ProgramCoreMaskRules = new(programCoreMaskRules);
+            LogicalProcessorMasks = new(logicalProcessorMasks);
+            ProgramMaskRules = new(programMaskRules);
             _matchWholePath = matchWholePath;
             _muteHotkeySound = muteHotkeySound;
             _startMinimized = startMinimized;
@@ -49,9 +49,9 @@ namespace CPUSetSetter.Config
 
             if (generateDefaultMasks)
             {
-                foreach (CoreMask coreMask in CpuInfo.DefaultCoreMasks)
+                foreach (LogicalProcessorMask coreMask in CpuInfo.DefaultLogicalProcessorMasks)
                 {
-                    CoreMasks.Add(coreMask);
+                    LogicalProcessorMasks.Add(coreMask);
                 }
             }
         }
