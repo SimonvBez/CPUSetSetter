@@ -64,14 +64,21 @@ namespace CPUSetSetter
         public CPUSet(string name)
         {
             _name = name;
-            Mask = new(Enumerable.Range(0, Environment.ProcessorCount).Select(i => new CPUSetProcessor { Name = $"CPU {i}", IsEnabled = true, Parent = this }));
+            Mask = new(Enumerable.Range(0, Environment.ProcessorCount).Select(i => new CPUSetProcessor($"CPU {i}", true) { Parent = this }));
             SetupHotkeyListener();
         }
 
         public CPUSet(string name, IEnumerable<bool> mask)
         {
             _name = name;
-            Mask = new(mask.Select((bool cpuEnabled, int i) => new CPUSetProcessor { Name = $"CPU {i}", IsEnabled = cpuEnabled, Parent = this }));
+            Mask = new(mask.Select((bool cpuEnabled, int i) => new CPUSetProcessor($"CPU {i}", cpuEnabled) { Parent = this }));
+            SetupHotkeyListener();
+        }
+
+        public CPUSet(string name, IEnumerable<bool> mask, IEnumerable<string> cpuNames)
+        {
+            _name = name;
+            Mask = new(mask.Zip(cpuNames, (cpuEnabled, cpuName) => new CPUSetProcessor(cpuName, cpuEnabled) { Parent = this }));
             SetupHotkeyListener();
         }
 
@@ -241,6 +248,16 @@ namespace CPUSetSetter
 
         [JsonIgnore]
         public CPUSet? Parent { get; set; }
+
+        // Private constructor for Json loading
+        [JsonConstructor]
+        private CPUSetProcessor() { }
+
+        public CPUSetProcessor(string name, bool isEnabled)
+        {
+            _name = name;
+            _isEnabled = isEnabled;
+        }
 
         partial void OnIsEnabledChanged(bool value)
         {
