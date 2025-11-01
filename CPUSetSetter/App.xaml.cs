@@ -1,3 +1,4 @@
+﻿using CPUSetSetter.Platforms;
 using System.Globalization;
 using System.IO;
 using System.Security.Principal;
@@ -22,6 +23,21 @@ namespace CPUSetSetter
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            // Quit when this CPU is not supported
+            try
+            {
+                if (!CpuInfo.IsSupported)
+                {
+                    throw new UnsupportedCpu();
+                }
+            }
+            catch (UnsupportedCpu ex)
+            {
+                MessageBox.Show($"This system's CPU is unfortunately not supported: {ex.Message}", "CPU Set Setter", MessageBoxButton.OK, MessageBoxImage.Error);
+                ExitApp();
+                return;
+            }
+
             base.OnStartup(e);
 
             // Set the working directory to the directory of the executable, so the config .json file will always be in the right place
@@ -41,14 +57,6 @@ namespace CPUSetSetter
             if (!isOwned)
             {
                 MessageBox.Show("Failed to open: App is already running", "CPU Set Setter", MessageBoxButton.OK, MessageBoxImage.Error);
-                ExitApp();
-                return;
-            }
-
-            // Quit when this CPU is not supported
-            if (Environment.ProcessorCount > 64)
-            {
-                MessageBox.Show("Failed to open: More than 64 logical processors are not supported", "CPU Set Setter", MessageBoxButton.OK, MessageBoxImage.Error);
                 ExitApp();
                 return;
             }

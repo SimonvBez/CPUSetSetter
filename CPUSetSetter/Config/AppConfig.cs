@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CPUSetSetter.Config.Models;
+using CPUSetSetter.Platforms;
 using CPUSetSetter.Themes;
 using System.Collections.ObjectModel;
 
@@ -48,7 +49,10 @@ namespace CPUSetSetter.Config
 
             if (generateDefaultMasks)
             {
-                
+                foreach (CoreMask coreMask in CpuInfo.DefaultCoreMasks)
+                {
+                    CoreMasks.Add(coreMask);
+                }
             }
         }
     }
