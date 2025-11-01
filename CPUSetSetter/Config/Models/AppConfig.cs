@@ -1,13 +1,13 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CPUSetSetter.Config.Models;
 using CPUSetSetter.Platforms;
 using CPUSetSetter.Themes;
 using System.Collections.ObjectModel;
+using Application = System.Windows.Application;
 
 
-namespace CPUSetSetter.Config
+namespace CPUSetSetter.Config.Models
 {
-    public partial class AppConfig : ObservableObject
+    public partial class AppConfig : ObservableConfigObject
     {
         public static readonly AppConfig Instance = AppConfigFile.Load();
 
@@ -30,6 +30,9 @@ namespace CPUSetSetter.Config
         [ObservableProperty]
         private ThemeMode _theme;
 
+        private readonly Lock _saveTaskLock = new();
+        private bool _isSaving = false;
+
         public AppConfig(List<LogicalProcessorMask> logicalProcessorMasks,
             List<ProgramMaskRule> programMaskRules,
             bool matchWholePath,
@@ -45,7 +48,7 @@ namespace CPUSetSetter.Config
             _muteHotkeySound = muteHotkeySound;
             _startMinimized = startMinimized;
             _disableWelcomeMessage = disableWelcomeMessage;
-            Theme = theme;
+            _theme = theme;
 
             if (generateDefaultMasks)
             {
@@ -54,11 +57,42 @@ namespace CPUSetSetter.Config
                     LogicalProcessorMasks.Add(coreMask);
                 }
             }
+
+            SaveOnCollectionChanged(LogicalProcessorMasks);
+            SaveOnCollectionChanged(ProgramMaskRules);
+
+            AppTheme.ApplyTheme(Theme);
         }
 
+        /// <summary>
+        /// Initiate a config save. The saving is delayed by a few milliseconds so that bulk changes don't do 30+ saves in a row
+        /// </summary>
         public void Save()
         {
-            AppConfigFile.Save(this);
+            using (_saveTaskLock.EnterScope())
+            {
+                if (!_isSaving)
+                {
+                    _isSaving = true;
+                    Application.Current.Dispatcher.BeginInvoke(DelayedSave);
+                }
+            }
+        }
+
+        private async Task DelayedSave()
+        {
+            await Task.Delay(30);
+
+            using (_saveTaskLock.EnterScope())
+            {
+                AppConfigFile.Save(this);
+                _isSaving = false;
+            }
+        }
+
+        partial void OnThemeChanged(ThemeMode value)
+        {
+            AppTheme.ApplyTheme(value);
         }
     }
 }

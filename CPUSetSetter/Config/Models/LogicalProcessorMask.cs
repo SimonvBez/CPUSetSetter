@@ -7,9 +7,9 @@ namespace CPUSetSetter.Config.Models
     /// <summary>
     /// Represents a boolean mask of the logical processors, indicating which ones should be enabled, and which ones disabled
     /// </summary>
-    public partial class LogicalProcessorMask : ObservableObject
+    public partial class LogicalProcessorMask : ObservableConfigObject
     {
-        private static readonly LogicalProcessorMask _clearMask = new([]);
+        private static LogicalProcessorMask? _clearMask;
 
         [ObservableProperty]
         private string _name;
@@ -23,32 +23,32 @@ namespace CPUSetSetter.Config.Models
 
         public bool IsClearMask { get; }
 
-        private LogicalProcessorMask(List<VKey> hotkeys)
-        {
-            _name = string.Empty;
-            _settingsName = "<clear mask>";
-            Mask = [];
-            Hotkeys = new(hotkeys);
-            IsClearMask = true;
-        }
-
-        public LogicalProcessorMask(string name, List<bool> mask, List<VKey> hotkeys)
+        private LogicalProcessorMask(string name, string settingsName, List<bool> mask, List<VKey> hotkeys, bool isClearMask)
         {
             _name = name;
-            _settingsName = name;
+            _settingsName = settingsName;
             Mask = new(mask);
             Hotkeys = new(hotkeys);
-            IsClearMask = false;
+            IsClearMask = isClearMask;
+
+            SaveOnCollectionChanged(Mask);
+            SaveOnCollectionChanged(Hotkeys);
         }
 
-        public static LogicalProcessorMask PrepareClearMask(List<VKey> hotkeys)
+        /// <summary>
+        /// Private constructor for creating the clear mask 
+        /// </summary>
+        private LogicalProcessorMask(List<VKey> hotkeys) : this(string.Empty, "<clear mask>", [], hotkeys, true) { }
+
+        /// <summary>
+        /// Constructor for creating a new logical processor mask
+        /// </summary>
+        public LogicalProcessorMask(string name, List<bool> mask, List<VKey> hotkeys) : this(name, name, mask, hotkeys, false) { }
+
+        public static LogicalProcessorMask InitClearMask(List<VKey> hotkeys)
         {
-            // Overwrite the existing hotkeys, in case the config was corrupt and got reset to the defaults
-            _clearMask.Hotkeys.Clear();
-            foreach (VKey key in hotkeys)
-            {
-                _clearMask.Hotkeys.Add(key);
-            }
+            _clearMask?.Dispose(); // Dispose the old clearMask in case it already existed
+            _clearMask = new(hotkeys); // Create a new one
             return _clearMask;
         }
     }

@@ -1,8 +1,8 @@
 ﻿namespace CPUSetSetter.Themes
 {
-    public static class Theme
+    public static class AppTheme
     {
-        public static void ApplyTheme()
+        public static void ApplyTheme(ThemeMode theme)
         {
 
         }

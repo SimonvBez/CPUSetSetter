@@ -108,7 +108,7 @@ namespace CPUSetSetter.Config
 
             List<VKey> clearMaskHotkeys = configJson.ClearMaskHotkey.Select(hotkey => Enum.Parse<VKey>(hotkey)).ToList();
             // Put the ClearMask Mask at the front of the logicalProcessorMasks
-            List<LogicalProcessorMask> logicalProcessorMasks = [LogicalProcessorMask.PrepareClearMask(clearMaskHotkeys)];
+            List<LogicalProcessorMask> logicalProcessorMasks = [LogicalProcessorMask.InitClearMask(clearMaskHotkeys)];
 
             // Construct the LogicalProcessorMask models from the config
             foreach (LogicalProcessorMaskJson jsonMask in configJson.LogicalProcessorMasks)
@@ -150,20 +150,32 @@ namespace CPUSetSetter.Config
 
         private class ConfigJson
         {
-            public List<string> ClearMaskHotkey { get; init; } = [];
-            public List<LogicalProcessorMaskJson> LogicalProcessorMasks { get; init; } = [];
-            public List<ProgramMaskRuleJson> ProgramMaskRules { get; init; } = [];
-            public bool MatchWholePath { get; init; } = true;
-            public bool MuteHotKeySound { get; init; } = false;
-            public bool StartMinimized { get; init; } = false;
-            public bool DisableWelcomeMessage { get; init; } = false;
-            public string Theme { get; init; } = ThemeMode.System.ToString();
-            public int ConfigVersion { get; init; } = 0; // Can be used in the future to migrate config files
-
-            [JsonConstructor]
-            private ConfigJson() { } // Default constructor for JSON Deserialization
+            public List<string> ClearMaskHotkey { get; init; }
+            public List<LogicalProcessorMaskJson> LogicalProcessorMasks { get; init; }
+            public List<ProgramMaskRuleJson> ProgramMaskRules { get; init; }
+            public bool MatchWholePath { get; init; }
+            public bool MuteHotKeySound { get; init; }
+            public bool StartMinimized { get; init; }
+            public bool DisableWelcomeMessage { get; init; }
+            public string Theme { get; init; }
+            public int ConfigVersion { get; init; } // Can be used in the future to migrate config files
 
             public static ConfigJson Default => new();
+
+            // Default constructor for JSON Deserialization
+            [JsonConstructor]
+            private ConfigJson()
+            {
+                ClearMaskHotkey = [];
+                LogicalProcessorMasks = [];
+                ProgramMaskRules = [];
+                MatchWholePath = true;
+                MuteHotKeySound = false;
+                StartMinimized = false;
+                DisableWelcomeMessage = false;
+                Theme = ThemeMode.System.ToString();
+                ConfigVersion = 0;
+            }
 
             public ConfigJson(AppConfig config)
             {
@@ -198,12 +210,17 @@ namespace CPUSetSetter.Config
 
         private class LogicalProcessorMaskJson
         {
-            public string Name { get; init; } = string.Empty;
-            public List<bool> Mask { get; init; } = [];
-            public List<string> Hotkeys { get; init; } = [];
+            public string Name { get; init; }
+            public List<bool> Mask { get; init; }
+            public List<string> Hotkeys { get; init; }
 
             [JsonConstructor]
-            private LogicalProcessorMaskJson() { }
+            private LogicalProcessorMaskJson()
+            {
+                Name = string.Empty;
+                Mask = [];
+                Hotkeys = [];
+            }
 
             public LogicalProcessorMaskJson(string name, List<bool> mask, List<string> hotkeys)
             {
@@ -215,11 +232,15 @@ namespace CPUSetSetter.Config
 
         private class ProgramMaskRuleJson
         {
-            public string ProgramPath { get; init; } = string.Empty;
-            public string LogicalProcessorMaskName { get; init; } = string.Empty;
+            public string ProgramPath { get; init; }
+            public string LogicalProcessorMaskName { get; init; }
 
             [JsonConstructor]
-            private ProgramMaskRuleJson() { }
+            private ProgramMaskRuleJson()
+            {
+                ProgramPath = string.Empty;
+                LogicalProcessorMaskName = string.Empty;
+            }
 
             public ProgramMaskRuleJson(string programPath, string logicalProcessorMaskName)
             {
