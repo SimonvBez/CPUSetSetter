@@ -9,10 +9,10 @@ namespace CPUSetSetter.Config.Models
     public partial class ProgramMaskRule : ObservableConfigObject
     {
         [ObservableProperty]
-        public string _programPath;
+        private string _programPath;
 
         [ObservableProperty]
-        public LogicalProcessorMask _logicalProcessorMask;
+        private LogicalProcessorMask _logicalProcessorMask;
 
         public ProgramMaskRule(string programPath, LogicalProcessorMask logicalProcessorMask)
         {

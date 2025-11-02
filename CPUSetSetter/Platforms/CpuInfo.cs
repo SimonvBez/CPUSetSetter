@@ -3,13 +3,17 @@
 
 namespace CPUSetSetter.Platforms
 {
+    /// <summary>
+    /// Provides information on the system's CPU. It analyzes the core/die structure of the CPU.
+    /// It uses this information to provide a list of names for each logical processor, and a collection of default masks that may be common in use.
+    /// </summary>
     public static class CpuInfo
     {
         public static Manufacturer Manufacturer => Default.Manufacturer;
 
         public static IReadOnlyCollection<string> LogicalProcessorNames => Default.LogicalProcessorNames;
 
-        public static int LogicalProcessorCount = Default.LogicalProcessorNames.Count;
+        public static int LogicalProcessorCount { get; } = Default.LogicalProcessorNames.Count;
 
         public static IReadOnlyCollection<LogicalProcessorMask> DefaultLogicalProcessorMasks => Default.DefaultLogicalProcessorMasks;
 

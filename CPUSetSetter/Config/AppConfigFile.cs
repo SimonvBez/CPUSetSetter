@@ -107,9 +107,9 @@ namespace CPUSetSetter.Config
         {
             hadSoftError = false;
 
-            List<VKey> clearMaskHotkeys = configJson.ClearMaskHotkey.Select(hotkey => Enum.Parse<VKey>(hotkey)).ToList();
-            // Put the ClearMask Mask at the front of the logicalProcessorMasks
-            List<LogicalProcessorMask> logicalProcessorMasks = [LogicalProcessorMask.InitClearMask(clearMaskHotkeys)];
+            List<VKey> noMaskHotkeys = configJson.NoMaskHotkey.Select(hotkey => Enum.Parse<VKey>(hotkey)).ToList();
+            // Put the NoMask Mask at the front of the logicalProcessorMasks
+            List<LogicalProcessorMask> logicalProcessorMasks = [LogicalProcessorMask.InitNoMask(noMaskHotkeys)];
 
             // Construct the LogicalProcessorMask models from the config
             foreach (LogicalProcessorMaskJson jsonMask in configJson.LogicalProcessorMasks)
@@ -138,10 +138,17 @@ namespace CPUSetSetter.Config
                 return new ProgramMaskRule(jsonProgramRule.ProgramPath, mask);
             }).ToList();
 
+            // Construct the AutomaticMaskRule models from the config
+            List<ProgramMaskRule> automaticMaskRules = configJson.AutomaticMaskRules.Select(jsonAutomaticRule =>
+            {
+                LogicalProcessorMask mask = logicalProcessorMasks.Single(mask => mask.Name == jsonAutomaticRule.LogicalProcessorMaskName);
+                return new ProgramMaskRule(jsonAutomaticRule.ProgramPath, mask);
+            }).ToList();
+
             // Construct the AppConfig
             return new(logicalProcessorMasks,
                 programMaskRules,
-                configJson.MatchWholePath,
+                automaticMaskRules,
                 configJson.MuteHotKeySound,
                 configJson.StartMinimized,
                 configJson.DisableWelcomeMessage,
@@ -151,10 +158,10 @@ namespace CPUSetSetter.Config
 
         private class ConfigJson
         {
-            public List<string> ClearMaskHotkey { get; init; }
+            public List<string> NoMaskHotkey { get; init; }
             public List<LogicalProcessorMaskJson> LogicalProcessorMasks { get; init; }
             public List<ProgramMaskRuleJson> ProgramMaskRules { get; init; }
-            public bool MatchWholePath { get; init; }
+            public List<ProgramMaskRuleJson> AutomaticMaskRules { get; init; }
             public bool MuteHotKeySound { get; init; }
             public bool StartMinimized { get; init; }
             public bool DisableWelcomeMessage { get; init; }
@@ -167,10 +174,10 @@ namespace CPUSetSetter.Config
             [JsonConstructor]
             private ConfigJson()
             {
-                ClearMaskHotkey = [];
+                NoMaskHotkey = [];
                 LogicalProcessorMasks = [];
                 ProgramMaskRules = [];
-                MatchWholePath = true;
+                AutomaticMaskRules = [];
                 MuteHotKeySound = false;
                 StartMinimized = false;
                 DisableWelcomeMessage = false;
@@ -180,12 +187,12 @@ namespace CPUSetSetter.Config
 
             public ConfigJson(AppConfig config)
             {
-                // Get the Hotkeys for the ClearMask
-                var clearMaskHotkeyVKeys = config.LogicalProcessorMasks.Single(mask => mask.IsClearMask).Hotkeys;
-                ClearMaskHotkey = clearMaskHotkeyVKeys.Select(hotkey => hotkey.ToString()).ToList();
+                // Get the Hotkeys for the NoMask
+                var noMaskHotkeyVKeys = config.LogicalProcessorMasks.Single(mask => mask.IsNoMask).Hotkeys;
+                NoMaskHotkey = noMaskHotkeyVKeys.Select(hotkey => hotkey.ToString()).ToList();
 
-                // Filter out the ClearMask from the list of logicalProcessorMasks
-                var userDefinedMasks = config.LogicalProcessorMasks.Where(mask => !mask.IsClearMask);
+                // Filter out the NoMask from the list of logicalProcessorMasks
+                var userDefinedMasks = config.LogicalProcessorMasks.Where(mask => !mask.IsNoMask);
 
                 // Convert the LogicalProcessorMask models to JSON objects
                 LogicalProcessorMasks = userDefinedMasks.Select(mask =>
@@ -194,13 +201,17 @@ namespace CPUSetSetter.Config
                     return new LogicalProcessorMaskJson(mask.Name, new(mask.Mask), hotkeys);
                 }).ToList();
 
-                // Convert the ProgramMaskRule models to JSON objects
+                // Convert the ProgramMaskRules models to JSON objects
                 ProgramMaskRules = config.ProgramMaskRules.Select(programRule =>
                     new ProgramMaskRuleJson(programRule.ProgramPath, programRule.LogicalProcessorMask.Name)
                 ).ToList();
 
+                // Convert the AutomaticMaskRules models to JSON objects
+                AutomaticMaskRules = config.AutomaticMaskRules.Select(automaticRule =>
+                    new ProgramMaskRuleJson(automaticRule.ProgramPath, automaticRule.LogicalProcessorMask.Name)
+                ).ToList();
+
                 // Set the remainder of the settings to the JSON object
-                MatchWholePath = config.MatchWholePath;
                 MuteHotKeySound = config.MuteHotkeySound;
                 StartMinimized = config.StartMinimized;
                 DisableWelcomeMessage = config.DisableWelcomeMessage;

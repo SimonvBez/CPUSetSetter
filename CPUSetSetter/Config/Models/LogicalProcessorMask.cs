@@ -10,47 +10,51 @@ namespace CPUSetSetter.Config.Models
     /// </summary>
     public partial class LogicalProcessorMask : ObservableConfigObject
     {
-        private static LogicalProcessorMask? _clearMask;
+        public static LogicalProcessorMask NoMask { get; private set; } = new([]);
 
         [ObservableProperty]
         private string _name;
 
         [ObservableProperty]
-        private string _settingsName;
+        private string _displayName;
 
         public ObservableCollection<bool> Mask { get; init; }
 
         public ObservableCollection<VKey> Hotkeys { get; init; }
 
-        public bool IsClearMask { get; }
+        public bool IsNoMask { get; }
 
-        private LogicalProcessorMask(string name, string settingsName, List<bool> mask, List<VKey> hotkeys, bool isClearMask)
+        private LogicalProcessorMask(string name, string displayName, List<bool> mask, List<VKey> hotkeys, bool isNoMask)
         {
             _name = name;
-            _settingsName = settingsName;
+            _displayName = displayName;
             Mask = new(mask);
             Hotkeys = new(hotkeys);
-            IsClearMask = isClearMask;
+            IsNoMask = isNoMask;
 
             SaveOnCollectionChanged(Mask);
             SaveOnCollectionChanged(Hotkeys);
         }
 
         /// <summary>
-        /// Private constructor for creating the clear mask 
+        /// Private constructor for creating the NoMask 
         /// </summary>
-        private LogicalProcessorMask(List<VKey> hotkeys) : this(string.Empty, "<clear mask>", [], hotkeys, true) { }
+        private LogicalProcessorMask(List<VKey> hotkeys) : this("<no mask>", string.Empty, [], hotkeys, true) { }
 
         /// <summary>
         /// Constructor for creating a new logical processor mask
         /// </summary>
         public LogicalProcessorMask(string name, List<bool> mask, List<VKey> hotkeys) : this(name, name, mask, hotkeys, false) { }
 
-        public static LogicalProcessorMask InitClearMask(List<VKey> hotkeys)
+        /// <summary>
+        /// Create a new NoMask with a given hotkey.
+        /// THIS SHOULD ONLY EVER BE CALLED DURING CONFIG LOADING
+        /// </summary>
+        public static LogicalProcessorMask InitNoMask(List<VKey> hotkeys)
         {
-            _clearMask?.Dispose(); // Dispose the old clearMask in case it already existed
-            _clearMask = new(hotkeys); // Create a new one
-            return _clearMask;
+            NoMask?.Dispose(); // Dispose the old NoMask in case it already existed
+            NoMask = new(hotkeys); // Create a new one
+            return NoMask;
         }
     }
 }

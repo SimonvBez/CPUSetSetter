@@ -1,4 +1,5 @@
 ﻿using CPUSetSetter.Config.Models;
+using CPUSetSetter.Core;
 using CPUSetSetter.Platforms;
 using CPUSetSetter.TrayIcon;
 using CPUSetSetter.UI;
@@ -103,6 +104,12 @@ namespace CPUSetSetter
         {
             trayIcon?.Dispose();
             Shutdown();
+        }
+
+        public static void EnsureMainThread()
+        {
+            if (Current.Dispatcher.Thread != Thread.CurrentThread)
+                throw new ThreadStateException("Not running on the MainThread");
         }
     }
 }

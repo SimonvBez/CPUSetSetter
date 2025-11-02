@@ -2,7 +2,6 @@
 using CPUSetSetter.Platforms;
 using CPUSetSetter.Themes;
 using System.Collections.ObjectModel;
-using System.Windows;
 
 
 namespace CPUSetSetter.Config.Models
@@ -13,12 +12,12 @@ namespace CPUSetSetter.Config.Models
         public static readonly AppConfig Instance = AppConfigFile.Load();
         public static AppConfig Load() => Instance; // Function to more explicitly control when the config gets loaded
 
+        // Masks that can be used by program rules and rule templates
         public ObservableCollection<LogicalProcessorMask> LogicalProcessorMasks { get; }
-
+        // Program rules that define which mask should be used on a specific program
         public ObservableCollection<ProgramMaskRule> ProgramMaskRules { get; }
-
-        [ObservableProperty]
-        private bool _matchWholePath;
+        // Rules with optional wildcards that can automatically create program rules
+        public ObservableCollection<ProgramMaskRule> AutomaticMaskRules { get; }
 
         [ObservableProperty]
         private bool _muteHotkeySound;
@@ -37,7 +36,7 @@ namespace CPUSetSetter.Config.Models
 
         public AppConfig(List<LogicalProcessorMask> logicalProcessorMasks,
             List<ProgramMaskRule> programMaskRules,
-            bool matchWholePath,
+            List<ProgramMaskRule> automaticMaskRules,
             bool muteHotkeySound,
             bool startMinimized,
             bool disableWelcomeMessage,
@@ -52,7 +51,7 @@ namespace CPUSetSetter.Config.Models
 
             LogicalProcessorMasks = new(logicalProcessorMasks);
             ProgramMaskRules = new(programMaskRules);
-            _matchWholePath = matchWholePath;
+            AutomaticMaskRules = new(automaticMaskRules);
             _muteHotkeySound = muteHotkeySound;
             _startMinimized = startMinimized;
             _disableWelcomeMessage = disableWelcomeMessage;
@@ -82,7 +81,7 @@ namespace CPUSetSetter.Config.Models
                 if (!_isSaving)
                 {
                     _isSaving = true;
-                    Application.Current.Dispatcher.BeginInvoke(DelayedSave);
+                    App.Current.Dispatcher.BeginInvoke(DelayedSave);
                 }
             }
         }

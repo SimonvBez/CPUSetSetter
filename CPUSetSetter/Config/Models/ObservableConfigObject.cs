@@ -44,11 +44,14 @@ namespace CPUSetSetter.Config.Models
         /// </summary>
         protected virtual void Dispose(bool disposing)
         {
-            foreach (Action unsubAction in collectionUnsubscribeActions)
+            if (disposing)
             {
-                unsubAction();
+                foreach (Action unsubAction in collectionUnsubscribeActions)
+                {
+                    unsubAction();
+                }
+                collectionUnsubscribeActions.Clear();
             }
-            collectionUnsubscribeActions.Clear();
         }
     }
 }

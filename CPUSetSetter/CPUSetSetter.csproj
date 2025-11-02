@@ -17,7 +17,7 @@
     
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-    <PackageReference Include="System.Management" Version="9.0.8" />
+    <PackageReference Include="System.Management" Version="9.0.10" />
   </ItemGroup>
     
   <ItemGroup>

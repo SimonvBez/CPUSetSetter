@@ -24,8 +24,8 @@ namespace CPUSetSetter.Themes
                     throw new ArgumentException("Invalid theme");
             }
 
-            Application.Current.Resources.MergedDictionaries.Clear();
-            Application.Current.Resources.MergedDictionaries.Add(
+            App.Current.Resources.MergedDictionaries.Clear();
+            App.Current.Resources.MergedDictionaries.Add(
                 new() { Source = new(themePath, UriKind.Relative) }
             );
         }
