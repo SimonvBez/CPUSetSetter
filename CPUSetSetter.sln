@@ -10,6 +10,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.github\workflows\build_and_release.yml = .github\workflows\build_and_release.yml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CPUSetSetter.TrayIcon", "CPUSetSetter.TrayIcon\CPUSetSetter.TrayIcon.csproj", "{EF305E12-E18F-46CC-B485-39107869EF2D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -20,6 +22,10 @@ Global
 		{E849FA1E-CCD5-4D8B-BCC6-E72DE0E18711}.Debug|x64.Build.0 = Debug|Any CPU
 		{E849FA1E-CCD5-4D8B-BCC6-E72DE0E18711}.Release|x64.ActiveCfg = Release|Any CPU
 		{E849FA1E-CCD5-4D8B-BCC6-E72DE0E18711}.Release|x64.Build.0 = Release|Any CPU
+		{EF305E12-E18F-46CC-B485-39107869EF2D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{EF305E12-E18F-46CC-B485-39107869EF2D}.Debug|x64.Build.0 = Debug|Any CPU
+		{EF305E12-E18F-46CC-B485-39107869EF2D}.Release|x64.ActiveCfg = Release|Any CPU
+		{EF305E12-E18F-46CC-B485-39107869EF2D}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,6 +1,7 @@
 ﻿using CPUSetSetter.Config.Models;
 using CPUSetSetter.Platforms;
 using CPUSetSetter.Themes;
+using CPUSetSetter.UI.Tabs.Processes;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -144,7 +145,7 @@ namespace CPUSetSetter.Config
                 configJson.MuteHotKeySound,
                 configJson.StartMinimized,
                 configJson.DisableWelcomeMessage,
-                Enum.Parse<ThemeMode>(configJson.Theme),
+                Enum.Parse<Theme>(configJson.UiTheme),
                 generateDefaultMasks);
         }
 
@@ -157,7 +158,7 @@ namespace CPUSetSetter.Config
             public bool MuteHotKeySound { get; init; }
             public bool StartMinimized { get; init; }
             public bool DisableWelcomeMessage { get; init; }
-            public string Theme { get; init; }
+            public string UiTheme { get; init; }
             public int ConfigVersion { get; init; } // Can be used in the future to migrate config files
 
             public static ConfigJson Default => new();
@@ -173,7 +174,7 @@ namespace CPUSetSetter.Config
                 MuteHotKeySound = false;
                 StartMinimized = false;
                 DisableWelcomeMessage = false;
-                Theme = ThemeMode.System.ToString();
+                UiTheme = Theme.System.ToString();
                 ConfigVersion = 0;
             }
 
@@ -203,7 +204,7 @@ namespace CPUSetSetter.Config
                 MuteHotKeySound = config.MuteHotkeySound;
                 StartMinimized = config.StartMinimized;
                 DisableWelcomeMessage = config.DisableWelcomeMessage;
-                Theme = config.Theme.ToString();
+                UiTheme = config.UiTheme.ToString();
                 ConfigVersion = configVersion;
             }
         }

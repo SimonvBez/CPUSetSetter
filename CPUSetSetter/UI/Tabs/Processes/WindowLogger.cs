@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 
 
-namespace CPUSetSetter
+namespace CPUSetSetter.UI.Tabs.Processes
 {
     public partial class WindowLogger : ObservableObject
     {

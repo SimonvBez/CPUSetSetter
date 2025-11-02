@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CPUSetSetter.Platforms;
 using System.Collections.ObjectModel;
 
 

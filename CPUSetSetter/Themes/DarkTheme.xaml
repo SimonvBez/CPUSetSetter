@@ -1,6 +1,6 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:local="clr-namespace:CPUSetSetter">
+                    xmlns:ui="clr-namespace:CPUSetSetter.UI">
 
     <!-- Color Resources -->
     <SolidColorBrush x:Key="BackgroundBrush" Color="#1E1E1E"/>
@@ -19,7 +19,7 @@
     <SolidColorBrush x:Key="DisabledBorderBrush" Color="#404040"/>
 
     <!-- Window Style -->
-    <Style TargetType="local:MainWindow">
+    <Style TargetType="ui:MainWindow">
         <Setter Property="Background" Value="{StaticResource BackgroundBrush}"/>
         <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>
     </Style>

@@ -1,0 +1,32 @@
+﻿<Window x:Class="CPUSetSetter.UI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="CPU Set Setter"
+        Height="547"
+        MinHeight="574"
+        Width="940"
+        MinWidth="700">
+
+    <TabControl>
+        <!--Processes Tab-->
+        <TabItem>
+            <TabItem.Header>
+                <TextBlock Text="Processes"/>
+            </TabItem.Header>
+
+            <TextBlock Text="Processes tab"/>
+        </TabItem>
+
+        <!--Settings Tab-->
+        <TabItem>
+            <TabItem.Header>
+                <TextBlock Text="Settings"/>
+            </TabItem.Header>
+
+            <TextBlock Text="Settings tab"/>
+        </TabItem>
+    </TabControl>
+</Window>

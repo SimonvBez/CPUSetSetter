@@ -1,6 +1,7 @@
-﻿using System.IO;
+﻿using CPUSetSetter.Config.Models;
+using System.IO;
 using System.Media;
-using Application = System.Windows.Application;
+using System.Windows;
 
 
 namespace CPUSetSetter
@@ -10,7 +11,7 @@ namespace CPUSetSetter
         private readonly SoundPlayer _applied;
         private readonly SoundPlayer _cleared;
 
-        public static HotkeySoundPlayer Default { get; } = new HotkeySoundPlayer();
+        public static HotkeySoundPlayer Instance { get; } = new();
 
         public HotkeySoundPlayer()
         {
@@ -37,9 +38,9 @@ namespace CPUSetSetter
             PlaySound(_cleared);
         }
 
-        public void PlayError()
+        public static void PlayError()
         {
-            if (!ConfigOld.Default.MuteHotkeySound)
+            if (!AppConfig.Instance.MuteHotkeySound)
             {
                 SystemSounds.Hand.Play();
             }
@@ -47,7 +48,7 @@ namespace CPUSetSetter
 
         private static void PlaySound(SoundPlayer player)
         {
-            if (!ConfigOld.Default.MuteHotkeySound)
+            if (!AppConfig.Instance.MuteHotkeySound)
             {
                 player.Play();
             }

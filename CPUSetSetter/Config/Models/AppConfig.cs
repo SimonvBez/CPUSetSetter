@@ -2,14 +2,16 @@
 using CPUSetSetter.Platforms;
 using CPUSetSetter.Themes;
 using System.Collections.ObjectModel;
-using Application = System.Windows.Application;
+using System.Windows;
 
 
 namespace CPUSetSetter.Config.Models
 {
     public partial class AppConfig : ObservableConfigObject
     {
+        private static bool _exists = false;
         public static readonly AppConfig Instance = AppConfigFile.Load();
+        public static AppConfig Load() => Instance; // Function to more explicitly control when the config gets loaded
 
         public ObservableCollection<LogicalProcessorMask> LogicalProcessorMasks { get; }
 
@@ -28,7 +30,7 @@ namespace CPUSetSetter.Config.Models
         private bool _disableWelcomeMessage;
 
         [ObservableProperty]
-        private ThemeMode _theme;
+        private Theme _uiTheme;
 
         private readonly Lock _saveTaskLock = new();
         private bool _isSaving = false;
@@ -39,16 +41,22 @@ namespace CPUSetSetter.Config.Models
             bool muteHotkeySound,
             bool startMinimized,
             bool disableWelcomeMessage,
-            ThemeMode theme,
+            Theme uiTheme,
             bool generateDefaultMasks)
         {
+            if (_exists)
+            {
+                throw new InvalidOperationException("Only a single AppConfig can be constructed in the app's lifetime");
+            }
+            _exists = true;
+
             LogicalProcessorMasks = new(logicalProcessorMasks);
             ProgramMaskRules = new(programMaskRules);
             _matchWholePath = matchWholePath;
             _muteHotkeySound = muteHotkeySound;
             _startMinimized = startMinimized;
             _disableWelcomeMessage = disableWelcomeMessage;
-            _theme = theme;
+            _uiTheme = uiTheme;
 
             if (generateDefaultMasks)
             {
@@ -61,7 +69,7 @@ namespace CPUSetSetter.Config.Models
             SaveOnCollectionChanged(LogicalProcessorMasks);
             SaveOnCollectionChanged(ProgramMaskRules);
 
-            AppTheme.ApplyTheme(Theme);
+            AppTheme.ApplyTheme(UiTheme);
         }
 
         /// <summary>
@@ -90,7 +98,7 @@ namespace CPUSetSetter.Config.Models
             }
         }
 
-        partial void OnThemeChanged(ThemeMode value)
+        partial void OnUiThemeChanged(Theme value)
         {
             AppTheme.ApplyTheme(value);
         }

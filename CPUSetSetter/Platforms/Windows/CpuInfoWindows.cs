@@ -14,6 +14,7 @@ namespace CPUSetSetter.Platforms
 
         public IReadOnlyCollection<LogicalProcessorMask> DefaultLogicalProcessorMasks { get; }
 
+        // If the CPU is not supported, an error will raise during construction. So if this property can be retrieved, support is already guaranteed
         public bool IsSupported { get; } = true;
 
         private List<ProcessorRelationship> _coreRelations = [];

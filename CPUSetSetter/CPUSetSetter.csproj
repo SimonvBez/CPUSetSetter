@@ -7,7 +7,6 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <UseWindowsForms>true</UseWindowsForms>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ApplicationIcon>icon.ico</ApplicationIcon>
   </PropertyGroup>
@@ -23,6 +22,14 @@
     
   <ItemGroup>
     <Resource Include="Resources\*" CopyToOutputDirectory="Never" LogicalName="%(Filename)%(Extension)" />
+  </ItemGroup>
+    
+  <ItemGroup>
+    <ProjectReference Include="..\CPUSetSetter.TrayIcon\CPUSetSetter.TrayIcon.csproj" />
+  </ItemGroup>
+    
+  <ItemGroup>
+    <Folder Include="UI\Tabs\Settings\" />
   </ItemGroup>
 
 </Project>
