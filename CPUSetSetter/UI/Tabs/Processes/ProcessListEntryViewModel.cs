@@ -49,7 +49,7 @@ namespace CPUSetSetter.UI.Tabs.Processes
         /// <summary>
         /// Store the new mask in the config (which in turn may also set the mask of other processes with the same path), and apply it to the process
         /// </summary>
-        /// <returns>true if the mask was successfully applied to the process, false if not</returns>
+        /// <returns>true if the mask was successfully applied to all processes of this ImagePath, false if not</returns>
         public bool SetMask(LogicalProcessorMask mask)
         {
             if (mask == _lastAppliedMask) // Return the previous status if the mask is still the same
@@ -58,13 +58,13 @@ namespace CPUSetSetter.UI.Tabs.Processes
             _lastAppliedMask = mask;
             Mask = mask;
             // Save the new mask to the config, which also applies it to all other processes of the same path
-            MaskRuleManager.UpdateOrAddProgramRule(ImagePath, mask);
+            bool hotkeySuccess = MaskRuleManager.UpdateOrAddProgramRule(ImagePath, mask);
 
             // Apply the mask to the actual process
             bool success = _processHandler.ApplyMask(mask);
             if (!success)
                 FailedToOpen = true;
-            return success;
+            return success && hotkeySuccess;
         }
 
         /// <summary>

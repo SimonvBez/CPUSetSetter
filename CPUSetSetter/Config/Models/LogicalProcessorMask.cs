@@ -1,6 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CPUSetSetter.Platforms;
+using CPUSetSetter.UI.Tabs.Processes;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 
 
 namespace CPUSetSetter.Config.Models
@@ -11,6 +14,8 @@ namespace CPUSetSetter.Config.Models
     public partial class LogicalProcessorMask : ObservableConfigObject
     {
         public static LogicalProcessorMask NoMask { get; private set; } = new([]);
+
+        private readonly HotkeyCallback _hotkeyCallback;
 
         [ObservableProperty]
         private string _name;
@@ -34,6 +39,13 @@ namespace CPUSetSetter.Config.Models
 
             SaveOnCollectionChanged(Mask);
             SaveOnCollectionChanged(Hotkeys);
+
+            _hotkeyCallback = new(hotkeys.ToArray(), false);
+            _hotkeyCallback.Pressed += OnHotkeyPressed;
+
+            Hotkeys.CollectionChanged += OnHotkeysChanged;
+
+            HotkeyListener.Default.AddCallback(_hotkeyCallback);
         }
 
         /// <summary>
@@ -55,6 +67,27 @@ namespace CPUSetSetter.Config.Models
             NoMask?.Dispose(); // Dispose the old NoMask in case it already existed
             NoMask = new(hotkeys); // Create a new one
             return NoMask;
+        }
+
+        private void OnHotkeysChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            _hotkeyCallback.VKeys = ImmutableArray.Create(Hotkeys.ToArray());
+        }
+
+        private void OnHotkeyPressed(object? sender, EventArgs e)
+        {
+            ProcessesTabViewModel.Instance?.OnMaskHotkeyPressed(this);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                Hotkeys.CollectionChanged -= OnHotkeysChanged;
+                _hotkeyCallback.Pressed -= OnHotkeyPressed;
+                HotkeyListener.Default.RemoveCallback(_hotkeyCallback);
+            }
+            base.Dispose(disposing);
         }
     }
 }

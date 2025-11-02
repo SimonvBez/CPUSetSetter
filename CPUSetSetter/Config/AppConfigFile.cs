@@ -107,7 +107,7 @@ namespace CPUSetSetter.Config
         {
             hadSoftError = false;
 
-            List<VKey> noMaskHotkeys = configJson.NoMaskHotkey.Select(hotkey => Enum.Parse<VKey>(hotkey)).ToList();
+            List<VKey> noMaskHotkeys = configJson.NoMaskHotkeys.Select(hotkey => Enum.Parse<VKey>(hotkey)).ToList();
             // Put the NoMask Mask at the front of the logicalProcessorMasks
             List<LogicalProcessorMask> logicalProcessorMasks = [LogicalProcessorMask.InitNoMask(noMaskHotkeys)];
 
@@ -158,7 +158,7 @@ namespace CPUSetSetter.Config
 
         private class ConfigJson
         {
-            public List<string> NoMaskHotkey { get; init; }
+            public List<string> NoMaskHotkeys { get; init; }
             public List<LogicalProcessorMaskJson> LogicalProcessorMasks { get; init; }
             public List<ProgramMaskRuleJson> ProgramMaskRules { get; init; }
             public List<ProgramMaskRuleJson> AutomaticMaskRules { get; init; }
@@ -174,7 +174,7 @@ namespace CPUSetSetter.Config
             [JsonConstructor]
             private ConfigJson()
             {
-                NoMaskHotkey = [];
+                NoMaskHotkeys = [];
                 LogicalProcessorMasks = [];
                 ProgramMaskRules = [];
                 AutomaticMaskRules = [];
@@ -188,8 +188,8 @@ namespace CPUSetSetter.Config
             public ConfigJson(AppConfig config)
             {
                 // Get the Hotkeys for the NoMask
-                var noMaskHotkeyVKeys = config.LogicalProcessorMasks.Single(mask => mask.IsNoMask).Hotkeys;
-                NoMaskHotkey = noMaskHotkeyVKeys.Select(hotkey => hotkey.ToString()).ToList();
+                var noMaskHotkeysVKeys = config.LogicalProcessorMasks.Single(mask => mask.IsNoMask).Hotkeys;
+                NoMaskHotkeys = noMaskHotkeysVKeys.Select(hotkey => hotkey.ToString()).ToList();
 
                 // Filter out the NoMask from the list of logicalProcessorMasks
                 var userDefinedMasks = config.LogicalProcessorMasks.Where(mask => !mask.IsNoMask);
