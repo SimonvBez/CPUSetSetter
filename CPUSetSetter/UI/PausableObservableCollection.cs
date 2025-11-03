@@ -13,13 +13,14 @@ namespace CPUSetSetter.UI
             suppressNotifications = suppress;
             if (!suppress)
             {
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(
-                    NotifyCollectionChangedAction.Reset));
+                // Signal that the collection has to be re-read, as processes could have been created/removed during the pause
+                OnCollectionChanged(new(NotifyCollectionChangedAction.Reset));
             }
         }
 
         protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
+            // Don't announce that the collection has changed when it is paused
             if (!suppressNotifications)
             {
                 base.OnCollectionChanged(e);

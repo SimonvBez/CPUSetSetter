@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:proc="clr-namespace:CPUSetSetter.UI.Tabs.Processes"
+        xmlns:masks="clr-namespace:CPUSetSetter.UI.Tabs.Masks"
         mc:Ignorable="d"
         Title="CPU Set Setter"
         Height="547"
@@ -21,13 +22,22 @@
             <proc:ProcessesTab/>
         </TabItem>
 
-        <!--Settings Tab-->
+        <!--Masks Tab-->
         <TabItem>
             <TabItem.Header>
-                <TextBlock Text="Settings"/>
+                <TextBlock Text="Masks"/>
             </TabItem.Header>
 
-            <TextBlock Text="Settings tab"/>
+            <masks:MasksTab/>
+        </TabItem>
+
+        <!--Rules-->
+        <TabItem>
+            <TabItem.Header>
+                <TextBlock Text="Rules"/>
+            </TabItem.Header>
+
+            <TextBlock Text="Rules tab"/>
         </TabItem>
     </TabControl>
 </Window>

@@ -80,7 +80,7 @@
             <!--Core mask column-->
             <DataGridTemplateColumn Header="Core mask"
                                     Width="120"
-                                    SortMemberPath="CpuSet.Name"
+                                    SortMemberPath="Mask.DisplayName"
                                     ui:DataGridExtensions.SortDesc="True">
                 <DataGridTemplateColumn.CellTemplate>
                     <DataTemplate>
@@ -115,7 +115,7 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0" Margin="5"
-                           Text="Name:&#x0a;CPU Set:"/>
+                           Text="Name:&#x0a;Mask:"/>
 
                 <TextBlock Grid.Column="1" Margin="5">
                     <TextBlock.Text>

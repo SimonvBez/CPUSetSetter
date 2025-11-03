@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CPUSetSetter.Core;
 using CPUSetSetter.Platforms;
 using CPUSetSetter.UI.Tabs.Processes;
 using System.Collections.Immutable;
@@ -43,7 +44,7 @@ namespace CPUSetSetter.Config.Models
             _hotkeyCallback = new(hotkeys.ToArray(), false);
             _hotkeyCallback.Pressed += OnHotkeyPressed;
 
-            Hotkeys.CollectionChanged += OnHotkeysChanged;
+            Hotkeys.CollectionChanged += OnHotkeysCollectionChanged;
 
             HotkeyListener.Default.AddCallback(_hotkeyCallback);
         }
@@ -69,7 +70,22 @@ namespace CPUSetSetter.Config.Models
             return NoMask;
         }
 
-        private void OnHotkeysChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        public void Remove()
+        {
+            // Remove any rules that are using this mask, updating any processes by that rule as well
+            MaskRuleManager.RemoveRulesUsingMask(this);
+            // Remove from any remaining processes (like ones where the path couldn't be read)
+            foreach (ProcessListEntryViewModel process in ProcessesTabViewModel.RunningProcesses)
+            {
+                if (process.Mask == this)
+                    process.Mask = NoMask;
+            }
+            // Remove self from config
+            AppConfig.Instance.LogicalProcessorMasks.Remove(this);
+            Dispose();
+        }
+
+        private void OnHotkeysCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             _hotkeyCallback.VKeys = ImmutableArray.Create(Hotkeys.ToArray());
         }
@@ -83,7 +99,7 @@ namespace CPUSetSetter.Config.Models
         {
             if (disposing)
             {
-                Hotkeys.CollectionChanged -= OnHotkeysChanged;
+                Hotkeys.CollectionChanged -= OnHotkeysCollectionChanged;
                 _hotkeyCallback.Pressed -= OnHotkeyPressed;
                 HotkeyListener.Default.RemoveCallback(_hotkeyCallback);
             }

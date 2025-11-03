@@ -27,9 +27,5 @@
   <ItemGroup>
     <ProjectReference Include="..\CPUSetSetter.TrayIcon\CPUSetSetter.TrayIcon.csproj" />
   </ItemGroup>
-    
-  <ItemGroup>
-    <Folder Include="UI\Tabs\Settings\" />
-  </ItemGroup>
 
 </Project>

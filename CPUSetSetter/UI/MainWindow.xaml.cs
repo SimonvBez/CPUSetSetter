@@ -1,5 +1,7 @@
-﻿using System.ComponentModel;
+﻿using CPUSetSetter.UI.Tabs.Processes;
+using System.ComponentModel;
 using System.Windows;
+using System.Windows.Input;
 
 
 namespace CPUSetSetter.UI
@@ -9,6 +11,10 @@ namespace CPUSetSetter.UI
         public MainWindow()
         {
             InitializeComponent();
+
+            // Listen for the Ctrl key, so the processes list's live sorting can be paused
+            PreviewKeyDown += (_, e) => KeyPressed(e);
+            PreviewKeyUp += (_, e) => KeyReleased(e);
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -16,6 +22,22 @@ namespace CPUSetSetter.UI
             e.Cancel = true;
             Hide();
             base.OnClosing(e);
+        }
+
+        private static void KeyPressed(KeyEventArgs e)
+        {
+            if ((e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl) && !e.IsRepeat)
+            {
+                ProcessesTabViewModel.Instance?.PauseListUpdates();
+            }
+        }
+
+        private static void KeyReleased(KeyEventArgs e)
+        {
+            if ((e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl) && !e.IsRepeat)
+            {
+                ProcessesTabViewModel.Instance?.ResumeListUpdates();
+            }
         }
     }
 }

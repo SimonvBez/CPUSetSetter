@@ -2,6 +2,7 @@
 using CPUSetSetter.Config.Models;
 using CPUSetSetter.Core;
 using CPUSetSetter.Platforms;
+using System.Collections.Specialized;
 
 
 namespace CPUSetSetter.UI.Tabs.Processes
@@ -49,30 +50,49 @@ namespace CPUSetSetter.UI.Tabs.Processes
         /// <summary>
         /// Store the new mask in the config (which in turn may also set the mask of other processes with the same path), and apply it to the process
         /// </summary>
+        /// <param name="shouldUpdateRules">Normally true. Only false if this mask is being applied BY a rule already to prevent recursion</param>
         /// <returns>true if the mask was successfully applied to all processes of this ImagePath, false if not</returns>
-        public bool SetMask(LogicalProcessorMask mask)
+        public bool SetMask(LogicalProcessorMask mask, bool shouldUpdateRules)
         {
             if (mask == _lastAppliedMask) // Return the previous status if the mask is still the same
                 return !FailedToOpen;
 
             _lastAppliedMask = mask;
             Mask = mask;
-            // Save the new mask to the config, which also applies it to all other processes of the same path
-            bool hotkeySuccess = MaskRuleManager.UpdateOrAddProgramRule(ImagePath, mask);
+
+            bool ruleSuccess;
+            if (shouldUpdateRules)
+            {
+                // Save the new mask to the config, which also applies it to all other processes of the same path
+                ruleSuccess = MaskRuleManager.UpdateOrAddProgramRule(ImagePath, mask);
+            }
+            else
+            {
+                ruleSuccess = true;
+            }
 
             // Apply the mask to the actual process
             bool success = _processHandler.ApplyMask(mask);
             if (!success)
                 FailedToOpen = true;
-            return success && hotkeySuccess;
+            return success && ruleSuccess;
         }
 
         /// <summary>
-        /// The UI changed the mask
+        /// The UI picked a different mask
         /// </summary>
-        partial void OnMaskChanged(LogicalProcessorMask value)
+        partial void OnMaskChanged(LogicalProcessorMask? oldValue, LogicalProcessorMask newValue)
         {
-            SetMask(value);
+            if (oldValue is not null)
+                oldValue.Mask.CollectionChanged -= OnMaskBitsChanged;
+            newValue.Mask.CollectionChanged += OnMaskBitsChanged;
+            SetMask(newValue, true);
+        }
+
+        private void OnMaskBitsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            // One of the logical processors in the mask has changed, apply it
+            _processHandler.ApplyMask(Mask);
         }
 
         public void Dispose()

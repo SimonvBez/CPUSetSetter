@@ -11,11 +11,11 @@ namespace CPUSetSetter.Platforms
     {
         public static Manufacturer Manufacturer => Default.Manufacturer;
 
-        public static IReadOnlyCollection<string> LogicalProcessorNames => Default.LogicalProcessorNames;
+        public static IReadOnlyList<string> LogicalProcessorNames => Default.LogicalProcessorNames;
 
         public static int LogicalProcessorCount { get; } = Default.LogicalProcessorNames.Count;
 
-        public static IReadOnlyCollection<LogicalProcessorMask> DefaultLogicalProcessorMasks => Default.DefaultLogicalProcessorMasks;
+        public static IReadOnlyList<LogicalProcessorMask> DefaultLogicalProcessorMasks => Default.DefaultLogicalProcessorMasks;
 
         public static bool IsSupported => Default.IsSupported;
 
@@ -30,8 +30,8 @@ namespace CPUSetSetter.Platforms
     public interface ICpuInfo
     {
         Manufacturer Manufacturer { get; }
-        IReadOnlyCollection<string> LogicalProcessorNames { get; }
-        IReadOnlyCollection<LogicalProcessorMask> DefaultLogicalProcessorMasks { get; }
+        IReadOnlyList<string> LogicalProcessorNames { get; }
+        IReadOnlyList<LogicalProcessorMask> DefaultLogicalProcessorMasks { get; }
         bool IsSupported { get; }
     }
 

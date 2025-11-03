@@ -43,13 +43,16 @@ namespace CPUSetSetter.UI.Tabs.Processes
             Task.Run(ProcessCpuUsageUpdateLoop);
         }
 
+        /// <summary>
+        /// Triggered by a LogicalProcessorMask when its hotkeys are pressed
+        /// </summary>
         public void OnMaskHotkeyPressed(LogicalProcessorMask mask)
         {
             UpdateCurrentForegroundProcess();
             var foregroundProcess = CurrentForegroundProcess;
             if (foregroundProcess is not null)
             {
-                bool success = foregroundProcess.SetMask(mask);
+                bool success = foregroundProcess.SetMask(mask, true);
                 if (success)
                 {
                     if (mask.IsNoMask)
@@ -61,6 +64,30 @@ namespace CPUSetSetter.UI.Tabs.Processes
                 {
                     HotkeySoundPlayer.PlayError();
                 }
+            }
+        }
+
+        /// <summary>
+        /// Pause the live sorting of the Processes list
+        /// </summary>
+        public void PauseListUpdates()
+        {
+            if (RunningProcessesView != null)
+            {
+                RunningProcessesView.IsLiveSorting = false;
+                RunningProcesses.SuppressNotifications(true);
+            }
+        }
+
+        /// <summary>
+        /// Resume the live sorting of the Processes list
+        /// </summary>
+        public void ResumeListUpdates()
+        {
+            if (RunningProcessesView != null)
+            {
+                RunningProcesses.SuppressNotifications(false);
+                RunningProcessesView.IsLiveSorting = true;
             }
         }
 

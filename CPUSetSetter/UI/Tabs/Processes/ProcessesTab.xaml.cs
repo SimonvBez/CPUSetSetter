@@ -3,9 +3,6 @@
 
 namespace CPUSetSetter.UI.Tabs.Processes
 {
-    /// <summary>
-    /// Interaction logic for ProcessesTab.xaml
-    /// </summary>
     public partial class ProcessesTab : Grid
     {
         private readonly ProcessesTabViewModel viewModel;
@@ -15,6 +12,8 @@ namespace CPUSetSetter.UI.Tabs.Processes
             viewModel = new(Dispatcher);
             DataContext = viewModel;
             InitializeComponent();
+
+            Loaded += (_, _) => logBox.ScrollToEnd();
         }
 
         private void Log_TextChanged(object sender, TextChangedEventArgs e)

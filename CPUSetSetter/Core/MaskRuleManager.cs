@@ -44,7 +44,7 @@ namespace CPUSetSetter.Core
                     {
                         AppConfig.Instance.ProgramMaskRules.Remove(existingRule);
                     }
-                    return ApplyProgramRulesToAllProcesses(imagePath);
+                    return ApplyRulesToPath(imagePath);
                 }
                 // If there is an auto rule that does have a mask, then store this NoMask rule in the config by continuing down
             }
@@ -61,7 +61,44 @@ namespace CPUSetSetter.Core
                 existingRule.LogicalProcessorMask = newMask;
             }
 
-            return ApplyProgramRulesToAllProcesses(imagePath);
+            return ApplyRulesToPath(imagePath);
+        }
+
+        public static bool MaskIsUsedByRules(LogicalProcessorMask mask)
+        {
+            App.EnsureMainThread();
+
+            return AppConfig.Instance.ProgramMaskRules.Any(rule => rule.LogicalProcessorMask == mask) ||
+                AppConfig.Instance.AutomaticMaskRules.Any(rule => rule.LogicalProcessorMask == mask);
+        }
+
+        public static void RemoveRulesUsingMask(LogicalProcessorMask mask)
+        {
+            App.EnsureMainThread();
+
+            List<string> removedRulePaths = [];
+            // Remove any program rules that were using this mask
+            for (int i = AppConfig.Instance.ProgramMaskRules.Count - 1; i >= 0; --i)
+            {
+                if (AppConfig.Instance.ProgramMaskRules[i].LogicalProcessorMask == mask)
+                {
+                    AppConfig.Instance.ProgramMaskRules.RemoveAt(i);
+                    removedRulePaths.Add(AppConfig.Instance.ProgramMaskRules[i].ProgramPath);
+                }
+            }
+
+            // Remove any auto rules that were using this mask
+            for (int i = AppConfig.Instance.AutomaticMaskRules.Count - 1; i >= 0; --i)
+            {
+                if (AppConfig.Instance.AutomaticMaskRules[i].LogicalProcessorMask == mask)
+                    AppConfig.Instance.AutomaticMaskRules.RemoveAt(i);
+            }
+
+            // Also remove/update the masks on any processes that were still using it
+            foreach (string removedRulePath in removedRulePaths)
+            {
+                ApplyRulesToPath(removedRulePath);
+            }
         }
 
         // Notes for later:
@@ -100,19 +137,18 @@ namespace CPUSetSetter.Core
             return AppConfig.Instance.AutomaticMaskRules.FirstOrDefault(rule => PathMatchesGlob(rule!.ProgramPath, imagePath), null);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns>false if the mask failed to apply to the process that is being changed, else true. This is used for the hotkey sound</returns>
-        private static bool ApplyProgramRulesToAllProcesses(string imagePath)
+        /// <returns>True if the mask was applied successfully, false if an error occurred</returns>
+        private static bool ApplyRulesToPath(string imagePath)
         {
             bool result = true;
             foreach (ProcessListEntryViewModel process in ProcessesTabViewModel.RunningProcesses)
             {
-                ProgramMaskRule? programRule = AppConfig.Instance.ProgramMaskRules.FirstOrDefault(rule => PathsEqual(rule!.ProgramPath, process.ImagePath), null);
-                LogicalProcessorMask mask = programRule?.LogicalProcessorMask ?? LogicalProcessorMask.NoMask;
-                if (!process.SetMask(mask) && PathsEqual(imagePath, process.ImagePath))
-                    result = false; // Set to false if setting the mask to process that matches imagePath failed
+                if (PathsEqual(process.ImagePath, imagePath))
+                {
+                    ProgramMaskRule? programRule = GetProgramRule(imagePath);
+                    LogicalProcessorMask mask = programRule?.LogicalProcessorMask ?? LogicalProcessorMask.NoMask;
+                    result = process.SetMask(mask, false) && result;
+                }
             }
             return result;
         }

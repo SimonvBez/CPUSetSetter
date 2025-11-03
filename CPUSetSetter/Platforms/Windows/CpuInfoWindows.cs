@@ -10,10 +10,10 @@ namespace CPUSetSetter.Platforms
     {
         public Manufacturer Manufacturer { get; }
 
-        public IReadOnlyCollection<string> LogicalProcessorNames { get; }
+        public IReadOnlyList<string> LogicalProcessorNames { get; }
 
         // Default masks are loaded on demand, so that they are only created when needed
-        public IReadOnlyCollection<LogicalProcessorMask> DefaultLogicalProcessorMasks => GetDefaultLogicalProcessorMasks();
+        public IReadOnlyList<LogicalProcessorMask> DefaultLogicalProcessorMasks => GetDefaultLogicalProcessorMasks();
 
         // If the CPU is not supported, an error will raise during construction. So if this property can be retrieved, support is already guaranteed
         public bool IsSupported { get; } = true;
