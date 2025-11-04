@@ -17,6 +17,7 @@
     
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="9.0.10" />
     <PackageReference Include="System.Management" Version="9.0.10" />
   </ItemGroup>
     

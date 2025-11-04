@@ -1,6 +1,7 @@
 ﻿using CPUSetSetter.Config.Models;
 using CPUSetSetter.UI.Tabs.Processes;
-using System.Text.RegularExpressions;
+using Microsoft.Extensions.FileSystemGlobbing;
+using System.IO;
 
 
 namespace CPUSetSetter.Core
@@ -158,24 +159,53 @@ namespace CPUSetSetter.Core
             return NormalizePath(path1) == NormalizePath(path2);
         }
 
-        private static bool PathMatchesGlob(string pattern, string imagePath)
+        /// <summary>
+        /// Checks if an absolute path is part of a glob pattern
+        /// </summary>
+        private static bool PathMatchesGlob(string pattern, string path)
         {
-            if (string.IsNullOrWhiteSpace(pattern) || string.IsNullOrWhiteSpace(imagePath))
+            if (string.IsNullOrWhiteSpace(pattern) || string.IsNullOrWhiteSpace(path))
                 return false;
 
-            // Normalize paths (consistent separators and absolute form)
-            string normalizedPattern = NormalizePath(pattern);
-            string normalizedCandidate = NormalizePath(imagePath);
+            string? pathRoot = Path.GetPathRoot(path);
+            string? patternRoot = Path.GetPathRoot(pattern);
 
-            // Convert glob to regex
-            string regexPattern = "^" + Regex.Escape(normalizedPattern)
-                .Replace(@"\*", ".*")     // *: any sequence
-                .Replace(@"\?", ".")      // ?: single character
-                + "$";
+            if (string.IsNullOrEmpty(pathRoot))
+            {
+                // The path doesn't have a root
+                return false;
+            }
 
-            var comparison = OperatingSystem.IsWindows() ? RegexOptions.IgnoreCase : RegexOptions.None;
+            if (pattern.StartsWith("*/"))
+            {
+                // Remove a starting wildcard(*/) as it will otherwise cause a false negative
+                pattern = pattern[2..];
+            }
+            else if (!pattern.StartsWith("**"))
+            {
+                if (string.IsNullOrEmpty(patternRoot))
+                {
+                    // A pattern not starting with a root, **, or */ can never be a match
+                    return false;
+                }
+                else if (patternRoot != pathRoot)
+                {
+                    // The path's root is different from the pattern's root
+                    return false;
+                }
+                else
+                {
+                    // Now that the pattern root is checked, strip it. The glob matcher only works with patterns without root
+                    pattern = pattern[patternRoot.Length..];
+                }
+            }
 
-            return Regex.IsMatch(normalizedCandidate, regexPattern, comparison);
+            Matcher matcher = new(OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+            matcher.AddInclude(pattern);
+
+            if (string.IsNullOrEmpty(pathRoot))
+                return matcher.Match(path).HasMatches;
+            return matcher.Match(pathRoot, path).HasMatches;
         }
 
         private static string NormalizePath(string path)
