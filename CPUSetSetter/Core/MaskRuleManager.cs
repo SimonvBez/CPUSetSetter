@@ -82,8 +82,8 @@ namespace CPUSetSetter.Core
             {
                 if (AppConfig.Instance.ProgramMaskRules[i].LogicalProcessorMask == mask)
                 {
-                    AppConfig.Instance.ProgramMaskRules.RemoveAt(i);
                     removedRulePaths.Add(AppConfig.Instance.ProgramMaskRules[i].ProgramPath);
+                    AppConfig.Instance.ProgramMaskRules.RemoveAt(i);
                 }
             }
 

@@ -2,7 +2,6 @@
 using CommunityToolkit.Mvvm.Input;
 using CPUSetSetter.Config.Models;
 using CPUSetSetter.Core;
-using CPUSetSetter.Platforms;
 using System.Windows;
 
 
@@ -10,42 +9,22 @@ namespace CPUSetSetter.UI.Tabs.Masks
 {
     public partial class MasksTabViewModel : ObservableObject
     {
-        public bool HotkeyInputSelected { get; private set; } = false;
-
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(CanRemoveMask))]
-        [NotifyPropertyChangedFor(nameof(MaskBits))]
         private LogicalProcessorMask? _selectedMask;
 
         public bool CanRemoveMask => SelectedMask is not null && !SelectedMask.IsNoMask;
 
-        public IEnumerable<IEnumerable<MaskBitViewModel>> MaskBits
-        {
-            get
-            {
-                if (SelectedMask is null)
-                    return [];
-
-                // Calculate the number of columns, so there are no columns with more than 16 logical processors
-                int div = 2;
-                while (SelectedMask.Mask.Count / div > 16)
-                {
-                    div += 2;
-                }
-                int columnCount = Math.Max(1, SelectedMask.Mask.Count / div);
-
-                // Convert the mask to a MaskBitViewModel, which also contains the name of the logical processor
-                IEnumerable<MaskBitViewModel> maskBits = Enumerable.Range(0, SelectedMask.Mask.Count).Select(i => new MaskBitViewModel(SelectedMask, i));
-                return maskBits.Chunk(columnCount);
-            }
-        }
-
         [RelayCommand]
         private void CreateNewMask()
         {
-            // TODO: Open a new window to create a new mask
+            // Open a CreateMaskWindow, which will be able to add a new Mask directly to the config 
             CreateMaskWindow createMaskWindow = new();
-            createMaskWindow.ShowDialog();
+            bool? hasCreated = createMaskWindow.ShowDialog();
+            if (hasCreated == true)
+            {
+                SelectedMask = AppConfig.Instance.LogicalProcessorMasks[^1];
+            }
         }
 
         [RelayCommand]
@@ -73,24 +52,6 @@ namespace CPUSetSetter.UI.Tabs.Masks
         private void ClearHotkey()
         {
             SelectedMask?.Hotkeys.Clear();
-        }
-
-        public MasksTabViewModel()
-        {
-            // Add pressed keys to the selected mask's hotkey list when the input TextBox is focussed 
-            HotkeyListener.KeyPressed += (_, e) =>
-            {
-                if (HotkeyInputSelected && SelectedMask is not null && !SelectedMask.Hotkeys.Contains(e.Key))
-                {
-                    SelectedMask.Hotkeys.Add(e.Key);
-                }
-            };
-        }
-
-        public void OnHotkeyInputFocusChanged(bool isFocused)
-        {
-            HotkeyInputSelected = isFocused;
-            HotkeyListener.CallbacksEnabled = !isFocused;
         }
     }
 }

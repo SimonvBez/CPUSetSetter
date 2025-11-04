@@ -1,35 +1,46 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CPUSetSetter.Config.Models;
 using CPUSetSetter.Platforms;
 
 
 namespace CPUSetSetter.UI.Tabs.Masks
 {
+    /// <summary>
+    /// Represents a single logical processor in a mask. It contains a processor name and a bool state.
+    /// Used by the MaskEditorControl.
+    /// </summary>
     public partial class MaskBitViewModel : ObservableObject
     {
-        private readonly LogicalProcessorMask _mask;
         private readonly int _logicalProcessorIndex;
 
-        [ObservableProperty]
-        private string _logicalProcessorName;
+        public string LogicalProcessorName { get; }
 
         [ObservableProperty]
         private bool _isEnabled;
 
-        public MaskBitViewModel(LogicalProcessorMask mask, int logicalProcessorIndex)
+        public event EventHandler<MaskBitChangedEventArgs>? MaskChanged;
+
+        public MaskBitViewModel(int logicalProcessorIndex)
         {
-            _mask = mask;
             _logicalProcessorIndex = logicalProcessorIndex;
-            _logicalProcessorName = CpuInfo.LogicalProcessorNames[logicalProcessorIndex];
-            _isEnabled = mask.Mask[logicalProcessorIndex];
+            LogicalProcessorName = CpuInfo.LogicalProcessorNames[logicalProcessorIndex];
+            _isEnabled = false;
         }
 
-        /// <summary>
-        /// Save the changed mask bit to the underlying LogicalProcessorMask config object
-        /// </summary>
         partial void OnIsEnabledChanged(bool value)
         {
-            _mask.Mask[_logicalProcessorIndex] = value;
+            MaskChanged?.Invoke(this, new(_logicalProcessorIndex, value));
+        }
+    }
+
+    public class MaskBitChangedEventArgs : EventArgs
+    {
+        public int MaskBitIndex { get; }
+        public bool IsEnabled { get; }
+
+        public MaskBitChangedEventArgs(int maskBitIndex, bool isEnabled)
+        {
+            MaskBitIndex = maskBitIndex;
+            IsEnabled = isEnabled;
         }
     }
 }

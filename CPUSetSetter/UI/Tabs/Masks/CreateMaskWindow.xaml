@@ -4,11 +4,45 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CPUSetSetter.UI.Tabs.Masks"
+        d:DataContext="{d:DesignInstance Type=local:CreateMaskWindowViewModel}"
         mc:Ignorable="d"
         Title="Create a new Mask"
-        Height="450"
-        Width="800">
-    <Grid>
-        
+        ResizeMode="NoResize"
+        Height="530"
+        Width="500">
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="33"/>
+            <RowDefinition Height="38"/>
+        </Grid.RowDefinitions>
+
+        <GroupBox Grid.Row="0" Header="Mask settings">
+            <local:MaskEditorControl x:Name="maskEditor"
+                                     Margin="5"
+                                     Mask="{Binding Mask}"
+                                     Hotkeys="{Binding Hotkeys}"/>
+        </GroupBox>
+
+        <Grid Grid.Row="2" Margin="0,10,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="Mask name:"
+                       VerticalAlignment="Center"/>
+            <TextBox Grid.Column="1" Margin="7,0,0,0"
+                     Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+        </Grid>
+
+        <Button Grid.Row="3" Margin="0,10,0,0"
+                Content="Create"
+                IsEnabled="{Binding CanCreateMask}"
+                Command="{Binding CreateMaskCommand}"/>
     </Grid>
+
 </Window>

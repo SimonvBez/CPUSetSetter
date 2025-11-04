@@ -12,8 +12,8 @@
 
     <Grid.RowDefinitions>
         <RowDefinition Height="*"/>
-        <RowDefinition Height="20"/>
-        <RowDefinition Height="55"/>
+        <RowDefinition Height="30"/>
+        <RowDefinition Height="60"/>
     </Grid.RowDefinitions>
 
     <Grid Grid.Row="0">
@@ -58,67 +58,9 @@
         </Grid>
 
         <!--Settings of the selected mask-->
-        <Grid Grid.Column="1" Margin="10,0,0,0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="23"/>
-            </Grid.RowDefinitions>
-
-            <!--Logical processor list of the currently selected mask-->
-            <ItemsControl Grid.Row="0"
-                          ItemsSource="{Binding MaskBits}">
-
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal"/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <ItemsControl ItemsSource="{Binding}" Width="105">
-
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Margin="0,0,15,0" Orientation="Vertical"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
-                                        <CheckBox IsChecked="{Binding IsEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <TextBlock Margin="5,0,0,0" Text="{Binding LogicalProcessorName}"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-
-                        </ItemsControl>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-
-            <!--Hotkey input field-->
-            <Grid Grid.Row="1">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="45"/>
-                </Grid.ColumnDefinitions>
-
-                <TextBlock Grid.Column="0"
-                           Text="Hotkey:"
-                           VerticalAlignment="Center"/>
-                <TextBox Grid.Column="1" Margin="5,0"
-                         IsReadOnly="True"
-                         Text="{Binding SelectedMask.HotkeysString, Mode=OneWay}"
-                         GotKeyboardFocus="HotkeyInput_GotFocus"
-                         LostKeyboardFocus="HotkeyInput_LostFocus"/>
-                <Button Grid.Column="2"
-                        Content="Clear"
-                        Command="{Binding ClearHotkeyCommand}"/>
-            </Grid>
-        </Grid>
+        <local:MaskEditorControl Grid.Column="1" Margin="10,0,0,0"
+                                 Mask="{Binding SelectedMask.Mask}"
+                                 Hotkeys="{Binding SelectedMask.Hotkeys}"/>
     </Grid>
 
     <Separator Grid.Row="1"/>
@@ -127,6 +69,6 @@
                FontSize="13"
                Text="This is where you can manage your Masks. A Mask defines which CPU cores a process can run on.
 &#x0a;Once a Mask is created, it can be applied to a process by selecting it in the Processes tab.
-&#x0a;You can also configure a hotkey for a Mask, which allows you to apply it to the current foreground process without tabbing-out"/>
+&#x0a;You can also configure a hotkey for a Mask, which allows you to apply it to the current foreground process without tabbing-out."/>
 
 </Grid>

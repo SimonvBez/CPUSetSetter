@@ -1,5 +1,4 @@
-﻿using System.Windows;
-using System.Windows.Controls;
+﻿using System.Windows.Controls;
 
 
 namespace CPUSetSetter.UI.Tabs.Masks
@@ -13,16 +12,6 @@ namespace CPUSetSetter.UI.Tabs.Masks
             viewModel = new();
             DataContext = viewModel;
             InitializeComponent();
-        }
-
-        private void HotkeyInput_GotFocus(object sender, RoutedEventArgs e)
-        {
-            viewModel.OnHotkeyInputFocusChanged(true);
-        }
-
-        private void HotkeyInput_LostFocus(object sender, RoutedEventArgs e)
-        {
-            viewModel.OnHotkeyInputFocusChanged(false);
         }
     }
 }
