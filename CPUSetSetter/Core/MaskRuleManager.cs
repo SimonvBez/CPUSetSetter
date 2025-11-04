@@ -13,7 +13,7 @@ namespace CPUSetSetter.Core
         /// </summary>
         public static LogicalProcessorMask GetMaskFromPath(string imagePath)
         {
-            ProgramMaskRule? rule = GetProgramRule(imagePath);
+            ProgramRule? rule = GetProgramRule(imagePath);
             if (rule is null)
                 return LogicalProcessorMask.NoMask;
             return rule.LogicalProcessorMask;
@@ -31,18 +31,18 @@ namespace CPUSetSetter.Core
 
             App.EnsureMainThread();
 
-            ProgramMaskRule? existingRule = FindProgramRule(imagePath);
+            ProgramRule? existingRule = FindProgramRule(imagePath);
 
             if (newMask.IsNoMask)
             {
                 // If there is no auto rule with a mask, remove this NoMask rule from the config
-                ProgramMaskRule? autoRule = FindAutoRule(imagePath);
+                AutoRule? autoRule = FindAutoRule(imagePath);
                 if (autoRule is null || (autoRule is not null && autoRule.LogicalProcessorMask.IsNoMask))
                 {
                     // Clear the rule if it exists
                     if (existingRule is not null)
                     {
-                        AppConfig.Instance.ProgramMaskRules.Remove(existingRule);
+                        AppConfig.Instance.ProgramRules.Remove(existingRule);
                     }
                     return ApplyRulesToPath(imagePath);
                 }
@@ -53,7 +53,7 @@ namespace CPUSetSetter.Core
             if (existingRule is null)
             {
                 // There is no existing rule yet. Add the new rule
-                AppConfig.Instance.ProgramMaskRules.Add(new(imagePath, newMask));
+                AppConfig.Instance.ProgramRules.Add(new(imagePath, newMask));
             }
             else
             {
@@ -68,8 +68,8 @@ namespace CPUSetSetter.Core
         {
             App.EnsureMainThread();
 
-            return AppConfig.Instance.ProgramMaskRules.Any(rule => rule.LogicalProcessorMask == mask) ||
-                AppConfig.Instance.AutomaticMaskRules.Any(rule => rule.LogicalProcessorMask == mask);
+            return AppConfig.Instance.ProgramRules.Any(rule => rule.LogicalProcessorMask == mask) ||
+                AppConfig.Instance.AutoRules.Any(rule => rule.LogicalProcessorMask == mask);
         }
 
         public static void RemoveRulesUsingMask(LogicalProcessorMask mask)
@@ -78,20 +78,20 @@ namespace CPUSetSetter.Core
 
             List<string> removedRulePaths = [];
             // Remove any program rules that were using this mask
-            for (int i = AppConfig.Instance.ProgramMaskRules.Count - 1; i >= 0; --i)
+            for (int i = AppConfig.Instance.ProgramRules.Count - 1; i >= 0; --i)
             {
-                if (AppConfig.Instance.ProgramMaskRules[i].LogicalProcessorMask == mask)
+                if (AppConfig.Instance.ProgramRules[i].LogicalProcessorMask == mask)
                 {
-                    removedRulePaths.Add(AppConfig.Instance.ProgramMaskRules[i].ProgramPath);
-                    AppConfig.Instance.ProgramMaskRules.RemoveAt(i);
+                    removedRulePaths.Add(AppConfig.Instance.ProgramRules[i].ProgramPath);
+                    AppConfig.Instance.ProgramRules.RemoveAt(i);
                 }
             }
 
             // Remove any auto rules that were using this mask
-            for (int i = AppConfig.Instance.AutomaticMaskRules.Count - 1; i >= 0; --i)
+            for (int i = AppConfig.Instance.AutoRules.Count - 1; i >= 0; --i)
             {
-                if (AppConfig.Instance.AutomaticMaskRules[i].LogicalProcessorMask == mask)
-                    AppConfig.Instance.AutomaticMaskRules.RemoveAt(i);
+                if (AppConfig.Instance.AutoRules[i].LogicalProcessorMask == mask)
+                    AppConfig.Instance.AutoRules.RemoveAt(i);
             }
 
             // Also remove/update the masks on any processes that were still using it
@@ -105,36 +105,36 @@ namespace CPUSetSetter.Core
         // - If there is going to be a "Program rules" UI tab, add an AddRule/RemoveRule function. And make a ProgramMaskRule be able to be edited
         // - If there is going to be a "Auto rule" UI tab, add Add/Remove functions, and prune any NoMask program rules that are no longer needed
 
-        private static ProgramMaskRule? GetProgramRule(string imagePath)
+        private static ProgramRule? GetProgramRule(string imagePath)
         {
             App.EnsureMainThread();
 
             // First try to return a matching program rule
-            ProgramMaskRule? rule = FindProgramRule(imagePath);
+            ProgramRule? rule = FindProgramRule(imagePath);
             if (rule is not null)
                 return rule;
 
             // Then try to get an auto rule
-            ProgramMaskRule? autoRule = FindAutoRule(imagePath);
+            AutoRule? autoRule = FindAutoRule(imagePath);
             if (autoRule is not null && !autoRule.LogicalProcessorMask.IsNoMask)
             {
                 // An auto rule with a mask exists. Create a new program rules based on it
-                ProgramMaskRule newRule = new(imagePath, autoRule.LogicalProcessorMask);
-                AppConfig.Instance.ProgramMaskRules.Add(newRule);
+                ProgramRule newRule = new(imagePath, autoRule.LogicalProcessorMask);
+                AppConfig.Instance.ProgramRules.Add(newRule);
                 return newRule;
             }
 
             return null; // No program rule exists
         }
 
-        private static ProgramMaskRule? FindProgramRule(string imagePath)
+        private static ProgramRule? FindProgramRule(string imagePath)
         {
-            return AppConfig.Instance.ProgramMaskRules.FirstOrDefault(rule => PathsEqual(rule!.ProgramPath, imagePath), null);
+            return AppConfig.Instance.ProgramRules.FirstOrDefault(rule => PathsEqual(rule!.ProgramPath, imagePath), null);
         }
 
-        private static ProgramMaskRule? FindAutoRule(string imagePath)
+        private static AutoRule? FindAutoRule(string imagePath)
         {
-            return AppConfig.Instance.AutomaticMaskRules.FirstOrDefault(rule => PathMatchesGlob(rule!.ProgramPath, imagePath), null);
+            return AppConfig.Instance.AutoRules.FirstOrDefault(rule => PathMatchesGlob(rule!.RuleGlob, imagePath), null);
         }
 
         /// <returns>True if the mask was applied successfully, false if an error occurred</returns>
@@ -145,7 +145,7 @@ namespace CPUSetSetter.Core
             {
                 if (PathsEqual(process.ImagePath, imagePath))
                 {
-                    ProgramMaskRule? programRule = GetProgramRule(imagePath);
+                    ProgramRule? programRule = GetProgramRule(imagePath);
                     LogicalProcessorMask mask = programRule?.LogicalProcessorMask ?? LogicalProcessorMask.NoMask;
                     result = process.SetMask(mask, false) && result;
                 }
