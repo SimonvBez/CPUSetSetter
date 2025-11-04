@@ -124,8 +124,6 @@
             <TextBlock.Inlines>
                 <Run Text="An Automatic Rule will create a new Program Rule for any matching program. i.e."/>
                 <Run Text="C:\Games\**" FontWeight="Bold"/>
-                <Run Text="or"/>
-                <Run Text="**\program.exe" FontWeight="Bold"/>
                 <Run Text="&#x0a;The priority goes from top to bottom, and rules can be moved by drag-and-dropping."/>
             </TextBlock.Inlines>
         </TextBlock>

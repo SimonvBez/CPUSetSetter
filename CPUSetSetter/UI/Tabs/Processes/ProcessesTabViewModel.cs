@@ -91,6 +91,11 @@ namespace CPUSetSetter.UI.Tabs.Processes
             }
         }
 
+        partial void OnProcessNameFilterChanged(string value)
+        {
+            RunningProcessesView.Refresh();
+        }
+
         private void OnNewProcess(ProcessInfo pInfo)
         {
             _dispatcher.Invoke(() =>
