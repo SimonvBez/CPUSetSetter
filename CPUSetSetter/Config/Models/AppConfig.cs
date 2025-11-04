@@ -31,6 +31,8 @@ namespace CPUSetSetter.Config.Models
         [ObservableProperty]
         private Theme _uiTheme;
 
+        public bool IsFirstRun { get; }
+
         private readonly Lock _saveTaskLock = new();
         private bool _isSaving = false;
 
@@ -41,7 +43,8 @@ namespace CPUSetSetter.Config.Models
             bool startMinimized,
             bool disableWelcomeMessage,
             Theme uiTheme,
-            bool generateDefaultMasks)
+            bool generateDefaultMasks,
+            bool isFirstRun)
         {
             if (_exists)
             {
@@ -56,9 +59,11 @@ namespace CPUSetSetter.Config.Models
             _startMinimized = startMinimized;
             _disableWelcomeMessage = disableWelcomeMessage;
             _uiTheme = uiTheme;
+            IsFirstRun = isFirstRun;
 
             if (generateDefaultMasks)
             {
+                // Create a default set of masks for this system's CPU
                 foreach (LogicalProcessorMask coreMask in CpuInfo.DefaultLogicalProcessorMasks)
                 {
                     LogicalProcessorMasks.Add(coreMask);

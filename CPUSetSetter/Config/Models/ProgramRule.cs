@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CPUSetSetter.Core;
 
 
 namespace CPUSetSetter.Config.Models
@@ -8,16 +9,20 @@ namespace CPUSetSetter.Config.Models
     /// </summary>
     public partial class ProgramRule : ObservableConfigObject
     {
-        [ObservableProperty]
-        private string _programPath;
+        public string ProgramPath { get; }
 
         [ObservableProperty]
         private LogicalProcessorMask _logicalProcessorMask;
 
         public ProgramRule(string programPath, LogicalProcessorMask logicalProcessorMask)
         {
-            _programPath = programPath;
+            ProgramPath = programPath;
             _logicalProcessorMask = logicalProcessorMask;
+        }
+
+        partial void OnLogicalProcessorMaskChanged(LogicalProcessorMask value)
+        {
+            MaskRuleManager.UpdateOrAddProgramRule(ProgramPath, value);
         }
     }
 }

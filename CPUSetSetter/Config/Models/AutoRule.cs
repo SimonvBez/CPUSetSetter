@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CPUSetSetter.Core;
 
 
 namespace CPUSetSetter.Config.Models
@@ -18,6 +19,18 @@ namespace CPUSetSetter.Config.Models
         {
             _ruleGlob = ruleGlob;
             _logicalProcessorMask = logicalProcessorMask;
+        }
+
+        partial void OnRuleGlobChanged(string value)
+        {
+            // Apply the auto rule to the currently running processes
+            MaskRuleManager.OnAutoRulesChanged();
+        }
+
+        partial void OnLogicalProcessorMaskChanged(LogicalProcessorMask value)
+        {
+            // Apply the auto rule to the currently running processes
+            MaskRuleManager.OnAutoRulesChanged();
         }
     }
 }

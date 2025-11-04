@@ -5,12 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:proc="clr-namespace:CPUSetSetter.UI.Tabs.Processes"
         xmlns:masks="clr-namespace:CPUSetSetter.UI.Tabs.Masks"
+        xmlns:rules="clr-namespace:CPUSetSetter.UI.Tabs.Rules"
         mc:Ignorable="d"
         Title="CPU Set Setter"
         Height="547"
         MinHeight="574"
         Width="940"
-        MinWidth="700">
+        MinWidth="720">
 
     <TabControl>
         <!--Processes Tab-->
@@ -37,7 +38,7 @@
                 <TextBlock Text="Rules"/>
             </TabItem.Header>
 
-            <TextBlock Text="Rules tab"/>
+            <rules:RulesTab/>
         </TabItem>
     </TabControl>
 </Window>

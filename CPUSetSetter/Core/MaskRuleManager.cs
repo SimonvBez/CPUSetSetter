@@ -65,6 +65,18 @@ namespace CPUSetSetter.Core
             return ApplyRulesToPath(imagePath);
         }
 
+        /// <summary>
+        /// Apply an AutoRule to the currently running processes immediately
+        /// </summary>
+        public static void OnAutoRulesChanged()
+        {
+            App.EnsureMainThread();
+
+            // The only way to deal with edge cases, such as when an existing AutoRule takes priority over a new/changed one is
+            // by just iterating over all running processes and re-applying every rule
+            ReapplyAllRules();
+        }
+
         public static bool MaskIsUsedByRules(LogicalProcessorMask mask)
         {
             App.EnsureMainThread();
@@ -102,10 +114,6 @@ namespace CPUSetSetter.Core
             }
         }
 
-        // Notes for later:
-        // - If there is going to be a "Program rules" UI tab, add an AddRule/RemoveRule function. And make a ProgramMaskRule be able to be edited
-        // - If there is going to be a "Auto rule" UI tab, add Add/Remove functions, and prune any NoMask program rules that are no longer needed
-
         private static ProgramRule? GetProgramRule(string imagePath)
         {
             App.EnsureMainThread();
@@ -138,25 +146,46 @@ namespace CPUSetSetter.Core
             return AppConfig.Instance.AutoRules.FirstOrDefault(rule => PathMatchesGlob(rule!.RuleGlob, imagePath), null);
         }
 
-        /// <returns>True if the mask was applied successfully, false if an error occurred</returns>
+        /// <summary>
+        /// Get the mask belonging to the given imagePath, which is either set by a rule, or NoMask if no rule exists
+        /// </summary>
+        /// <returns>True if the mask was applied successfully to all relevant processes, false if an error occurred</returns>
         private static bool ApplyRulesToPath(string imagePath)
         {
+            ProgramRule? programRule = GetProgramRule(imagePath);
+            LogicalProcessorMask mask = programRule?.LogicalProcessorMask ?? LogicalProcessorMask.NoMask;
+
             bool result = true;
             foreach (ProcessListEntryViewModel process in ProcessesTabViewModel.RunningProcesses)
             {
                 if (PathsEqual(process.ImagePath, imagePath))
                 {
-                    ProgramRule? programRule = GetProgramRule(imagePath);
-                    LogicalProcessorMask mask = programRule?.LogicalProcessorMask ?? LogicalProcessorMask.NoMask;
                     result = process.SetMask(mask, false) && result;
                 }
             }
             return result;
         }
 
+        private static void ReapplyAllRules()
+        {
+            foreach (ProcessListEntryViewModel process in ProcessesTabViewModel.RunningProcesses)
+            {
+                ProgramRule? programRule = GetProgramRule(process.ImagePath);
+                LogicalProcessorMask mask = programRule?.LogicalProcessorMask ?? LogicalProcessorMask.NoMask;
+                process.SetMask(mask, false);
+            }
+        }
+
         private static bool PathsEqual(string path1, string path2)
         {
             return NormalizePath(path1) == NormalizePath(path2);
+        }
+
+        private static string NormalizePath(string path)
+        {
+            if (OperatingSystem.IsWindows())
+                return path.Replace(@"\", "/");
+            return path;
         }
 
         /// <summary>
@@ -206,13 +235,6 @@ namespace CPUSetSetter.Core
             if (string.IsNullOrEmpty(pathRoot))
                 return matcher.Match(path).HasMatches;
             return matcher.Match(pathRoot, path).HasMatches;
-        }
-
-        private static string NormalizePath(string path)
-        {
-            if (OperatingSystem.IsWindows())
-                return path.Replace(@"\", "/");
-            return path;
         }
     }
 }

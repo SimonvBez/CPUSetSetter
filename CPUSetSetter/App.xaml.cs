@@ -3,6 +3,8 @@ using CPUSetSetter.Core;
 using CPUSetSetter.Platforms;
 using CPUSetSetter.TrayIcon;
 using CPUSetSetter.UI;
+using Microsoft.Win32;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Windows;
@@ -66,6 +68,14 @@ namespace CPUSetSetter
             trayIcon.OpenClicked += (_, _) => ShowMainWindow();
             trayIcon.CloseClicked += (_, _) => ExitApp();
 
+            if (AppConfig.Instance.IsFirstRun)
+            {
+                // Promote the tray icon directly onto the Taskbar instead of in the "up-arrow" menu
+                // Some users did not notice the tray icon because it was hidden by default
+                // To respect the user's choice, this is only done the first time the app is ran
+                PromoteTrayIcon();
+            }
+
             // Create the rest of the app
             MainWindow = new MainWindow();
             if (!AppConfig.Instance.StartMinimized)
@@ -91,6 +101,36 @@ namespace CPUSetSetter
                 typeof(FrameworkElement),
                 new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag))
             );
+        }
+
+        /// <summary>
+        /// 'Promote' the app's tray icon, meaning it is unhidden from the 'up-arrow' menu 
+        /// </summary>
+        private static void PromoteTrayIcon()
+        {
+            string? appExePath = Environment.ProcessPath;
+            if (appExePath is null)
+                return;
+
+            using RegistryKey? notifyKey = Registry.CurrentUser.OpenSubKey(@"Control Panel\NotifyIconSettings");
+            if (notifyKey is null)
+                return;
+
+            foreach (string subkeyName in notifyKey.GetSubKeyNames())
+            {
+                using RegistryKey? appKey = notifyKey.OpenSubKey(subkeyName, true);
+                if (appKey is null)
+                    continue;
+
+                object? exePathValue = appKey.GetValue("ExecutablePath");
+                if (exePathValue is null || !string.Equals(exePathValue.ToString(), appExePath, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                // Only promote the tray icon when it has no promote status set yet
+                object? isPromoted = appKey.GetValue("IsPromoted");
+                if (isPromoted is null)
+                    appKey.SetValue("IsPromoted", 1, RegistryValueKind.DWord);
+            }
         }
 
         private void ShowMainWindow()

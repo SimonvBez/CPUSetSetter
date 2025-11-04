@@ -40,14 +40,14 @@ namespace CPUSetSetter.Config
             if (!File.Exists(fileName))
             {
                 // The config file does not exist yet, use the defaults
-                return JsonToConfig(ConfigJson.Default, true, out bool _);
+                return JsonToConfig(ConfigJson.Default, true, true, out bool _);
             }
 
             try
             {
                 using FileStream fileStream = File.OpenRead(fileName);
                 ConfigJson configJson = JsonSerializer.Deserialize<ConfigJson>(fileStream, options: jsonOptions) ?? throw new NullReferenceException();
-                AppConfig config = JsonToConfig(configJson, false, out bool hadSoftError);
+                AppConfig config = JsonToConfig(configJson, false, false, out bool hadSoftError);
 
                 if (hadSoftError)
                 {
@@ -80,7 +80,7 @@ namespace CPUSetSetter.Config
                     WindowLogger.Write("Your config has been reset. What did you do to make even the backup fail??");
                 }
                 // Use the defaults
-                return JsonToConfig(ConfigJson.Default, true, out bool _);
+                return JsonToConfig(ConfigJson.Default, true, false, out bool _);
             }
         }
 
@@ -103,7 +103,7 @@ namespace CPUSetSetter.Config
             }
         }
 
-        private static AppConfig JsonToConfig(ConfigJson configJson, bool generateDefaultMasks, out bool hadSoftError)
+        private static AppConfig JsonToConfig(ConfigJson configJson, bool generateDefaultMasks, bool isFirstRun, out bool hadSoftError)
         {
             hadSoftError = false;
 
@@ -153,7 +153,8 @@ namespace CPUSetSetter.Config
                 configJson.StartMinimized,
                 configJson.DisableWelcomeMessage,
                 Enum.Parse<Theme>(configJson.UiTheme),
-                generateDefaultMasks);
+                generateDefaultMasks,
+                isFirstRun);
         }
 
         private class ConfigJson

@@ -13,7 +13,7 @@
     <Grid.RowDefinitions>
         <RowDefinition Height="*"/>
         <RowDefinition Height="30"/>
-        <RowDefinition Height="60"/>
+        <RowDefinition Height="55"/>
     </Grid.RowDefinitions>
 
     <Grid Grid.Row="0">
@@ -65,10 +65,12 @@
 
     <Separator Grid.Row="1"/>
 
-    <TextBlock Grid.Row="2"
-               FontSize="13"
-               Text="This is where you can manage your Masks. A Mask defines which CPU cores a process can run on.
-&#x0a;Once a Mask is created, it can be applied to a process by selecting it in the Processes tab.
-&#x0a;You can also configure a hotkey for a Mask, which allows you to apply it to the current foreground process without tabbing-out."/>
+    <TextBlock Grid.Row="2">
+        <TextBlock.Inlines>
+            <Run Text="This is where you can manage your Masks. A Mask defines which CPU cores a process can run on."/>
+            <Run Text="&#x0a;Once a Mask is created, it can be applied to a process by selecting it in the Processes tab."/>
+            <Run Text="&#x0a;You can also configure a hotkey for a Mask, which allows you to apply it to the current foreground process without tabbing-out."/>
+        </TextBlock.Inlines>
+    </TextBlock>
 
 </Grid>
