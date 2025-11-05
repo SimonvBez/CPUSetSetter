@@ -29,7 +29,12 @@ namespace CPUSetSetter.UI.Tabs.Processes
         private ProcessListEntryViewModel? _currentForegroundProcess;
 
         // Core usage collection
-        public ObservableCollection<CPUSetSetter.UI.Tabs.Processes.CoreUsage.CoreUsage> CoreUsages { get; } = new();
+        public ObservableCollection<CPUSetSetter.UI.Tabs.Processes.CoreUsage.CoreUsage> CoreUsages { get; } = new(
+            Enumerable.Range(0, Environment.ProcessorCount).Select(i => new CPUSetSetter.UI.Tabs.Processes.CoreUsage.CoreUsage(i))
+        );
+
+        [GeneratedRegex(@"^\d+,\d+$")]
+        private static partial Regex ProcessorInfoRegex();
 
         public ProcessesTabViewModel(Dispatcher dispatcher)
         {
@@ -45,12 +50,6 @@ namespace CPUSetSetter.UI.Tabs.Processes
             RunningProcessesView.IsLiveSorting = true;
             RunningProcessesView.LiveSortingProperties.Add(nameof(ProcessListEntryViewModel.AverageCpuUsage));
             RunningProcessesView.Filter = item => ((ProcessListEntryViewModel)item).Name.Contains(ProcessNameFilter, StringComparison.OrdinalIgnoreCase);
-
-            // Initialize per-core collection
-            for (int i = 0; i < Environment.ProcessorCount; i++)
-            {
-                CoreUsages.Add(new CPUSetSetter.UI.Tabs.Processes.CoreUsage.CoreUsage(i));
-            }
 
             Task.Run(ForegroundProcessUpdateLoop);
             Task.Run(ProcessCpuUsageUpdateLoop);
@@ -219,7 +218,7 @@ namespace CPUSetSetter.UI.Tabs.Processes
                     _ = parkingCounters[i].NextValue();
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 // Parking counters may not exist; leave null
             }

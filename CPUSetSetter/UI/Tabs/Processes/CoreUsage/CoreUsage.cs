@@ -2,9 +2,9 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace CPUSetSetter.UI.Tabs.Processes.CoreUsage
 {
-    public class CoreUsage : ObservableObject
+    public class CoreUsage(int coreIndex) : ObservableObject
     {
-        public int CoreIndex { get; }
+        public int CoreIndex { get; } = coreIndex;
 
         private double _usagePercent;
         public double UsagePercent
@@ -18,11 +18,6 @@ namespace CPUSetSetter.UI.Tabs.Processes.CoreUsage
         {
             get => _isParked;
             set => SetProperty(ref _isParked, value);
-        }
-
-        public CoreUsage(int coreIndex)
-        {
-            CoreIndex = coreIndex;
         }
     }
 }

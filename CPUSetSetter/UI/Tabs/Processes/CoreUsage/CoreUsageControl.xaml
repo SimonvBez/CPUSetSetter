@@ -10,7 +10,7 @@
         <local:CoreUsageTextConverter x:Key="CoreUsageTextConverter"/>
         <local:PercentToHeightConverter x:Key="PercentToHeightConverter"/>
     </UserControl.Resources>
-    <Grid Margin="2,4">
+    <Grid Margin="2">
         <Grid.Style>
             <Style TargetType="Grid">
                 <Setter Property="Opacity" Value="1"/>
