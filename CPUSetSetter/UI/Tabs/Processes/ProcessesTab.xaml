@@ -6,6 +6,7 @@
       xmlns:local="clr-namespace:CPUSetSetter.UI.Tabs.Processes"
       xmlns:config="clr-namespace:CPUSetSetter.Config.Models"
       xmlns:ui="clr-namespace:CPUSetSetter.UI"
+      xmlns:coreUsage="clr-namespace:CPUSetSetter.UI.Tabs.Processes.CoreUsage"
       d:DataContext="{d:DesignInstance Type=local:ProcessesTabViewModel}"
       mc:Ignorable="d">
 
@@ -103,6 +104,7 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="250"/>
             <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="260"/>
         </Grid.ColumnDefinitions>
 
         <!--Current foreground process-->
@@ -139,5 +141,20 @@
                      TextWrapping="Wrap"/>
         </GroupBox>
 
+        <!-- Core Usage -->
+        <GroupBox Grid.Column="2" Header="Core Usage">
+            <ItemsControl ItemsSource="{Binding CoreUsages}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Rows="2"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <coreUsage:CoreUsageControl />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </GroupBox>
     </Grid>
 </Grid>

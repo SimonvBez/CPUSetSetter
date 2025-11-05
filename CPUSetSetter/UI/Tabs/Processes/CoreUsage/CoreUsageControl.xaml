@@ -1,0 +1,68 @@
+﻿<UserControl x:Class="CPUSetSetter.UI.Tabs.Processes.CoreUsage.CoreUsageControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:CPUSetSetter.UI.Tabs.Processes.CoreUsage"
+             mc:Ignorable="d" 
+             d:DesignHeight="60" d:DesignWidth="50">
+    <UserControl.Resources>
+        <local:CoreUsageTextConverter x:Key="CoreUsageTextConverter"/>
+        <local:PercentToHeightConverter x:Key="PercentToHeightConverter"/>
+    </UserControl.Resources>
+    <Grid Margin="2,4">
+        <Grid.Style>
+            <Style TargetType="Grid">
+                <Setter Property="Opacity" Value="1"/>
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsParked}" Value="True">
+                        <Setter Property="Opacity" Value="0.5"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </Grid.Style>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <!-- Bar container -->
+        <Border Grid.Row="0" Background="Gray" CornerRadius="2" VerticalAlignment="Stretch" ClipToBounds="True">
+            <Border HorizontalAlignment="Stretch" CornerRadius="2,2,0,0"
+                    VerticalAlignment="Bottom">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Background" Value="#32A852"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsParked}" Value="True">
+                                <Setter Property="Background" Value="#B0B0B0"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Border.Height>
+                    <MultiBinding Converter="{StaticResource PercentToHeightConverter}">
+                        <Binding RelativeSource="{RelativeSource AncestorType=Border}" Path="ActualHeight"/>
+                        <Binding Path="UsagePercent"/>
+                    </MultiBinding>
+                </Border.Height>
+            </Border>
+        </Border>
+        <TextBlock Grid.Row="1" TextAlignment="Center" FontSize="10" Margin="0,2,0,0">
+            <TextBlock.Text>
+                <MultiBinding Converter="{StaticResource CoreUsageTextConverter}">
+                    <Binding Path="UsagePercent"/>
+                    <Binding Path="IsParked"/>
+                </MultiBinding>
+            </TextBlock.Text>
+            <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsParked}" Value="True">
+                            <Setter Property="Foreground" Value="Gray"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+    </Grid>
+</UserControl>

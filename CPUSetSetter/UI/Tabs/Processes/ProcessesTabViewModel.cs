@@ -1,7 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CPUSetSetter.Config.Models;
 using CPUSetSetter.Platforms;
+using CPUSetSetter.UI.Tabs.Processes.CoreUsage;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Threading;
@@ -24,6 +28,9 @@ namespace CPUSetSetter.UI.Tabs.Processes
         [ObservableProperty]
         private ProcessListEntryViewModel? _currentForegroundProcess;
 
+        // Core usage collection
+        public ObservableCollection<CPUSetSetter.UI.Tabs.Processes.CoreUsage.CoreUsage> CoreUsages { get; } = new();
+
         public ProcessesTabViewModel(Dispatcher dispatcher)
         {
             _dispatcher = dispatcher;
@@ -39,8 +46,15 @@ namespace CPUSetSetter.UI.Tabs.Processes
             RunningProcessesView.LiveSortingProperties.Add(nameof(ProcessListEntryViewModel.AverageCpuUsage));
             RunningProcessesView.Filter = item => ((ProcessListEntryViewModel)item).Name.Contains(ProcessNameFilter, StringComparison.OrdinalIgnoreCase);
 
+            // Initialize per-core collection
+            for (int i = 0; i < Environment.ProcessorCount; i++)
+            {
+                CoreUsages.Add(new CPUSetSetter.UI.Tabs.Processes.CoreUsage.CoreUsage(i));
+            }
+
             Task.Run(ForegroundProcessUpdateLoop);
             Task.Run(ProcessCpuUsageUpdateLoop);
+            Task.Run(PerCoreUsageUpdateLoop);
         }
 
         /// <summary>
@@ -162,6 +176,92 @@ namespace CPUSetSetter.UI.Tabs.Processes
                 });
                 int delayTime = windowIsVisible ? 1000 : 5000; // Poll the CPU usage less often when not visible
                 await Task.Delay(delayTime);
+            }
+        }
+
+        private async Task PerCoreUsageUpdateLoop()
+        {
+            // Use Windows per-processor performance counters: "Processor", "% Processor Time"; and parking from "Processor Information", "Parking Status".
+            var usageCounters = new System.Diagnostics.PerformanceCounter[Environment.ProcessorCount];
+            System.Diagnostics.PerformanceCounter[]? parkingCounters = null;
+            try
+            {
+                for (int i = 0; i < usageCounters.Length; i++)
+                {
+                    usageCounters[i] = new System.Diagnostics.PerformanceCounter("Processor", "% Processor Time", i.ToString());
+                    _ = usageCounters[i].NextValue();
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+
+            try
+            {
+                var cat = new System.Diagnostics.PerformanceCounterCategory("Processor Information");
+                var instanceNames = cat.GetInstanceNames()
+                .Where(n => n != "_Total" && Regex.IsMatch(n, @"^\d+,\d+$"))
+                .Select(n =>
+                {
+                    var parts = n.Split(',');
+                    return new { Name = n, Node = int.Parse(parts[0]), Cpu = int.Parse(parts[1]) };
+                })
+                .OrderBy(x => x.Node).ThenBy(x => x.Cpu)
+                .Select(x => x.Name)
+                .ToArray();
+
+                int count = Math.Min(instanceNames.Length, CoreUsages.Count);
+                parkingCounters = new System.Diagnostics.PerformanceCounter[count];
+                for (int i = 0; i < count; i++)
+                {
+                    parkingCounters[i] = new System.Diagnostics.PerformanceCounter("Processor Information", "Parking Status", instanceNames[i]);
+                    _ = parkingCounters[i].NextValue();
+                }
+            }
+            catch (Exception ex)
+            {
+                // Parking counters may not exist; leave null
+            }
+
+            while (true)
+            {
+                float[] usageValues = new float[CoreUsages.Count];
+                bool[] parkedValues = new bool[CoreUsages.Count];
+
+                for (int i = 0; i < usageValues.Length; i++)
+                {
+                    float v = 0f;
+                    try { v = usageCounters[i]?.NextValue() ?? 0f; } catch { }
+                    usageValues[i] = Math.Clamp(v, 0f, 100f);
+
+                    if (parkingCounters is not null && i < parkingCounters.Length)
+                    {
+                        try
+                        {
+                            float p = parkingCounters[i]?.NextValue() ?? 0f; // Typically 0 or 1
+                            parkedValues[i] = p > 0.5f; // treat >0.5 as parked
+                        }
+                        catch
+                        {
+                            parkedValues[i] = false;
+                        }
+                    }
+                }
+
+                await _dispatcher.InvokeAsync(() =>
+                {
+                    for (int i = 0; i < CoreUsages.Count; i++)
+                    {
+                        CoreUsages[i].UsagePercent = usageValues[i];
+                        if (i < parkedValues.Length)
+                            CoreUsages[i].IsParked = parkedValues[i];
+                        else
+                            CoreUsages[i].IsParked = false;
+                    }
+                });
+
+                await Task.Delay(1000);
             }
         }
     }
