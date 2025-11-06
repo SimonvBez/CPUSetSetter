@@ -83,8 +83,8 @@
             <TextBlock Grid.Row="0" Grid.Column="0"
                        Text="Rule Template:"
                        VerticalAlignment="Center"/>
-            <TextBox Grid.Row="0" Grid.Column="1" Margin="7,0,0,0"
-                     x:Name="ruleGlobInput"
+            <TextBox x:Name="ruleGlobInput"
+                     Grid.Row="0" Grid.Column="1" Margin="7,0,0,0"
                      Text="{Binding RuleGlob, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
             <TextBlock Grid.Row="2" Grid.Column="0"

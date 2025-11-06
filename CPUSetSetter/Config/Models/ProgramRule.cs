@@ -27,11 +27,16 @@ namespace CPUSetSetter.Config.Models
         public bool HasRunningProcesses => runningRuleProcesses.Count >= 1;
         public bool IsDeviatingFromRuleTemplate => MatchingRuleTemplate is not null && MatchingRuleTemplate.Mask != Mask;
 
-        public ProgramRule(string programPath, LogicalProcessorMask mask)
+        public ProgramRule(string programPath, LogicalProcessorMask mask, bool skipSetup)
         {
             ProgramPath = programPath;
             _mask = mask;
+
             AddAllRunningProcesses();
+            if (!skipSetup)
+            {
+                TryFindMatchingRuleTemplate();
+            }
         }
 
         protected override void MarkConfigSaveExcludeProperties(ICollection<string> ignoredProperties)
@@ -59,6 +64,18 @@ namespace CPUSetSetter.Config.Models
                     runningRuleProcesses.Add(process);
             }
             OnPropertyChanged(nameof(HasRunningProcesses));
+        }
+
+        private void TryFindMatchingRuleTemplate()
+        {
+            foreach (RuleTemplate ruleTemplate in AppConfig.Instance.RuleTemplates)
+            {
+                if (RuleHelpers.PathMatchesGlob(ruleTemplate.RuleGlob, ProgramPath))
+                {
+                    MatchingRuleTemplate = ruleTemplate;
+                    return;
+                }
+            }
         }
 
         public void RemoveRunningProcess(ProcessListEntryViewModel process)

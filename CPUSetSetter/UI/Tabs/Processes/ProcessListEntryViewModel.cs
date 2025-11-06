@@ -68,7 +68,7 @@ namespace CPUSetSetter.UI.Tabs.Processes
                 ProgramRule? programRule = RuleHelpers.GetProgramRuleOrNull(ImagePath);
                 if (programRule is null)
                 {
-                    programRule = new(ImagePath, newMask);
+                    programRule = new(ImagePath, newMask, true);
                     AppConfig.Instance.ProgramRules.Add(programRule);
                 }
                 ruleSuccess = programRule.SetMask(newMask, true);

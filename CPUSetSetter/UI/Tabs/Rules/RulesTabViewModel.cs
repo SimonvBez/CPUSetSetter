@@ -35,6 +35,13 @@ namespace CPUSetSetter.UI.Tabs.Rules
                 programRule.Mask = programRule.MatchingRuleTemplate.Mask;
         }
 
+        [RelayCommand]
+        private static void CreateProgramRule()
+        {
+            CreateProgramRuleWindow window = new() { Owner = App.Current.MainWindow };
+            window.ShowDialog();
+        }
+
         /// <summary>
         /// User pressed Rule Template Reapply button.
         /// This will overwrite every deviating ProgramRule with the mask of the RuleTemplate
