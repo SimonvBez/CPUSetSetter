@@ -40,6 +40,10 @@
               AutoGenerateColumns="False"
               RowHeight="24"
               HeadersVisibility="Column"
+              CanUserReorderColumns="False"
+              CanUserDeleteRows="False"
+              CanUserAddRows="False"
+              CanUserResizeRows="False"
               ui:DataGridExtensions.SortDesc="True">
 
         <!--KNOWN VISUAL BUG: The Cell Style here is not re-made on a theme change

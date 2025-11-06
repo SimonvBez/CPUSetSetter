@@ -24,7 +24,7 @@ namespace CPUSetSetter.Config.Models
         [ObservableProperty]
         private string _displayName;
 
-        public ObservableCollection<bool> Mask { get; init; }
+        public ObservableCollection<bool> BoolMask { get; init; }
 
         public ObservableCollection<VKey> Hotkeys { get; init; }
 
@@ -34,11 +34,11 @@ namespace CPUSetSetter.Config.Models
         {
             _name = name;
             _displayName = displayName;
-            Mask = new(mask);
+            BoolMask = new(mask);
             Hotkeys = new(hotkeys);
             IsNoMask = isNoMask;
 
-            SaveOnCollectionChanged(Mask);
+            SaveOnCollectionChanged(BoolMask);
             SaveOnCollectionChanged(Hotkeys);
 
             _hotkeyCallback = new(hotkeys.ToArray(), false);
@@ -82,7 +82,6 @@ namespace CPUSetSetter.Config.Models
             }
             // Remove self from config
             AppConfig.Instance.LogicalProcessorMasks.Remove(this);
-            Dispose();
         }
 
         private void OnHotkeysCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)

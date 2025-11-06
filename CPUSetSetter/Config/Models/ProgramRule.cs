@@ -12,17 +12,50 @@ namespace CPUSetSetter.Config.Models
         public string ProgramPath { get; }
 
         [ObservableProperty]
-        private LogicalProcessorMask _logicalProcessorMask;
+        [NotifyPropertyChangedFor(nameof(IsDeviatingFromRuleTemplate))]
+        private LogicalProcessorMask _mask;
 
-        public ProgramRule(string programPath, LogicalProcessorMask logicalProcessorMask)
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsDeviatingFromRuleTemplate))]
+        private RuleTemplate? _matchingRuleTemplate;
+
+        public bool IsDeviatingFromRuleTemplate => MatchingRuleTemplate is not null && MatchingRuleTemplate.Mask != Mask;
+
+        public ProgramRule(string programPath, LogicalProcessorMask mask)
         {
             ProgramPath = programPath;
-            _logicalProcessorMask = logicalProcessorMask;
+            _mask = mask;
         }
 
-        partial void OnLogicalProcessorMaskChanged(LogicalProcessorMask value)
+        /// <summary>
+        /// The mask was just set by either the Rules tab, or was set to a non-NoMask by something else
+        /// The mask can only have been set to NoMask from the Rules tab, either directly or with a Template reapply
+        /// </summary>
+        partial void OnMaskChanged(LogicalProcessorMask value)
         {
-            MaskRuleManager.UpdateOrAddProgramRule(ProgramPath, value);
+            MaskRuleManager.UpdateOrAddProgramRule(ProgramPath, value, false);
+        }
+
+        partial void OnMatchingRuleTemplateChanged(RuleTemplate? oldValue, RuleTemplate? newValue)
+        {
+            if (oldValue is not null)
+                oldValue.MaskChanged -= OnMatchingRuleTemplateMaskChanged;
+
+            if (newValue is not null)
+                newValue.MaskChanged += OnMatchingRuleTemplateMaskChanged;
+        }
+
+        private void OnMatchingRuleTemplateMaskChanged(object? sender, EventArgs e)
+        {
+            OnPropertyChanged(nameof(IsDeviatingFromRuleTemplate));
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && MatchingRuleTemplate is not null)
+                MatchingRuleTemplate.MaskChanged -= OnMatchingRuleTemplateMaskChanged;
+
+            base.Dispose(disposing);
         }
     }
 }

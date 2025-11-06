@@ -112,7 +112,7 @@ namespace CPUSetSetter.Config
             List<LogicalProcessorMask> logicalProcessorMasks = [LogicalProcessorMask.InitNoMask(noMaskHotkeys)];
 
             // Construct the LogicalProcessorMask models from the config
-            foreach (LogicalProcessorMaskJson jsonMask in configJson.LogicalProcessorMasks)
+            foreach (LogicalProcessorMaskJson jsonMask in configJson.Masks)
             {
                 if (logicalProcessorMasks.Any(existingMask => existingMask.Name == jsonMask.Name))
                 {
@@ -120,7 +120,7 @@ namespace CPUSetSetter.Config
                     hadSoftError = true;
                     continue;
                 }
-                if (jsonMask.Mask.Count != CpuInfo.LogicalProcessorCount)
+                if (jsonMask.BoolMask.Count != CpuInfo.LogicalProcessorCount)
                 {
                     WindowLogger.Write($"Config file contained incorrect mask length in mask '{jsonMask.Name}'. The invalid mask was removed.");
                     hadSoftError = true;
@@ -128,7 +128,7 @@ namespace CPUSetSetter.Config
                 }
 
                 List<VKey> hotkeys = jsonMask.Hotkeys.Select(hotkey => Enum.Parse<VKey>(hotkey)).ToList();
-                logicalProcessorMasks.Add(new(jsonMask.Name, jsonMask.Mask, hotkeys));
+                logicalProcessorMasks.Add(new(jsonMask.Name, jsonMask.BoolMask, hotkeys));
             }
 
             // Construct the ProgramRule models from the config
@@ -138,17 +138,17 @@ namespace CPUSetSetter.Config
                 return new ProgramRule(jsonProgramRule.ProgramPath, mask);
             }).ToList();
 
-            // Construct the AutoRule models from the config
-            List<AutoRule> autoRules = configJson.AutoRules.Select(jsonAutoRule =>
+            // Construct the RuleTemplate models from the config
+            List<RuleTemplate> ruleTemplates = configJson.RuleTemplates.Select(jsonRuleTemplate =>
             {
-                LogicalProcessorMask mask = logicalProcessorMasks.Single(mask => mask.Name == jsonAutoRule.LogicalProcessorMaskName);
-                return new AutoRule(jsonAutoRule.RuleGlob, mask);
+                LogicalProcessorMask mask = logicalProcessorMasks.Single(mask => mask.Name == jsonRuleTemplate.LogicalProcessorMaskName);
+                return new RuleTemplate(jsonRuleTemplate.RuleGlob, mask);
             }).ToList();
 
             // Construct the AppConfig
             return new(logicalProcessorMasks,
                 programRules,
-                autoRules,
+                ruleTemplates,
                 configJson.MuteHotKeySound,
                 configJson.StartMinimized,
                 configJson.DisableWelcomeMessage,
@@ -160,9 +160,9 @@ namespace CPUSetSetter.Config
         private class ConfigJson
         {
             public List<string> NoMaskHotkeys { get; init; }
-            public List<LogicalProcessorMaskJson> LogicalProcessorMasks { get; init; }
+            public List<LogicalProcessorMaskJson> Masks { get; init; }
             public List<ProgramRuleJson> ProgramRules { get; init; }
-            public List<AutoRuleJson> AutoRules { get; init; }
+            public List<RuleTemplateJson> RuleTemplates { get; init; }
             public bool MuteHotKeySound { get; init; }
             public bool StartMinimized { get; init; }
             public bool DisableWelcomeMessage { get; init; }
@@ -176,9 +176,9 @@ namespace CPUSetSetter.Config
             private ConfigJson()
             {
                 NoMaskHotkeys = [];
-                LogicalProcessorMasks = [];
+                Masks = [];
                 ProgramRules = [];
-                AutoRules = [];
+                RuleTemplates = [];
                 MuteHotKeySound = false;
                 StartMinimized = false;
                 DisableWelcomeMessage = false;
@@ -196,20 +196,20 @@ namespace CPUSetSetter.Config
                 var userDefinedMasks = config.LogicalProcessorMasks.Where(mask => !mask.IsNoMask);
 
                 // Convert the LogicalProcessorMask models to JSON objects
-                LogicalProcessorMasks = userDefinedMasks.Select(mask =>
+                Masks = userDefinedMasks.Select(mask =>
                 {
                     List<string> hotkeys = mask.Hotkeys.Select(hotkey => hotkey.ToString()).ToList();
-                    return new LogicalProcessorMaskJson(mask.Name, new(mask.Mask), hotkeys);
+                    return new LogicalProcessorMaskJson(mask.Name, new(mask.BoolMask), hotkeys);
                 }).ToList();
 
                 // Convert the ProgramRules models to JSON objects
                 ProgramRules = config.ProgramRules.Select(programRule =>
-                    new ProgramRuleJson(programRule.ProgramPath, programRule.LogicalProcessorMask.Name)
+                    new ProgramRuleJson(programRule.ProgramPath, programRule.Mask.Name)
                 ).ToList();
 
-                // Convert the AutoRules models to JSON objects
-                AutoRules = config.AutoRules.Select(autoRule =>
-                    new AutoRuleJson(autoRule.RuleGlob, autoRule.LogicalProcessorMask.Name)
+                // Convert the RuleTemplates models to JSON objects
+                RuleTemplates = config.RuleTemplates.Select(ruleTemplate =>
+                    new RuleTemplateJson(ruleTemplate.RuleGlob, ruleTemplate.Mask.Name)
                 ).ToList();
 
                 // Set the remainder of the settings to the JSON object
@@ -224,21 +224,21 @@ namespace CPUSetSetter.Config
         private class LogicalProcessorMaskJson
         {
             public string Name { get; init; }
-            public List<bool> Mask { get; init; }
+            public List<bool> BoolMask { get; init; }
             public List<string> Hotkeys { get; init; }
 
             [JsonConstructor]
             private LogicalProcessorMaskJson()
             {
                 Name = string.Empty;
-                Mask = [];
+                BoolMask = [];
                 Hotkeys = [];
             }
 
-            public LogicalProcessorMaskJson(string name, List<bool> mask, List<string> hotkeys)
+            public LogicalProcessorMaskJson(string name, List<bool> boolMask, List<string> hotkeys)
             {
                 Name = name;
-                Mask = mask;
+                BoolMask = boolMask;
                 Hotkeys = hotkeys;
             }
         }
@@ -262,19 +262,19 @@ namespace CPUSetSetter.Config
             }
         }
 
-        private class AutoRuleJson
+        private class RuleTemplateJson
         {
             public string RuleGlob { get; init; }
             public string LogicalProcessorMaskName { get; init; }
 
             [JsonConstructor]
-            private AutoRuleJson()
+            private RuleTemplateJson()
             {
                 RuleGlob = string.Empty;
                 LogicalProcessorMaskName = string.Empty;
             }
 
-            public AutoRuleJson(string ruleGlob, string logicalProcessorMaskName)
+            public RuleTemplateJson(string ruleGlob, string logicalProcessorMaskName)
             {
                 RuleGlob = ruleGlob;
                 LogicalProcessorMaskName = logicalProcessorMaskName;

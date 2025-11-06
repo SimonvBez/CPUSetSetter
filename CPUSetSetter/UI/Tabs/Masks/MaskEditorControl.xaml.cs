@@ -13,13 +13,14 @@ namespace CPUSetSetter.UI.Tabs.Masks
     /// </summary>
     public partial class MaskEditorControl : UserControl, IDisposable
     {
+        private bool _suppressInnerToOuterMaskChanges = false;
         private bool _hotkeyInputSelected = false;
         private readonly List<MaskBitViewModel> innerMask;
 
         // DependencyProperties
-        public static readonly DependencyProperty MaskProperty =
+        public static readonly DependencyProperty BoolMaskProperty =
             DependencyProperty.Register(
-                nameof(Mask),
+                nameof(BoolMask),
                 typeof(ObservableCollection<bool>),
                 typeof(MaskEditorControl),
                 new PropertyMetadata(null, OnMaskChanged));
@@ -32,10 +33,10 @@ namespace CPUSetSetter.UI.Tabs.Masks
                 new PropertyMetadata(null, OnHotkeysChanged));
 
         // Properties
-        public ObservableCollection<bool>? Mask
+        public ObservableCollection<bool>? BoolMask
         {
-            get => (ObservableCollection<bool>?)GetValue(MaskProperty);
-            set => SetValue(MaskProperty, value);
+            get => (ObservableCollection<bool>?)GetValue(BoolMaskProperty);
+            set => SetValue(BoolMaskProperty, value);
         }
 
         public ObservableCollection<VKey>? Hotkeys
@@ -71,10 +72,12 @@ namespace CPUSetSetter.UI.Tabs.Masks
                     control.maskItemsControl.Visibility = Visibility.Visible;
                     newMask.CollectionChanged += control.OnOuterMaskChanged;
                     // Copy the values from the new outer mask to the control's inner mask
+                    control._suppressInnerToOuterMaskChanges = true; // Don't change the Outer Mask based on itself
                     for (int i = 0; i < newMask.Count; ++i)
                     {
                         control.innerMask[i].IsEnabled = newMask[i];
                     }
+                    control._suppressInnerToOuterMaskChanges = false; // Re-enable the inner-to-outer changes again
                 }
             }
             else
@@ -104,7 +107,7 @@ namespace CPUSetSetter.UI.Tabs.Masks
             // The outer mask was changed. Reflect this change into the inner mask
             if (e.Action == NotifyCollectionChangedAction.Replace)
             {
-                innerMask[e.OldStartingIndex].IsEnabled = Mask![e.OldStartingIndex];
+                innerMask[e.OldStartingIndex].IsEnabled = BoolMask![e.OldStartingIndex];
             }
             else
             {
@@ -155,9 +158,9 @@ namespace CPUSetSetter.UI.Tabs.Masks
         private void OnInnerMaskBitChanged(object? sender, MaskBitChangedEventArgs e)
         {
             // Apply a change to the inner mask to the outer mask
-            if (Mask is not null)
+            if (BoolMask is not null && !_suppressInnerToOuterMaskChanges)
             {
-                Mask[e.MaskBitIndex] = e.IsEnabled;
+                BoolMask[e.MaskBitIndex] = e.IsEnabled;
             }
         }
 
@@ -188,8 +191,8 @@ namespace CPUSetSetter.UI.Tabs.Masks
 
         public void Dispose()
         {
-            if (Mask is not null)
-                Mask.CollectionChanged -= OnOuterMaskChanged;
+            if (BoolMask is not null)
+                BoolMask.CollectionChanged -= OnOuterMaskChanged;
             if (Hotkeys is not null)
                 Hotkeys.CollectionChanged -= OnOuterMaskChanged;
 

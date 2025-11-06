@@ -1,0 +1,106 @@
+﻿<Window x:Class="CPUSetSetter.UI.Tabs.Rules.CreateRuleTemplateWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CPUSetSetter.UI.Tabs.Rules"
+        xmlns:config="clr-namespace:CPUSetSetter.Config.Models"
+        d:DataContext="{d:DesignInstance Type=local:CreateRuleTemplateWindowViewModel}"
+        mc:Ignorable="d"
+        FocusManager.FocusedElement="{Binding ElementName=ruleGlobInput}"
+        Title="Create a new Rule Template"
+        MinHeight="360"
+        MaxHeight="360"
+        Width="700"
+        MinWidth="700">
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="38"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0">
+            <Run Text="When a new process 'matches' with a Rule Template, a new Program Rule will be created for that process automatically."/>
+            <Run Text="&#x0a;&#x0a;A Rule Template is written like a path with wildcards (* and/or **)."/>
+            <Run Text="&#x0a;* matches any/zero characters, but not (back)slashes"/>
+            <Run Text="&#x0a;** matches any/zero characters, including (back)slashes that are not the first/last character"/>
+            <Run Text="&#x0a;&#x0a;Examples (green means the process matches):"/>
+            
+            <Run Text="&#x0a;C:\Games\** " FontWeight="Bold"/>
+            <Run Text="->"/>
+            <Run Text="C:\Games\game.exe" Foreground="Green"/>
+            <Run Text="and"/>
+            <Run Text="C:\Games\Steam\The Finals\Discovery.exe" Foreground="Green"/>
+            <Run Text="but not"/>
+            <Run Text="C:\More Games\game.exe" Foreground="Red"/>
+            
+            <Run Text="&#x0a;C:\Games\* " FontWeight="Bold"/>
+            <Run Text="->"/>
+            <Run Text="C:\Games\game.exe" Foreground="Green"/>
+            <Run Text="but not"/>
+            <Run Text="C:\Games\Steam\The Finals\Discovery.exe" Foreground="Red"/>
+            
+            <Run Text="&#x0a;C:\Games\*\* " FontWeight="Bold"/>
+            <Run Text="->"/>
+            <Run Text="C:\Games\Outer Wilds\OuterWilds.exe" Foreground="Green"/>
+            <Run Text="but not"/>
+            <Run Text="C:\Games\A\B\C.exe" Foreground="Red"/>
+            <Run Text="or"/>
+            <Run Text="C:\Games\A.exe" Foreground="Red"/>
+            
+            <Run Text="&#x0a;**\bf6.exe " FontWeight="Bold"/>
+            <Run Text="->"/>
+            <Run Text="C:\Games\Battlefield 6\bf6.exe" Foreground="Green"/>
+            <Run Text="and"/>
+            <Run Text="D:\Battlefield 6\SP\bf6.exe" Foreground="Green"/>
+            <Run Text="but not"/>
+            <Run Text="C:\Games\bbf6.exe" Foreground="Red"/>
+            
+            <Run Text="&#x0a;**\*Cheat* " FontWeight="Bold"/>
+            <Run Text="->"/>
+            <Run Text="C:\Games\BF6\EAAntiCheat.Installer.exe" Foreground="Green"/>
+            <Run Text="(Use with &lt;no mask&gt; to create an exception for anti-cheat launchers)"/>
+
+        </TextBlock>
+
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="24"/>
+                <RowDefinition Height="3"/>
+                <RowDefinition Height="24"/>
+            </Grid.RowDefinitions>
+            
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0"
+                       Text="Rule Template:"
+                       VerticalAlignment="Center"/>
+            <TextBox Grid.Row="0" Grid.Column="1" Margin="7,0,0,0"
+                     x:Name="ruleGlobInput"
+                     Text="{Binding RuleGlob, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+            <TextBlock Grid.Row="2" Grid.Column="0"
+                       Text="Core Mask:"
+                       VerticalAlignment="Center"/>
+            <ComboBox Grid.Row="2" Grid.Column="1" Margin="7,0,0,0"
+                      ItemsSource="{Binding LogicalProcessorMasks, Source={x:Static config:AppConfig.Instance}}"
+                      SelectedValue="{Binding SelectedMask, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Name}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </Grid>
+
+        <Button Grid.Row="3" Margin="0,10,0,0"
+                Content="Create"
+                IsEnabled="{Binding CanCreate}"
+                Command="{Binding CreateRuleTemplateCommand}"/>
+    </Grid>
+</Window>

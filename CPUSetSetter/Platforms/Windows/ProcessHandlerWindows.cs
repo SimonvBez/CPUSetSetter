@@ -111,9 +111,9 @@ namespace CPUSetSetter.Platforms.Windows
             else
             {
                 UIntPtr bitMask = 0;
-                for (int i = 0; i < mask.Mask.Count; ++i)
+                for (int i = 0; i < mask.BoolMask.Count; ++i)
                 {
-                    if (mask.Mask[i])
+                    if (mask.BoolMask[i])
                         bitMask |= (UIntPtr)1 << i;
                 }
 

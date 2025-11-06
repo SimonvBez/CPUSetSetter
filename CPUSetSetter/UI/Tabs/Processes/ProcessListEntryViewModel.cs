@@ -64,7 +64,7 @@ namespace CPUSetSetter.UI.Tabs.Processes
             if (shouldUpdateRules)
             {
                 // Save the new mask to the config, which also applies it to all other processes of the same path
-                ruleSuccess = MaskRuleManager.UpdateOrAddProgramRule(ImagePath, mask);
+                ruleSuccess = MaskRuleManager.UpdateOrAddProgramRule(ImagePath, mask, true);
             }
             else
             {
@@ -84,19 +84,23 @@ namespace CPUSetSetter.UI.Tabs.Processes
         partial void OnMaskChanged(LogicalProcessorMask? oldValue, LogicalProcessorMask newValue)
         {
             if (oldValue is not null)
-                oldValue.Mask.CollectionChanged -= OnMaskBitsChanged;
-            newValue.Mask.CollectionChanged += OnMaskBitsChanged;
+                oldValue.BoolMask.CollectionChanged -= OnMaskBitsChanged;
+            newValue.BoolMask.CollectionChanged += OnMaskBitsChanged;
             SetMask(newValue, true);
         }
 
         private void OnMaskBitsChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
+            if (e.Action != NotifyCollectionChangedAction.Replace)
+                throw new ArgumentException("Only Replace actions are allowed for mask bits");
+
             // One of the logical processors in the mask has changed, apply it
             _processHandler.ApplyMask(Mask);
         }
 
         public void Dispose()
         {
+            Mask.BoolMask.CollectionChanged -= OnMaskBitsChanged;
             _processHandler.Dispose();
             GC.SuppressFinalize(this);
         }

@@ -4,7 +4,6 @@ using CPUSetSetter.Platforms;
 using CPUSetSetter.TrayIcon;
 using CPUSetSetter.UI;
 using Microsoft.Win32;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Windows;
@@ -58,6 +57,7 @@ namespace CPUSetSetter
 
             // Load the config, which also loads the app's UI theme
             AppConfig.Load();
+            MaskRuleManager.OnConfigLoaded();
 
             // Set the app's culture to the local culture
             SetAppCulture();
