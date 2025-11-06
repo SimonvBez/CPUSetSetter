@@ -2,23 +2,20 @@
 using CommunityToolkit.Mvvm.Input;
 using CPUSetSetter.Config.Models;
 using CPUSetSetter.Core;
+using System.Windows.Data;
 
 
 namespace CPUSetSetter.UI.Tabs.Rules
 {
     public partial class RulesTabViewModel : ObservableObject
     {
-        public static string RuleTemplatesHeaderText
-        {
-            get
-            {
-                if (AppConfig.Instance.RuleTemplates.Count == 0)
-                    return "Rule Templates";
-                if (AppConfig.Instance.RuleTemplates.Count == 1)
-                    return "Rule Templates (double click to edit)";
-                return "Rule Templates (double click to edit, drag-and-drop to reorder)";
-            }
-        }
+        private readonly ListCollectionView programRulesView;
+
+        [ObservableProperty]
+        private string _programRuleFilter = string.Empty;
+
+        [ObservableProperty]
+        private bool _showOnlyDeviatingProgramRule = false;
 
         /// <summary>
         /// User pressed Program Rule Remove button
@@ -28,7 +25,7 @@ namespace CPUSetSetter.UI.Tabs.Rules
         {
             // Remove the ProgramRule, unless it currently has a running process AND is matching a RuleTemplate
             // In that case, the Mask will be set to the RuleTemplate's
-            MaskRuleManager.RemoveProgramRule(programRule);
+            programRule.TryRemove();
         }
 
         [RelayCommand]
@@ -39,36 +36,51 @@ namespace CPUSetSetter.UI.Tabs.Rules
         }
 
         /// <summary>
-        /// User pressed Rule Template Reapply button
+        /// User pressed Rule Template Reapply button.
+        /// This will overwrite every deviating ProgramRule with the mask of the RuleTemplate
         /// </summary>
         [RelayCommand]
         private static void RuleTemplateReapply(RuleTemplate ruleTemplate)
         {
-            MaskRuleManager.ReapplyRuleTemplate(ruleTemplate);
+            ruleTemplate.Reapply();
         }
 
         /// <summary>
-        /// User pressed Rule Template Remove button
+        /// User pressed Rule Template Remove button.
+        /// Removes the RuleTemplate. This will also refresh all ProgramRules to find their first matching RuleTemplate
         /// </summary>
         [RelayCommand]
         private static void RuleTemplateRemove(RuleTemplate ruleTemplate)
         {
-            // Rule Templates don't have any remove-logic, so they can just be removed
-            MaskRuleManager.RemoveRuleTemplate(ruleTemplate);
+            AppConfig.Instance.RuleTemplates.Remove(ruleTemplate);
         }
 
         [RelayCommand]
         private static void CreateRuleTemplate()
         {
-            new CreateRuleTemplateWindow().ShowDialog();
+            CreateRuleTemplateWindow window = new() { Owner = App.Current.MainWindow };
+            window.ShowDialog();
         }
 
         public RulesTabViewModel()
         {
-            // Update the Rule Template DataGrid header when the Rule Template collection changes
-            AppConfig.Instance.RuleTemplates.CollectionChanged += (_, _) => OnPropertyChanged(nameof(RuleTemplatesHeaderText));
+            programRulesView = (ListCollectionView)CollectionViewSource.GetDefaultView(AppConfig.Instance.ProgramRules);
+            programRulesView.Filter = item =>
+            {
+                ProgramRule rule = (ProgramRule)item;
+                return rule.ProgramPath.Contains(ProgramRuleFilter, StringComparison.OrdinalIgnoreCase) &&
+                    (!ShowOnlyDeviatingProgramRule || rule.IsDeviatingFromRuleTemplate);
+            };
         }
 
-        // TODO: Disable Remove button for Program Rules that fall under a Rule Template
+        partial void OnProgramRuleFilterChanged(string value)
+        {
+            programRulesView.Refresh();
+        }
+
+        partial void OnShowOnlyDeviatingProgramRuleChanged(bool value)
+        {
+            programRulesView.Refresh();
+        }
     }
 }

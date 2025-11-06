@@ -57,7 +57,7 @@ namespace CPUSetSetter
 
             // Load the config, which also loads the app's UI theme
             AppConfig.Load();
-            MaskRuleManager.OnConfigLoaded();
+            RuleHelpers.OnConfigLoaded();
 
             // Set the app's culture to the local culture
             SetAppCulture();
@@ -144,12 +144,6 @@ namespace CPUSetSetter
         {
             trayIcon?.Dispose();
             Shutdown();
-        }
-
-        public static void EnsureMainThread()
-        {
-            if (Current.Dispatcher.Thread != Thread.CurrentThread)
-                throw new ThreadStateException("Not running on the MainThread");
         }
     }
 }

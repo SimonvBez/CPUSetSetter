@@ -12,12 +12,24 @@ namespace CPUSetSetter.Config.Models
     public class ObservableConfigObject : ObservableObject, IDisposable
     {
         private readonly List<Action> collectionUnsubscribeActions = [];
+        private readonly HashSet<string> configExcludeProperties = []; 
+
+        public ObservableConfigObject()
+        {
+            MarkConfigSaveExcludeProperties(configExcludeProperties);
+        }
 
         protected override void OnPropertyChanged(PropertyChangedEventArgs e)
         {
             base.OnPropertyChanged(e);
-            AppConfig.Instance.Save();
+            if (e.PropertyName is not null && !configExcludeProperties.Contains(e.PropertyName))
+                AppConfig.Instance.Save();
         }
+
+        /// <summary>
+        /// Subclasses can add property names to this collection to exclude their PropertyChanged events from trigger config saves
+        /// </summary>
+        protected virtual void MarkConfigSaveExcludeProperties(ICollection<string> ignoredProperties) { }
 
         /// <summary>
         /// Automatically save the config file when something in the collection changes
@@ -34,14 +46,23 @@ namespace CPUSetSetter.Config.Models
             AppConfig.Instance.Save();
 
             // Dispose of any ObservableConfigObject that may have been removed
-            if (e.Action == NotifyCollectionChangedAction.Remove)
+            if (sender is IEnumerable<ObservableConfigObject>)
             {
-                if (e.OldItems![0] is ObservableConfigObject removedConfigObject)
-                    removedConfigObject.Dispose();
-            }
-            else if (e.Action != NotifyCollectionChangedAction.Add)
-            {
-                throw new NotImplementedException("Collections of ObservableConfigObjects should only be added/removed from");
+                switch (e.Action)
+                {
+                    case NotifyCollectionChangedAction.Add:
+                    case NotifyCollectionChangedAction.Move:
+                        break; // Add and Move actions don't need any disposing
+                    
+                    case NotifyCollectionChangedAction.Remove:
+                        if (e.OldItems![0] is ObservableConfigObject removedConfigObject)
+                            removedConfigObject.Dispose();
+                        break; // Dispose of 
+
+                    case NotifyCollectionChangedAction.Replace:
+                    case NotifyCollectionChangedAction.Reset:
+                        throw new NotImplementedException("Collections of ObservableConfigObjects can only be added/moved/removed from");
+                }
             }
         }
 

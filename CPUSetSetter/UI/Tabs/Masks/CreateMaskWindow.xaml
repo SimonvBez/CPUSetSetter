@@ -7,6 +7,7 @@
         d:DataContext="{d:DesignInstance Type=local:CreateMaskWindowViewModel}"
         mc:Ignorable="d"
         Title="Create a new Mask"
+        WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         Height="530"
         Width="500">

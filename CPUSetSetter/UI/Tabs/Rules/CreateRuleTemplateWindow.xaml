@@ -9,8 +9,9 @@
         mc:Ignorable="d"
         FocusManager.FocusedElement="{Binding ElementName=ruleGlobInput}"
         Title="Create a new Rule Template"
-        MinHeight="360"
-        MaxHeight="360"
+        WindowStartupLocation="CenterOwner"
+        MinHeight="385"
+        MaxHeight="385"
         Width="700"
         MinWidth="700">
 
@@ -24,8 +25,8 @@
         <TextBlock Grid.Row="0">
             <Run Text="When a new process 'matches' with a Rule Template, a new Program Rule will be created for that process automatically."/>
             <Run Text="&#x0a;&#x0a;A Rule Template is written like a path with wildcards (* and/or **)."/>
-            <Run Text="&#x0a;* matches any/zero characters, but not (back)slashes"/>
-            <Run Text="&#x0a;** matches any/zero characters, including (back)slashes that are not the first/last character"/>
+            <Run Text="&#x0a;* matches any part of a single folder or file name."/>
+            <Run Text="&#x0a;** matches any number of folders, including subfolders. When used at the end, it also matches any file name."/>
             <Run Text="&#x0a;&#x0a;Examples (green means the process matches):"/>
             
             <Run Text="&#x0a;C:\Games\** " FontWeight="Bold"/>
@@ -61,7 +62,9 @@
             <Run Text="&#x0a;**\*Cheat* " FontWeight="Bold"/>
             <Run Text="->"/>
             <Run Text="C:\Games\BF6\EAAntiCheat.Installer.exe" Foreground="Green"/>
-            <Run Text="(Use with &lt;no mask&gt; to create an exception for anti-cheat launchers)"/>
+            <Run Text="(Use with &lt;no mask&gt; to create an exclusion for anti-cheat launchers)"/>
+            
+            <Run Text="&#x0a;&#x0a;When creating an exclusion, don't forget to drag the Rule Template to the top so it takes priority!"/>
 
         </TextBlock>
 

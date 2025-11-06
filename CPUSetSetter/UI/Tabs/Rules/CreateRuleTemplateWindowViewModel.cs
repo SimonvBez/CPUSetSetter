@@ -22,7 +22,7 @@ namespace CPUSetSetter.UI.Tabs.Rules
         [RelayCommand]
         private void CreateRuleTemplate()
         {
-            MaskRuleManager.AddRuleTemplate(RuleGlob, SelectedMask);
+            AppConfig.Instance.RuleTemplates.Add(new(RuleGlob, SelectedMask));
             CloseWindow();
         }
 

@@ -14,9 +14,9 @@ namespace CPUSetSetter.UI.Tabs.Processes
         public static ProcessesTabViewModel? Instance { get; private set; }
 
         private readonly Dispatcher _dispatcher;
+        private readonly ListCollectionView runningProcessesView;
 
         public static PausableObservableCollection<ProcessListEntryViewModel> RunningProcesses { get; } = [];
-        public ListCollectionView RunningProcessesView;
 
         [ObservableProperty]
         private string _processNameFilter = string.Empty;
@@ -33,11 +33,11 @@ namespace CPUSetSetter.UI.Tabs.Processes
             ProcessEvents.Default.ProcessExited += (_, e) => OnExitedProcess(e.PID);
             ProcessEvents.Default.Start();
 
-            RunningProcessesView = (ListCollectionView)CollectionViewSource.GetDefaultView(RunningProcesses);
-            RunningProcessesView.SortDescriptions.Add(new(nameof(ProcessListEntryViewModel.AverageCpuUsage), ListSortDirection.Descending));
-            RunningProcessesView.IsLiveSorting = true;
-            RunningProcessesView.LiveSortingProperties.Add(nameof(ProcessListEntryViewModel.AverageCpuUsage));
-            RunningProcessesView.Filter = item => ((ProcessListEntryViewModel)item).Name.Contains(ProcessNameFilter, StringComparison.OrdinalIgnoreCase);
+            runningProcessesView = (ListCollectionView)CollectionViewSource.GetDefaultView(RunningProcesses);
+            runningProcessesView.SortDescriptions.Add(new(nameof(ProcessListEntryViewModel.AverageCpuUsage), ListSortDirection.Descending));
+            runningProcessesView.IsLiveSorting = true;
+            runningProcessesView.LiveSortingProperties.Add(nameof(ProcessListEntryViewModel.AverageCpuUsage));
+            runningProcessesView.Filter = item => ((ProcessListEntryViewModel)item).Name.Contains(ProcessNameFilter, StringComparison.OrdinalIgnoreCase);
 
             Task.Run(ForegroundProcessUpdateLoop);
             Task.Run(ProcessCpuUsageUpdateLoop);
@@ -72,9 +72,9 @@ namespace CPUSetSetter.UI.Tabs.Processes
         /// </summary>
         public void PauseListUpdates()
         {
-            if (RunningProcessesView != null)
+            if (runningProcessesView != null)
             {
-                RunningProcessesView.IsLiveSorting = false;
+                runningProcessesView.IsLiveSorting = false;
                 RunningProcesses.SuppressNotifications(true);
             }
         }
@@ -84,16 +84,16 @@ namespace CPUSetSetter.UI.Tabs.Processes
         /// </summary>
         public void ResumeListUpdates()
         {
-            if (RunningProcessesView != null)
+            if (runningProcessesView != null)
             {
                 RunningProcesses.SuppressNotifications(false);
-                RunningProcessesView.IsLiveSorting = true;
+                runningProcessesView.IsLiveSorting = true;
             }
         }
 
         partial void OnProcessNameFilterChanged(string value)
         {
-            RunningProcessesView.Refresh();
+            runningProcessesView.Refresh();
         }
 
         private void OnNewProcess(ProcessInfo pInfo)
