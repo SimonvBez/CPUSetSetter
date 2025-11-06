@@ -136,6 +136,7 @@ namespace CPUSetSetter.Config.Models
         partial void OnMaskChanged(LogicalProcessorMask value)
         {
             SetMask(value, false);
+            UpdateDeviationStateToRuleTemplate();
         }
 
         partial void OnMatchingRuleTemplateChanged(RuleTemplate? oldValue, RuleTemplate? newValue)
@@ -144,18 +145,35 @@ namespace CPUSetSetter.Config.Models
             {
                 oldValue.MaskChanged -= OnMatchingRuleTemplateMaskChanged;
                 oldValue.MaskReapplied -= OnMatchingRuleTemplateReapplied;
+                oldValue.RemoveDeviatingProgramRule(this);
             }
 
             if (newValue is not null)
             {
                 newValue.MaskChanged += OnMatchingRuleTemplateMaskChanged;
                 newValue.MaskReapplied += OnMatchingRuleTemplateReapplied;
+                UpdateDeviationStateToRuleTemplate();
             }
         }
 
         private void OnMatchingRuleTemplateMaskChanged(object? sender, EventArgs e)
         {
             OnPropertyChanged(nameof(IsDeviatingFromRuleTemplate));
+            UpdateDeviationStateToRuleTemplate();
+        }
+
+        /// <summary>
+        /// Tell the MatchingRuleTemplate (if present) what the current deviation state is
+        /// </summary>
+        private void UpdateDeviationStateToRuleTemplate()
+        {
+            if (MatchingRuleTemplate is null)
+                return;
+
+            if (IsDeviatingFromRuleTemplate)
+                MatchingRuleTemplate.AddDeviatingProgramRule(this);
+            else
+                MatchingRuleTemplate.RemoveDeviatingProgramRule(this);
         }
 
         private void OnMatchingRuleTemplateReapplied(object? sender, EventArgs e)

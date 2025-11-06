@@ -10,6 +10,7 @@ namespace CPUSetSetter.Config.Models
     /// </summary>
     public partial class RuleTemplate : ObservableConfigObject
     {
+        private readonly HashSet<ProgramRule> deviatingProgramRules = [];
         private static bool _isBulkChanging = false;
 
         [ObservableProperty]
@@ -18,6 +19,8 @@ namespace CPUSetSetter.Config.Models
         [ObservableProperty]
         private LogicalProcessorMask _Mask;
 
+        public bool HasDeviatingProgramRules => deviatingProgramRules.Count >= 1;
+
         public event EventHandler<EventArgs>? MaskChanged;
         public event EventHandler<EventArgs>? MaskReapplied;
 
@@ -25,6 +28,12 @@ namespace CPUSetSetter.Config.Models
         {
             _ruleGlob = ruleGlob;
             _Mask = mask;
+        }
+
+        protected override void MarkConfigSaveExcludeProperties(ICollection<string> ignoredProperties)
+        {
+            base.MarkConfigSaveExcludeProperties(ignoredProperties);
+            ignoredProperties.Add(nameof(HasDeviatingProgramRules));
         }
 
         partial void OnRuleGlobChanged(string value)
@@ -43,6 +52,18 @@ namespace CPUSetSetter.Config.Models
         public void Reapply()
         {
             MaskReapplied?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void AddDeviatingProgramRule(ProgramRule deviatingRule)
+        {
+            deviatingProgramRules.Add(deviatingRule);
+            OnPropertyChanged(nameof(HasDeviatingProgramRules));
+        }
+
+        public void RemoveDeviatingProgramRule(ProgramRule programRule)
+        {
+            deviatingProgramRules.Remove(programRule);
+            OnPropertyChanged(nameof(HasDeviatingProgramRules));
         }
 
         public static void RemoveAllUsingMask(LogicalProcessorMask maskToBeRemoved)
@@ -83,6 +104,15 @@ namespace CPUSetSetter.Config.Models
             {
                 programRule.MatchingRuleTemplate = RuleHelpers.FindRuleTemplateOrNull(programRule.ProgramPath);
             }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                deviatingProgramRules.Clear();
+            }
+            base.Dispose(disposing);
         }
     }
 }

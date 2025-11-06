@@ -16,7 +16,7 @@
     </Grid.Resources>
 
     <Grid.RowDefinitions>
-        <RowDefinition Height="1.3*"/>
+        <RowDefinition Height="1.5*"/>
         <RowDefinition Height="25"/>
         <RowDefinition Height="20"/>
         <RowDefinition Height="*"/>
@@ -227,9 +227,26 @@
                             <Button Grid.Column="0"
                                     Command="{Binding DataContext.RuleTemplateReapplyCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                     CommandParameter="{Binding}"
-                                    ToolTip="Overwrite all deviating Program Rules to this Core Mask">
+                                    ToolTipService.ShowOnDisabled="True">
+
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                        <Setter Property="IsEnabled" Value="False"/>
+                                        <Setter Property="Opacity" Value="0.4"/>
+                                        <Setter Property="ToolTip" Value="No Rules are deviating from Template; nothing to reapply"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding HasDeviatingProgramRules}" Value="True">
+                                                <Setter Property="IsEnabled" Value="True"/>
+                                                <Setter Property="Opacity" Value="1"/>
+                                                <Setter Property="ToolTip" Value="Overwrite all deviating Program Rules to this Core Mask"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+
                                 <Image Source="{StaticResource ReapplyImageSource}"/>
                             </Button>
+                            
                             <Button Grid.Column="2"
                                     Command="{Binding DataContext.RuleTemplateRemoveCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                     CommandParameter="{Binding}"

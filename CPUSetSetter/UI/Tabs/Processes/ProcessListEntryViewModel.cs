@@ -41,7 +41,9 @@ namespace CPUSetSetter.UI.Tabs.Processes
             ProgramRule? programRule = RuleHelpers.GetProgramRuleOrNull(pInfo.ImagePath);
             programRule?.AddRunningProcess(this);
 
-            _mask = programRule?.Mask ?? LogicalProcessorMask.NoMask;
+            LogicalProcessorMask mask = programRule?.Mask ?? LogicalProcessorMask.NoMask;
+            SetMask(mask, false);
+            _mask = mask; // _mask is already set by SetMask, this just suppresses a warning
 
             AverageCpuUsage = _processHandler.GetAverageCpuUsage();
         }
@@ -76,37 +78,6 @@ namespace CPUSetSetter.UI.Tabs.Processes
                 FailedToOpen = true;
             return success && ruleSuccess;
         }
-
-        ///// <summary>
-        ///// Store the new mask in the config (which in turn may also set the mask of other processes with the same path), and apply it to the process
-        ///// </summary>
-        ///// <param name="shouldUpdateRules">Normally true. Only false if this mask is being applied BY a rule already to prevent recursion</param>
-        ///// <returns>true if the mask was successfully applied to all processes of this ImagePath, false if not</returns>
-        //public bool SetMask(LogicalProcessorMask mask, bool shouldUpdateRules)
-        //{
-        //    if (mask == _lastAppliedMask) // Return the previous status if the mask is still the same
-        //        return !FailedToOpen;
-
-        //    _lastAppliedMask = mask;
-        //    Mask = mask;
-
-        //    bool ruleSuccess;
-        //    if (shouldUpdateRules)
-        //    {
-        //        // Save the new mask to the config, which also applies it to all other processes of the same path
-        //        ruleSuccess = MaskRuleManager.UpdateOrAddProgramRule(ImagePath, mask, true);
-        //    }
-        //    else
-        //    {
-        //        ruleSuccess = true;
-        //    }
-
-        //    // Apply the mask to the actual process
-        //    bool success = _processHandler.ApplyMask(mask);
-        //    if (!success)
-        //        FailedToOpen = true;
-        //    return success && ruleSuccess;
-        //}
 
         /// <summary>
         /// The UI picked a different mask
