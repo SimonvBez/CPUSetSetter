@@ -22,7 +22,7 @@
         <GroupBox Grid.Row="0" Header="Mask settings">
             <local:MaskEditorControl x:Name="maskEditor"
                                      Margin="5"
-                                     Mask="{Binding Mask}"
+                                     BoolMask="{Binding BoolMask}"
                                      Hotkeys="{Binding Hotkeys}"/>
         </GroupBox>
 

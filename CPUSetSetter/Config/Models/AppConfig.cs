@@ -17,7 +17,7 @@ namespace CPUSetSetter.Config.Models
         // Program rules that define which mask should be used on a specific program
         public ObservableCollection<ProgramRule> ProgramRules { get; }
         // Rules with optional wildcards that can automatically create program rules
-        public ObservableCollection<AutoRule> AutoRules { get; }
+        public ObservableCollection<RuleTemplate> RuleTemplates { get; }
 
         [ObservableProperty]
         private bool _muteHotkeySound;
@@ -38,7 +38,7 @@ namespace CPUSetSetter.Config.Models
 
         public AppConfig(List<LogicalProcessorMask> logicalProcessorMasks,
             List<ProgramRule> programRules,
-            List<AutoRule> autoRules,
+            List<RuleTemplate> ruleTemplates,
             bool muteHotkeySound,
             bool startMinimized,
             bool disableWelcomeMessage,
@@ -54,7 +54,7 @@ namespace CPUSetSetter.Config.Models
 
             LogicalProcessorMasks = new(logicalProcessorMasks);
             ProgramRules = new(programRules);
-            AutoRules = new(autoRules);
+            RuleTemplates = new(ruleTemplates);
             _muteHotkeySound = muteHotkeySound;
             _startMinimized = startMinimized;
             _disableWelcomeMessage = disableWelcomeMessage;
@@ -72,6 +72,7 @@ namespace CPUSetSetter.Config.Models
 
             SaveOnCollectionChanged(LogicalProcessorMasks);
             SaveOnCollectionChanged(ProgramRules);
+            SaveOnCollectionChanged(RuleTemplates);
 
             AppTheme.ApplyTheme(UiTheme);
         }

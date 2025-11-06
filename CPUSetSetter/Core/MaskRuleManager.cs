@@ -8,6 +8,12 @@ namespace CPUSetSetter.Core
 {
     public static class MaskRuleManager
     {
+        public static void OnConfigLoaded()
+        {
+            // Updates all ProgramRules to have references to the RuleTemplate that matches them
+            RefreshAllRules();
+        }
+
         /// <summary>
         /// Get the mask that belongs to a given program path.
         /// This is called when a new process has appeared.
@@ -17,7 +23,7 @@ namespace CPUSetSetter.Core
             ProgramRule? rule = GetProgramRule(imagePath);
             if (rule is null)
                 return LogicalProcessorMask.NoMask;
-            return rule.LogicalProcessorMask;
+            return rule.Mask;
         }
 
         /// <summary>
@@ -25,7 +31,7 @@ namespace CPUSetSetter.Core
         /// This is called when the mask of a process in the process list is changed.
         /// </summary>
         /// <returns>false if the mask failed to apply to the process that is being changed, else true. This is used for the hotkey sound</returns>
-        public static bool UpdateOrAddProgramRule(string imagePath, LogicalProcessorMask newMask)
+        public static bool UpdateOrAddProgramRule(string imagePath, LogicalProcessorMask newMask, bool removeRedundantNoMask)
         {
             if (imagePath.Length == 0)
                 return false; // Don't add/update any empty strings
@@ -33,21 +39,23 @@ namespace CPUSetSetter.Core
             App.EnsureMainThread();
 
             ProgramRule? existingRule = FindProgramRule(imagePath);
+            RuleTemplate? ruleTemplate = FindRuleTemplate(imagePath);
+            if (existingRule is not null)
+                existingRule.MatchingRuleTemplate = ruleTemplate;
 
             if (newMask.IsNoMask)
             {
-                // If there is no auto rule with a mask, remove this NoMask rule from the config
-                AutoRule? autoRule = FindAutoRule(imagePath);
-                if (autoRule is null || (autoRule is not null && autoRule.LogicalProcessorMask.IsNoMask))
+                // If there is no rule template with a mask, remove this NoMask rule from the config
+                if (ruleTemplate is null || (ruleTemplate is not null && ruleTemplate.Mask.IsNoMask))
                 {
                     // Clear the rule if it exists
-                    if (existingRule is not null)
+                    if (existingRule is not null && removeRedundantNoMask)
                     {
                         AppConfig.Instance.ProgramRules.Remove(existingRule);
                     }
                     return ApplyRulesToPath(imagePath);
                 }
-                // If there is an auto rule that does have a mask, then store this NoMask rule in the config by continuing down
+                // If there is an rule template that does have a mask, then store this NoMask rule in the config by continuing down
             }
 
             // Add the rule if it does not exist, or update it if it does
@@ -59,30 +67,66 @@ namespace CPUSetSetter.Core
             else
             {
                 // Modify the existing rule
-                existingRule.LogicalProcessorMask = newMask;
+                existingRule.Mask = newMask;
             }
 
             return ApplyRulesToPath(imagePath);
         }
 
         /// <summary>
-        /// Apply an AutoRule to the currently running processes immediately
+        /// User pressed the explicit remove button on a ProgramRule.
+        /// Remove the ProgramRule, unless it currently has a running process AND is matching a RuleTemplate.
+        /// In that case, the Mask will be set to the RuleTemplate's
         /// </summary>
-        public static void OnAutoRulesChanged()
+        public static void RemoveProgramRule(ProgramRule programRule)
+        {
+            if (programRule.MatchingRuleTemplate is null)
+            {
+                // Clear the mask and remove the ProgramRule
+                programRule.Mask = LogicalProcessorMask.NoMask;
+                AppConfig.Instance.ProgramRules.Remove(programRule);
+                return;
+            }
+
+            foreach (ProcessListEntryViewModel process in ProcessesTabViewModel.RunningProcesses)
+            {
+                if (PathsEqual(process.ImagePath, programRule.ProgramPath))
+                {
+                    // This ProgramRule matches a RuleTemplate and has a currently running process
+                    // It can't be removed, so it is set to the RuleTemplate instead
+                    programRule.Mask = programRule.MatchingRuleTemplate.Mask;
+                    return;
+                }
+            }
+        }
+
+        public static void AddRuleTemplate(string ruleGlob, LogicalProcessorMask mask)
         {
             App.EnsureMainThread();
 
-            // The only way to deal with edge cases, such as when an existing AutoRule takes priority over a new/changed one is
-            // by just iterating over all running processes and re-applying every rule
-            ReapplyAllRules();
+            AppConfig.Instance.RuleTemplates.Add(new(ruleGlob, mask));
+            RefreshAllRules();
+        }
+
+        public static void RemoveRuleTemplate(RuleTemplate ruleTemplate)
+        {
+            App.EnsureMainThread();
+
+            AppConfig.Instance.RuleTemplates.Remove(ruleTemplate);
+            RefreshAllRules();
+        }
+
+        public static void OnRuleTemplateChanged()
+        {
+            RefreshAllRules();
         }
 
         public static bool MaskIsUsedByRules(LogicalProcessorMask mask)
         {
             App.EnsureMainThread();
 
-            return AppConfig.Instance.ProgramRules.Any(rule => rule.LogicalProcessorMask == mask) ||
-                AppConfig.Instance.AutoRules.Any(rule => rule.LogicalProcessorMask == mask);
+            return AppConfig.Instance.ProgramRules.Any(rule => rule.Mask == mask) ||
+                AppConfig.Instance.RuleTemplates.Any(rule => rule.Mask == mask);
         }
 
         public static void RemoveRulesUsingMask(LogicalProcessorMask mask)
@@ -93,18 +137,18 @@ namespace CPUSetSetter.Core
             // Remove any program rules that were using this mask
             for (int i = AppConfig.Instance.ProgramRules.Count - 1; i >= 0; --i)
             {
-                if (AppConfig.Instance.ProgramRules[i].LogicalProcessorMask == mask)
+                if (AppConfig.Instance.ProgramRules[i].Mask == mask)
                 {
                     removedRulePaths.Add(AppConfig.Instance.ProgramRules[i].ProgramPath);
                     AppConfig.Instance.ProgramRules.RemoveAt(i);
                 }
             }
 
-            // Remove any auto rules that were using this mask
-            for (int i = AppConfig.Instance.AutoRules.Count - 1; i >= 0; --i)
+            // Remove any rule templates that were using this mask
+            for (int i = AppConfig.Instance.RuleTemplates.Count - 1; i >= 0; --i)
             {
-                if (AppConfig.Instance.AutoRules[i].LogicalProcessorMask == mask)
-                    AppConfig.Instance.AutoRules.RemoveAt(i);
+                if (AppConfig.Instance.RuleTemplates[i].Mask == mask)
+                    AppConfig.Instance.RuleTemplates.RemoveAt(i);
             }
 
             // Also remove/update the masks on any processes that were still using it
@@ -114,21 +158,41 @@ namespace CPUSetSetter.Core
             }
         }
 
-        private static ProgramRule? GetProgramRule(string imagePath)
+        /// <summary>
+        /// Reapply a rule template. This will overwrite any Program Rules that deviated from this template, to the template's mask
+        /// </summary>
+        public static void ReapplyRuleTemplate(RuleTemplate ruleTemplate)
         {
             App.EnsureMainThread();
 
+            foreach (ProgramRule rule in AppConfig.Instance.ProgramRules)
+            {
+                // Find all Program Rules that match with the given Template
+                if (FindRuleTemplate(rule.ProgramPath) == ruleTemplate)
+                {
+                    rule.Mask = ruleTemplate.Mask;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get an already existing Program Rule, otherwise create+add a new Program Rule with the first matching Rule Template.
+        /// If no existing Program Rule or matching Rule Template exist, this returns null
+        /// </summary>
+        private static ProgramRule? GetProgramRule(string imagePath)
+        {
             // First try to return a matching program rule
             ProgramRule? rule = FindProgramRule(imagePath);
             if (rule is not null)
                 return rule;
 
-            // Then try to get an auto rule
-            AutoRule? autoRule = FindAutoRule(imagePath);
-            if (autoRule is not null && !autoRule.LogicalProcessorMask.IsNoMask)
+            // Then try to get a RuleTemplate for this process
+            RuleTemplate? ruleTemplate = FindRuleTemplate(imagePath);
+            if (ruleTemplate is not null)
             {
-                // An auto rule with a mask exists. Create a new program rules based on it
-                ProgramRule newRule = new(imagePath, autoRule.LogicalProcessorMask);
+                // A RuleTemplate exists. Create a new ProgramRule based on it
+                ProgramRule newRule = new(imagePath, ruleTemplate.Mask);
+                newRule.MatchingRuleTemplate = ruleTemplate;
                 AppConfig.Instance.ProgramRules.Add(newRule);
                 return newRule;
             }
@@ -141,9 +205,9 @@ namespace CPUSetSetter.Core
             return AppConfig.Instance.ProgramRules.FirstOrDefault(rule => PathsEqual(rule!.ProgramPath, imagePath), null);
         }
 
-        private static AutoRule? FindAutoRule(string imagePath)
+        private static RuleTemplate? FindRuleTemplate(string imagePath)
         {
-            return AppConfig.Instance.AutoRules.FirstOrDefault(rule => PathMatchesGlob(rule!.RuleGlob, imagePath), null);
+            return AppConfig.Instance.RuleTemplates.FirstOrDefault(rule => PathMatchesGlob(rule!.RuleGlob, imagePath), null);
         }
 
         /// <summary>
@@ -153,7 +217,7 @@ namespace CPUSetSetter.Core
         private static bool ApplyRulesToPath(string imagePath)
         {
             ProgramRule? programRule = GetProgramRule(imagePath);
-            LogicalProcessorMask mask = programRule?.LogicalProcessorMask ?? LogicalProcessorMask.NoMask;
+            LogicalProcessorMask mask = programRule?.Mask ?? LogicalProcessorMask.NoMask;
 
             bool result = true;
             foreach (ProcessListEntryViewModel process in ProcessesTabViewModel.RunningProcesses)
@@ -166,13 +230,23 @@ namespace CPUSetSetter.Core
             return result;
         }
 
-        private static void ReapplyAllRules()
+        private static void RefreshAllRules()
         {
+            App.EnsureMainThread();
+
+            // The only way to deal with edge cases, such as when an existing RuleTemplate takes priority over a new/changed one is
+            // by just iterating over all running processes and re-applying every rule
             foreach (ProcessListEntryViewModel process in ProcessesTabViewModel.RunningProcesses)
             {
                 ProgramRule? programRule = GetProgramRule(process.ImagePath);
-                LogicalProcessorMask mask = programRule?.LogicalProcessorMask ?? LogicalProcessorMask.NoMask;
+                LogicalProcessorMask mask = programRule?.Mask ?? LogicalProcessorMask.NoMask;
                 process.SetMask(mask, false);
+            }
+
+            // Give each ProgramRule a reference to the Rule Template that matches it, to update the actions buttons on the Rules page
+            foreach (ProgramRule rule in AppConfig.Instance.ProgramRules)
+            {
+                rule.MatchingRuleTemplate = FindRuleTemplate(rule.ProgramPath);
             }
         }
 

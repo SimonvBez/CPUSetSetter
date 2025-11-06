@@ -11,7 +11,7 @@
         Height="547"
         MinHeight="574"
         Width="940"
-        MinWidth="720">
+        MinWidth="900">
 
     <TabControl>
         <!--Processes Tab-->

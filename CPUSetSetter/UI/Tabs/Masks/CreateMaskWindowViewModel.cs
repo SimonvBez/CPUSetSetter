@@ -12,7 +12,7 @@ namespace CPUSetSetter.UI.Tabs.Masks
         private readonly Action _closeWindowAction;
 
         [ObservableProperty]
-        private ObservableCollection<bool> _mask;
+        private ObservableCollection<bool> _boolMask;
 
         [ObservableProperty]
         private ObservableCollection<VKey> _hotkeys;
@@ -33,14 +33,14 @@ namespace CPUSetSetter.UI.Tabs.Masks
                 return;
             }
 
-            AppConfig.Instance.LogicalProcessorMasks.Add(new(Name, new(Mask), new(Hotkeys)));
+            AppConfig.Instance.LogicalProcessorMasks.Add(new(Name, new(BoolMask), new(Hotkeys)));
             _closeWindowAction();
         }
 
         public CreateMaskWindowViewModel(Action closeWindowAction)
         {
             _closeWindowAction = closeWindowAction;
-            _mask = new(Enumerable.Repeat(true, CpuInfo.LogicalProcessorCount));
+            _boolMask = new(Enumerable.Repeat(true, CpuInfo.LogicalProcessorCount));
             _hotkeys = [];
             _name = string.Empty;
         }
