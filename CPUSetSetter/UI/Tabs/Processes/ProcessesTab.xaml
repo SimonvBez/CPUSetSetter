@@ -103,50 +103,15 @@
         </DataGrid.Columns>
     </DataGrid>
 
-    <!--Current foreground process and Log-->
+    <!--Core Usage andLog-->
     <Grid Grid.Row="2">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="250"/>
-            <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="260"/>
+            <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!--Current foreground process-->
-        <GroupBox Grid.Column="0"
-                  Header="Current foreground process">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="60"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-
-                <TextBlock Grid.Column="0" Margin="5"
-                           Text="Name:&#x0a;Mask:"/>
-
-                <TextBlock Grid.Column="1" Margin="5">
-                    <TextBlock.Text>
-                        <MultiBinding StringFormat="{}{0}&#x0a;{1}">
-                            <Binding Path="CurrentForegroundProcess.Name"/>
-                            <Binding Path="CurrentForegroundProcess.Mask.Name"/>
-                        </MultiBinding>
-                    </TextBlock.Text>
-                </TextBlock>
-            </Grid>
-        </GroupBox>
-
-        <!--Log-->
-        <GroupBox Grid.Column="1"
-                  Margin="2,0,0,0"
-                  Header="Log">
-            <TextBox x:Name="logBox"
-                     IsReadOnly="True"
-                     Text="{Binding Text, Source={x:Static local:WindowLogger.Default}}"
-                     TextChanged="Log_TextChanged"
-                     TextWrapping="Wrap"/>
-        </GroupBox>
-
         <!-- Core Usage -->
-        <GroupBox Grid.Column="2" Header="Core Usage">
+        <GroupBox Grid.Column="0" Header="Core Usage">
             <ItemsControl ItemsSource="{Binding CoreUsages}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -159,6 +124,17 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
+        </GroupBox>
+
+        <!--Log-->
+        <GroupBox Grid.Column="1"
+                  Margin="2,0,0,0"
+                  Header="Log">
+            <TextBox x:Name="logBox"
+                     IsReadOnly="True"
+                     Text="{Binding Text, Source={x:Static local:WindowLogger.Default}}"
+                     TextChanged="Log_TextChanged"
+                     TextWrapping="Wrap"/>
         </GroupBox>
     </Grid>
 </Grid>
