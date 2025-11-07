@@ -1,5 +1,5 @@
 ﻿using CPUSetSetter.Config.Models;
-using CPUSetSetter.Core;
+using CPUSetSetter.Util;
 using CPUSetSetter.Platforms;
 using CPUSetSetter.TrayIcon;
 using CPUSetSetter.UI;

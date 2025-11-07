@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CPUSetSetter.Config.Models;
-using CPUSetSetter.Core;
+using CPUSetSetter.Util;
 using CPUSetSetter.Platforms;
 using System.Collections.Specialized;
 

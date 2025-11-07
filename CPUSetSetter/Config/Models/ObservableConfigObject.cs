@@ -12,7 +12,7 @@ namespace CPUSetSetter.Config.Models
     public class ObservableConfigObject : ObservableObject, IDisposable
     {
         private readonly List<Action> collectionUnsubscribeActions = [];
-        private readonly HashSet<string> configExcludeProperties = []; 
+        private readonly HashSet<string> configExcludeProperties = [];
 
         public ObservableConfigObject()
         {
@@ -53,7 +53,7 @@ namespace CPUSetSetter.Config.Models
                     case NotifyCollectionChangedAction.Add:
                     case NotifyCollectionChangedAction.Move:
                         break; // Add and Move actions don't need any disposing
-                    
+
                     case NotifyCollectionChangedAction.Remove:
                         if (e.OldItems![0] is ObservableConfigObject removedConfigObject)
                             removedConfigObject.Dispose();

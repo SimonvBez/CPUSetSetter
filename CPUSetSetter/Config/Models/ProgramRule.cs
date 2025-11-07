@@ -1,5 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CPUSetSetter.Core;
+using CPUSetSetter.Util;
 using CPUSetSetter.UI.Tabs.Processes;
 
 

@@ -3,7 +3,7 @@ using Microsoft.Extensions.FileSystemGlobbing;
 using System.IO;
 
 
-namespace CPUSetSetter.Core
+namespace CPUSetSetter.Util
 {
     public static class RuleHelpers
     {

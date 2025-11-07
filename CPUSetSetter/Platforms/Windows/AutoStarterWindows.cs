@@ -55,7 +55,7 @@ namespace CPUSetSetter.Platforms
         {
             if (appExePath is null)
                 return false;
-            
+
             if (!Environment.IsPrivilegedProcess)
                 return RunElevated(appExePath, AutoStarter.LaunchArgumentDisable);
 
