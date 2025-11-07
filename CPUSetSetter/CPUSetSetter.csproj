@@ -20,6 +20,7 @@
     <PackageReference Include="gong-wpf-dragdrop" Version="4.0.0" />
     <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="9.0.10" />
     <PackageReference Include="System.Management" Version="9.0.10" />
+    <PackageReference Include="TaskScheduler" Version="2.12.2" />
   </ItemGroup>
     
   <ItemGroup>

@@ -6,6 +6,7 @@
         xmlns:proc="clr-namespace:CPUSetSetter.UI.Tabs.Processes"
         xmlns:masks="clr-namespace:CPUSetSetter.UI.Tabs.Masks"
         xmlns:rules="clr-namespace:CPUSetSetter.UI.Tabs.Rules"
+        xmlns:settings="clr-namespace:CPUSetSetter.UI.Tabs.Settings"
         mc:Ignorable="d"
         Title="CPU Set Setter"
         Height="547"
@@ -39,6 +40,15 @@
             </TabItem.Header>
 
             <rules:RulesTab/>
+        </TabItem>
+
+        <!--Settings-->
+        <TabItem>
+            <TabItem.Header>
+                <TextBlock Text="Settings"/>
+            </TabItem.Header>
+
+            <settings:SettingsTab/>
         </TabItem>
     </TabControl>
 </Window>

@@ -29,6 +29,18 @@ namespace CPUSetSetter
             // Set the working directory to the directory of the executable, so the config .json file will always be in the right place
             Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
 
+            // Check if the app was launched as an elevated AutoStart child process
+            if (e.Args.Contains(AutoStarter.LaunchArgumentEnable))
+            {
+                bool success = AutoStarter.Enable();
+                Environment.Exit(success ? 0 : 1);
+            }
+            if (e.Args.Contains(AutoStarter.LaunchArgumentDisable))
+            {
+                bool success = AutoStarter.Disable();
+                Environment.Exit(success ? 0 : 1);
+            }
+
             // Quit when this CPU is not supported
             try
             {

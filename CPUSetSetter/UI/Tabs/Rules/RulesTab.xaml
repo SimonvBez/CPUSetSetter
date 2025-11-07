@@ -164,7 +164,7 @@
 
         <!--Template-deviating rules only-->
         <CheckBox Grid.Column="3"
-                  IsChecked="{Binding ShowOnlyDeviatingProgramRule}"/>
+                  IsChecked="{Binding ShowOnlyDeviatingProgramRule, UpdateSourceTrigger=PropertyChanged}"/>
 
         <TextBlock Grid.Column="4"
                    VerticalAlignment="Center"
