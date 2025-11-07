@@ -15,7 +15,7 @@ namespace CPUSetSetter.Platforms
 
         public static int LogicalProcessorCount { get; } = Default.LogicalProcessorNames.Count;
 
-        public static IReadOnlyList<LogicalProcessorMask> DefaultLogicalProcessorMasks => Default.DefaultLogicalProcessorMasks;
+        public static IReadOnlyList<(string name, List<bool> boolMask)> DefaultLogicalProcessorMasks => Default.DefaultLogicalProcessorMasks;
 
         public static bool IsSupported => Default.IsSupported;
 
@@ -31,7 +31,7 @@ namespace CPUSetSetter.Platforms
     {
         Manufacturer Manufacturer { get; }
         IReadOnlyList<string> LogicalProcessorNames { get; }
-        IReadOnlyList<LogicalProcessorMask> DefaultLogicalProcessorMasks { get; }
+        IReadOnlyList<(string name, List<bool> boolMask)> DefaultLogicalProcessorMasks { get; }
         bool IsSupported { get; }
     }
 

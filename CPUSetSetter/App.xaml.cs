@@ -3,6 +3,7 @@ using CPUSetSetter.Core;
 using CPUSetSetter.Platforms;
 using CPUSetSetter.TrayIcon;
 using CPUSetSetter.UI;
+using CPUSetSetter.UI.Tabs.Processes;
 using Microsoft.Win32;
 using System.Globalization;
 using System.IO;
@@ -86,6 +87,14 @@ namespace CPUSetSetter
                 // Some users did not notice the tray icon because it was hidden by default
                 // To respect the user's choice, this is only done the first time the app is ran
                 PromoteTrayIcon();
+            }
+
+            if (!AppConfig.Instance.DisableWelcomeMessage)
+            {
+                WindowLogger.Write(
+                    "Welcome! Here you can apply a Core Mask to a process. Changes are saved and applied automatically the next time it runs.\n" +
+                    "Use the Masks tab to customize your Core Masks and Hotkeys, and for the advanced, the Rules tab to create Templates for entire folders.\n" +
+                    "I hope this tool may be of use to you! For questions, issues, feedback or just to say Hi, please open an Issue on GitHub!\n");
             }
 
             // Create the rest of the app

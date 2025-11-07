@@ -64,9 +64,9 @@ namespace CPUSetSetter.Config.Models
             if (generateDefaultMasks)
             {
                 // Create a default set of masks for this system's CPU
-                foreach (LogicalProcessorMask coreMask in CpuInfo.DefaultLogicalProcessorMasks)
+                foreach ((string name, List<bool> boolMask) in CpuInfo.DefaultLogicalProcessorMasks)
                 {
-                    LogicalProcessorMasks.Add(coreMask);
+                    LogicalProcessorMasks.Add(new(name, boolMask, []));
                 }
             }
 
