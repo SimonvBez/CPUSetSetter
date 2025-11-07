@@ -112,18 +112,7 @@
 
         <!-- Core Usage -->
         <GroupBox Grid.Column="0" Header="Core Usage">
-            <ItemsControl ItemsSource="{Binding CoreUsages}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <UniformGrid Rows="2"/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <coreUsage:CoreUsageControl />
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+            <coreUsage:CoreUsageControl />
         </GroupBox>
 
         <!--Log-->

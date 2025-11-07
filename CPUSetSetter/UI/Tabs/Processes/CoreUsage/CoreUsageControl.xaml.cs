@@ -23,6 +23,7 @@ namespace CPUSetSetter.UI.Tabs.Processes.CoreUsage
         public CoreUsageControl()
         {
             InitializeComponent();
+            DataContext = new CoreUsageControlViewModel();
         }
     }
 }

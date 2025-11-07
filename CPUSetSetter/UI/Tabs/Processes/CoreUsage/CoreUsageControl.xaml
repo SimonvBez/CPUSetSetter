@@ -5,45 +5,56 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:CPUSetSetter.UI.Tabs.Processes.CoreUsage"
              mc:Ignorable="d" 
-             d:DesignHeight="60" d:DesignWidth="50">
+             d:DesignHeight="150" d:DesignWidth="260">
     <UserControl.Resources>
         <local:PercentToHeightConverter x:Key="PercentToHeightConverter"/>
     </UserControl.Resources>
-    <Grid Margin="2">
-        <Grid.Style>
-            <Style TargetType="Grid">
-                <Setter Property="Opacity" Value="1"/>
-                <Style.Triggers>
-                    <DataTrigger Binding="{Binding IsParked}" Value="True">
-                        <Setter Property="Opacity" Value="0.5"/>
-                    </DataTrigger>
-                </Style.Triggers>
-            </Style>
-        </Grid.Style>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="60"/>
-        </Grid.RowDefinitions>
-        <!-- Bar container -->
-        <Border Grid.Row="0" Background="Gray" CornerRadius="2" VerticalAlignment="Stretch" ClipToBounds="True">
-            <Border HorizontalAlignment="Stretch" CornerRadius="2,2,0,0"
-                    VerticalAlignment="Bottom">
-                <Border.Style>
-                    <Style TargetType="Border">
-                        <Setter Property="Background" Value="#32A852"/>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsParked}" Value="True">
-                                <Setter Property="Background" Value="#B0B0B0"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
-                <Border.Height>
-                    <MultiBinding Converter="{StaticResource PercentToHeightConverter}">
-                        <Binding RelativeSource="{RelativeSource AncestorType=Border}" Path="ActualHeight"/>
-                        <Binding Path="UsagePercent"/>
-                    </MultiBinding>
-                </Border.Height>
-            </Border>
-        </Border>
-    </Grid>
+    <ItemsControl ItemsSource="{Binding CoreUsages}">
+        <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+                <UniformGrid Rows="2"/>
+            </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+            <DataTemplate>
+                <Grid Margin="2">
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Opacity" Value="1"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsParked}" Value="True">
+                                    <Setter Property="Opacity" Value="0.5"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="60"/>
+                    </Grid.RowDefinitions>
+                    <!-- Bar container -->
+                    <Border Grid.Row="0" Background="Gray" CornerRadius="2" VerticalAlignment="Stretch" ClipToBounds="True">
+                        <Border HorizontalAlignment="Stretch" CornerRadius="2,2,0,0"
+                                VerticalAlignment="Bottom">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="#32A852"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsParked}" Value="True">
+                                            <Setter Property="Background" Value="#B0B0B0"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <Border.Height>
+                                <MultiBinding Converter="{StaticResource PercentToHeightConverter}">
+                                    <Binding RelativeSource="{RelativeSource AncestorType=Border}" Path="ActualHeight"/>
+                                    <Binding Path="UsagePercent"/>
+                                </MultiBinding>
+                            </Border.Height>
+                        </Border>
+                    </Border>
+                </Grid>
+            </DataTemplate>
+        </ItemsControl.ItemTemplate>
+    </ItemsControl>
 </UserControl>
