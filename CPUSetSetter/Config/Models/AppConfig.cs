@@ -29,6 +29,9 @@ namespace CPUSetSetter.Config.Models
         private bool _disableWelcomeMessage;
 
         [ObservableProperty]
+        private bool _showGameModePopup;
+
+        [ObservableProperty]
         private bool _showUpdatePopup;
 
         [ObservableProperty]
@@ -45,6 +48,7 @@ namespace CPUSetSetter.Config.Models
             bool muteHotkeySound,
             bool startMinimized,
             bool disableWelcomeMessage,
+            bool showGameModePopup,
             bool showUpdatePopup,
             Theme uiTheme,
             bool generateDefaultMasks,
@@ -62,8 +66,9 @@ namespace CPUSetSetter.Config.Models
             _muteHotkeySound = muteHotkeySound;
             _startMinimized = startMinimized;
             _disableWelcomeMessage = disableWelcomeMessage;
-            _uiTheme = uiTheme;
+            _showGameModePopup = showGameModePopup;
             _showUpdatePopup = showUpdatePopup;
+            _uiTheme = uiTheme;
             IsFirstRun = isFirstRun;
 
             if (generateDefaultMasks)

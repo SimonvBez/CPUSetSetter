@@ -27,7 +27,7 @@
             <Run Text="TIP: While Program Rules can be created like this, the easiest way to create new Program Rules"/>
             <Run Text="is by selecting a Core Mask for a process in the Processes tab."/>
             <Run Text="&#x0a;In the Masks tab you can even set up Hotkeys for your Core Masks. Just press your hotkey,"/>
-            <Run Text="and that Core Mask will be applied to your current foreground program. Even (most) fullscreen games."/>
+            <Run Text="and that Core Mask will be applied to your current foreground program. Hotkeys also work in (most) fullscreen games."/>
         </TextBlock>
 
         <Grid Grid.Row="1">

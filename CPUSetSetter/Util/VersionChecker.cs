@@ -76,7 +76,7 @@ namespace CPUSetSetter.Util
                         "A new version of CPU Set Setter is available!\n" +
                         "Would you like to open the Release page now?\n" +
                         "(Sorry, self-updaters are hard)\n\n" +
-                        "This update popup can be disabled in the Settings\n",
+                        "(This popup can be disabled in the Settings tab)",
                         "New CPU Set Setter update available",
                         MessageBoxButton.YesNo,
                         MessageBoxImage.Information);
