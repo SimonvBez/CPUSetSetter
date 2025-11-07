@@ -135,7 +135,7 @@ namespace CPUSetSetter.Config
             List<ProgramRule> programRules = configJson.ProgramRules.Select(jsonProgramRule =>
             {
                 LogicalProcessorMask mask = logicalProcessorMasks.Single(mask => mask.Name == jsonProgramRule.LogicalProcessorMaskName);
-                return new ProgramRule(jsonProgramRule.ProgramPath, mask);
+                return new ProgramRule(jsonProgramRule.ProgramPath, mask, true);
             }).ToList();
 
             // Construct the RuleTemplate models from the config

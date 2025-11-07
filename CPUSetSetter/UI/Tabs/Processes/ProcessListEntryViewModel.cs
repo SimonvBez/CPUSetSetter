@@ -37,7 +37,13 @@ namespace CPUSetSetter.UI.Tabs.Processes
             Name = pInfo.Name;
             ImagePath = pInfo.ImagePath;
             _processHandler = pInfo.ProcessHandler;
-            Mask = MaskRuleManager.GetMaskFromPath(pInfo.ImagePath);
+
+            ProgramRule? programRule = RuleHelpers.GetProgramRuleOrNull(pInfo.ImagePath);
+            programRule?.AddRunningProcess(this);
+
+            LogicalProcessorMask mask = programRule?.Mask ?? LogicalProcessorMask.NoMask;
+            SetMask(mask, false);
+            _mask = mask; // _mask is already set by SetMask, this just suppresses a warning
 
             AverageCpuUsage = _processHandler.GetAverageCpuUsage();
         }
@@ -47,32 +53,27 @@ namespace CPUSetSetter.UI.Tabs.Processes
             AverageCpuUsage = _processHandler.GetAverageCpuUsage();
         }
 
-        /// <summary>
-        /// Store the new mask in the config (which in turn may also set the mask of other processes with the same path), and apply it to the process
-        /// </summary>
-        /// <param name="shouldUpdateRules">Normally true. Only false if this mask is being applied BY a rule already to prevent recursion</param>
-        /// <returns>true if the mask was successfully applied to all processes of this ImagePath, false if not</returns>
-        public bool SetMask(LogicalProcessorMask mask, bool shouldUpdateRules)
+        public bool SetMask(LogicalProcessorMask newMask, bool updateRule)
         {
-            if (mask == _lastAppliedMask) // Return the previous status if the mask is still the same
+            if (newMask == _lastAppliedMask) // Return the previous status if the mask is still the same
                 return !FailedToOpen;
 
-            _lastAppliedMask = mask;
-            Mask = mask;
+            _lastAppliedMask = newMask;
+            Mask = newMask;
 
-            bool ruleSuccess;
-            if (shouldUpdateRules)
+            bool ruleSuccess = true;
+            if (updateRule)
             {
-                // Save the new mask to the config, which also applies it to all other processes of the same path
-                ruleSuccess = MaskRuleManager.UpdateOrAddProgramRule(ImagePath, mask, true);
+                // SetMask was called from the Processes tab UI, so the ProgramRule needs to be updated or created too
+                ProgramRule? programRule = RuleHelpers.GetProgramRuleOrNull(ImagePath);
+                if (programRule is null)
+                {
+                    programRule = new(ImagePath, newMask, true);
+                    AppConfig.Instance.ProgramRules.Add(programRule);
+                }
+                ruleSuccess = programRule.SetMask(newMask, true);
             }
-            else
-            {
-                ruleSuccess = true;
-            }
-
-            // Apply the mask to the actual process
-            bool success = _processHandler.ApplyMask(mask);
+            bool success = _processHandler.ApplyMask(newMask);
             if (!success)
                 FailedToOpen = true;
             return success && ruleSuccess;
@@ -98,8 +99,12 @@ namespace CPUSetSetter.UI.Tabs.Processes
             _processHandler.ApplyMask(Mask);
         }
 
+        /// <summary>
+        /// The process has exited
+        /// </summary>
         public void Dispose()
         {
+            RuleHelpers.GetProgramRuleOrNull(ImagePath)?.RemoveRunningProcess(this);
             Mask.BoolMask.CollectionChanged -= OnMaskBitsChanged;
             _processHandler.Dispose();
             GC.SuppressFinalize(this);

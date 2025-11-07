@@ -61,7 +61,7 @@ namespace CPUSetSetter.Platforms.Windows
             if (deltaCpuTime.Ticks == 0)
                 return 0;
             else
-                return (double)deltaCpuTime.Ticks / deltaTime.Ticks / Environment.ProcessorCount;
+                return (double)deltaCpuTime.Ticks / deltaTime.Ticks / CpuInfo.LogicalProcessorCount;
         }
 
         public bool ApplyMask(LogicalProcessorMask mask)

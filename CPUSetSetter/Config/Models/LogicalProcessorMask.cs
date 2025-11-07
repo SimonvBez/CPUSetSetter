@@ -72,15 +72,26 @@ namespace CPUSetSetter.Config.Models
 
         public void Remove()
         {
-            // Remove any rules that are using this mask, updating any processes by that rule as well
-            MaskRuleManager.RemoveRulesUsingMask(this);
-            // Remove from any remaining processes (like ones where the path couldn't be read)
+            // Remove all RuleTemplates that are using this Mask
+            RuleTemplate.RemoveAllUsingMask(this);
+
+            // Remove any program rules that were using this mask
+            for (int i = AppConfig.Instance.ProgramRules.Count - 1; i >= 0; --i)
+            {
+                if (AppConfig.Instance.ProgramRules[i].Mask == this)
+                {
+                    AppConfig.Instance.ProgramRules[i].TryRemove();
+                }
+            }
+
+            // Finally, also remove the mask from any processes where the ImagePath couldn't be read (and so there was no ProgramRule to clear it)
             foreach (ProcessListEntryViewModel process in ProcessesTabViewModel.RunningProcesses)
             {
                 if (process.Mask == this)
-                    process.Mask = NoMask;
+                    process.SetMask(NoMask, false);
             }
-            // Remove self from config
+
+            // Remove self from config, which in turn calls Dispose()
             AppConfig.Instance.LogicalProcessorMasks.Remove(this);
         }
 

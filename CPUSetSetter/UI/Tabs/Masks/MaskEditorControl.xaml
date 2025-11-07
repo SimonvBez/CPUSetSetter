@@ -47,7 +47,8 @@
         </ItemsControl>
 
         <!--Hotkey input field-->
-        <Grid Grid.Row="1" Margin="0,5,0,0">
+        <Grid x:Name="hotkeyGrid"
+              Grid.Row="1" Margin="0,5,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>

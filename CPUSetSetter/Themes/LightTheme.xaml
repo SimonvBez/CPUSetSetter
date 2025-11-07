@@ -32,6 +32,8 @@
 
     <Style TargetType="rules:CreateRuleTemplateWindow" BasedOn="{StaticResource {x:Type Window}}"/>
 
+    <Style TargetType="rules:CreateProgramRuleWindow" BasedOn="{StaticResource {x:Type Window}}"/>
+
     <!-- TextBlock Style -->
     <Style TargetType="TextBlock">
         <Setter Property="Foreground" Value="{StaticResource ForegroundBrush}"/>

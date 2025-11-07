@@ -96,7 +96,14 @@ namespace CPUSetSetter.UI.Tabs.Masks
 
             // Subscribe to the new outer hotkeys
             if (e.NewValue is ObservableCollection<VKey> newKeys)
+            {
                 newKeys.CollectionChanged += control.OnOuterHotkeysChanged;
+                control.hotkeyGrid.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                control.hotkeyGrid.Visibility = Visibility.Hidden;
+            }
 
             control.UpdateHotkeysDisplay();
         }
@@ -150,6 +157,7 @@ namespace CPUSetSetter.UI.Tabs.Masks
             maskItemsControl.ItemsSource = innerMask.Chunk(columnCount);
             // Hide the checkboxes by default. They will become visible once an outer mask has been set
             maskItemsControl.Visibility = Visibility.Hidden;
+            hotkeyGrid.Visibility = Visibility.Hidden;
 
             // Listen for key presses so the Hotkey input can be updated once it is focused
             HotkeyListener.KeyPressed += OnKeyPressed;

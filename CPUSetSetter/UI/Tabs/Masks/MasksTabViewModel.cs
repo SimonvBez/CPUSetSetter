@@ -19,7 +19,7 @@ namespace CPUSetSetter.UI.Tabs.Masks
         private void CreateNewMask()
         {
             // Open a CreateMaskWindow, which will be able to add a new Mask directly to the config 
-            CreateMaskWindow createMaskWindow = new();
+            CreateMaskWindow createMaskWindow = new() { Owner = App.Current.MainWindow };
             bool? hasCreated = createMaskWindow.ShowDialog();
             if (hasCreated == true)
             {
@@ -33,7 +33,7 @@ namespace CPUSetSetter.UI.Tabs.Masks
             if (!CanRemoveMask || SelectedMask is null)
                 return;
 
-            if (MaskRuleManager.MaskIsUsedByRules(SelectedMask))
+            if (RuleHelpers.MaskIsUsedByRules(SelectedMask))
             {
                 // Prompt user if they're sure
                 MessageBoxResult choice = MessageBox.Show($"The Mask '{SelectedMask.Name}' is currently used by at least one Rule.\nRemoving the Mask will also remove those Rules.\nAre you sure you want to remove the Mask?",
