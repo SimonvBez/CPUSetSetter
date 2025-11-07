@@ -12,10 +12,10 @@ namespace CPUSetSetter.Themes
             switch (theme)
             {
                 case Theme.Light:
-                    themePath = "Themes/LightTheme.xaml";
+                    themePath = "Themes/LightThemeColors.xaml";
                     break;
                 case Theme.Dark:
-                    themePath = "Themes/DarkTheme.xaml";
+                    themePath = "Themes/DarkThemeColors.xaml";
                     break;
                 case Theme.System:
                     ApplySystemTheme();
@@ -24,10 +24,23 @@ namespace CPUSetSetter.Themes
                     throw new ArgumentException("Invalid theme");
             }
 
-            App.Current.Resources.MergedDictionaries.Clear();
-            App.Current.Resources.MergedDictionaries.Add(
-                new() { Source = new(themePath, UriKind.Relative) }
-            );
+            var mergedDicts = App.Current.Resources.MergedDictionaries;
+            ResourceDictionary colorDict = new() { Source = new(themePath, UriKind.Relative) };
+            if (mergedDicts.Count == 0)
+            {
+                // Theme is being set for the first time, set the theme colors and the Styles that use them
+                mergedDicts.Add(colorDict);
+                mergedDicts.Add(new() { Source = new("Themes/Styles.xaml", UriKind.Relative) });
+            }
+            else if (mergedDicts.Count == 2)
+            {
+                // Theme is being hot-switched. Only change the colors
+                mergedDicts[0] = colorDict;
+            }
+            else
+            {
+                throw new InvalidOperationException($"Unexpected MergedDictionaries count: {mergedDicts.Count}");
+            }
         }
 
         private static void ApplySystemTheme()

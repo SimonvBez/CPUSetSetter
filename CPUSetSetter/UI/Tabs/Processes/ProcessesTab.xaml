@@ -12,7 +12,7 @@
     <Grid.RowDefinitions>
         <RowDefinition Height="Auto"/>
         <RowDefinition Height="*"/>
-        <RowDefinition Height="140"/>
+        <RowDefinition Height="142"/>
     </Grid.RowDefinitions>
 
     <!--Search Bar-->
