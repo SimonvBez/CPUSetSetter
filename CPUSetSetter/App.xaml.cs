@@ -97,6 +97,9 @@ namespace CPUSetSetter
                     "I hope this tool may be of use to you! For questions, issues, feedback or just to say Hi, please open an Issue on GitHub!\n");
             }
 
+            // Check for updates in the background
+            VersionChecker.Instance.RunVersionChecker();
+
             // Create the rest of the app
             MainWindow = new MainWindow();
             if (!AppConfig.Instance.StartMinimized)

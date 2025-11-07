@@ -46,7 +46,7 @@ jobs:
         shell: pwsh
 
       - name: Publish
-        run: dotnet publish CPUSetSetter/CPUSetSetter.csproj -c Release /p:DebugType=None /p:DebugSymbols=false /p:FileVersion=${{ env.VERSION }} /p:PublishSingleFile=true /p:PublishTrimmed=false /p:PublishReadyToRun=true /p:SelfContained=false -o publish/CPUSetSetter
+        run: dotnet publish CPUSetSetter/CPUSetSetter.csproj -c Release /p:DebugType=None /p:DebugSymbols=false /p:FileVersion=${{ env.VERSION }} /p:Version=${{ env.VERSION }} /p:PublishSingleFile=true /p:PublishTrimmed=false /p:PublishReadyToRun=true /p:SelfContained=false -o publish/CPUSetSetter
 
       - name: Compress Release files
         run: Compress-Archive -Path publish\* -DestinationPath CPUSetSetter.zip
