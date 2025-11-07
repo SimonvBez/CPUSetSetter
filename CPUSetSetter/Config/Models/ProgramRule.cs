@@ -98,7 +98,7 @@ namespace CPUSetSetter.Config.Models
                 // Apply the new Mask to every process of this Program Rule
                 foreach (ProcessListEntryViewModel process in runningRuleProcesses)
                 {
-                    if (process.SetMask(newMask, false))
+                    if (!process.SetMask(newMask, false))
                         allSuccess = false;
                 }
 
