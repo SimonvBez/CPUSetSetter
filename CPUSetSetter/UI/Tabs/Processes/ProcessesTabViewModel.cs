@@ -25,9 +25,6 @@ namespace CPUSetSetter.UI.Tabs.Processes
         [ObservableProperty]
         private string _processNameFilter = string.Empty;
 
-        [ObservableProperty]
-        private ProcessListEntryViewModel? _currentForegroundProcess;
-
         // Core usage collection
         public ObservableCollection<CPUSetSetter.UI.Tabs.Processes.CoreUsage.CoreUsage> CoreUsages { get; } = new(
             Enumerable.Range(0, Environment.ProcessorCount).Select(i => new CPUSetSetter.UI.Tabs.Processes.CoreUsage.CoreUsage(i))
@@ -51,7 +48,6 @@ namespace CPUSetSetter.UI.Tabs.Processes
             RunningProcessesView.LiveSortingProperties.Add(nameof(ProcessListEntryViewModel.AverageCpuUsage));
             RunningProcessesView.Filter = item => ((ProcessListEntryViewModel)item).Name.Contains(ProcessNameFilter, StringComparison.OrdinalIgnoreCase);
 
-            Task.Run(ForegroundProcessUpdateLoop);
             Task.Run(ProcessCpuUsageUpdateLoop);
             Task.Run(PerCoreUsageUpdateLoop);
         }
@@ -61,23 +57,7 @@ namespace CPUSetSetter.UI.Tabs.Processes
         /// </summary>
         public void OnMaskHotkeyPressed(LogicalProcessorMask mask)
         {
-            UpdateCurrentForegroundProcess();
-            var foregroundProcess = CurrentForegroundProcess;
-            if (foregroundProcess is not null)
-            {
-                bool success = foregroundProcess.SetMask(mask, true);
-                if (success)
-                {
-                    if (mask.IsNoMask)
-                        HotkeySoundPlayer.Instance.PlayCleared();
-                    else
-                        HotkeySoundPlayer.Instance.PlayApplied();
-                }
-                else
-                {
-                    HotkeySoundPlayer.PlayError();
-                }
-            }
+            // Functionality removed as foreground process handling is no longer supported
         }
 
         /// <summary>
@@ -132,31 +112,6 @@ namespace CPUSetSetter.UI.Tabs.Processes
                         RunningProcesses.RemoveAt(i);
                     }
                 }
-            });
-        }
-
-        private async Task ForegroundProcessUpdateLoop()
-        {
-            while (true)
-            {
-                UpdateCurrentForegroundProcess();
-                await Task.Delay(2000);
-            }
-        }
-
-        private void UpdateCurrentForegroundProcess()
-        {
-            IntPtr hwnd = NativeMethods.GetForegroundWindow();
-            if (hwnd == 0)
-            {
-                return;
-            }
-
-            NativeMethods.GetWindowThreadProcessId(hwnd, out uint pid);
-
-            _dispatcher.BeginInvoke(() =>
-            {
-                CurrentForegroundProcess = RunningProcesses.FirstOrDefault(x => x!.Pid == pid, null);
             });
         }
 

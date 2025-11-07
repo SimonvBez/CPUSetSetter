@@ -7,7 +7,6 @@
              mc:Ignorable="d" 
              d:DesignHeight="60" d:DesignWidth="50">
     <UserControl.Resources>
-        <local:CoreUsageTextConverter x:Key="CoreUsageTextConverter"/>
         <local:PercentToHeightConverter x:Key="PercentToHeightConverter"/>
     </UserControl.Resources>
     <Grid Margin="2">
@@ -23,7 +22,6 @@
         </Grid.Style>
         <Grid.RowDefinitions>
             <RowDefinition Height="40"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <!-- Bar container -->
         <Border Grid.Row="0" Background="Gray" CornerRadius="2" VerticalAlignment="Stretch" ClipToBounds="True">
@@ -47,22 +45,5 @@
                 </Border.Height>
             </Border>
         </Border>
-        <TextBlock Grid.Row="1" TextAlignment="Center" FontSize="10" Margin="0,2,0,0">
-            <TextBlock.Text>
-                <MultiBinding Converter="{StaticResource CoreUsageTextConverter}">
-                    <Binding Path="UsagePercent"/>
-                    <Binding Path="IsParked"/>
-                </MultiBinding>
-            </TextBlock.Text>
-            <TextBlock.Style>
-                <Style TargetType="TextBlock">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding IsParked}" Value="True">
-                            <Setter Property="Foreground" Value="Gray"/>
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </TextBlock.Style>
-        </TextBlock>
     </Grid>
 </UserControl>

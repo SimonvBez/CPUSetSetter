@@ -21,12 +21,6 @@ namespace CPUSetSetter.Platforms
         [return: MarshalAs(UnmanagedType.Bool)]
         public static partial bool QueryFullProcessImageNameW(SafeProcessHandle hProcess, uint dwFlags, [Out] char[] lpExeName, ref uint lpdwSize);
 
-        [LibraryImport("user32.dll")]
-        public static partial IntPtr GetForegroundWindow();
-
-        [LibraryImport("user32.dll")]
-        public static partial uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
-
         [LibraryImport("user32.dll", SetLastError = true)]
         public static partial IntPtr SetWindowsHookExW(int idHook, LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);
 

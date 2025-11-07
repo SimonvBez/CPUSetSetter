@@ -103,7 +103,7 @@
         </DataGrid.Columns>
     </DataGrid>
 
-    <!--Core Usage andLog-->
+    <!--Core Usage and Log-->
     <Grid Grid.Row="2">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="260"/>
