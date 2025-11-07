@@ -3,7 +3,7 @@ using System.IO;
 using System.Media;
 
 
-namespace CPUSetSetter.Core
+namespace CPUSetSetter.Util
 {
     public class HotkeySoundPlayer
     {

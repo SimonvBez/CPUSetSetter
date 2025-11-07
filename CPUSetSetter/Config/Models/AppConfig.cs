@@ -29,6 +29,12 @@ namespace CPUSetSetter.Config.Models
         private bool _disableWelcomeMessage;
 
         [ObservableProperty]
+        private bool _showGameModePopup;
+
+        [ObservableProperty]
+        private bool _showUpdatePopup;
+
+        [ObservableProperty]
         private Theme _uiTheme;
 
         public bool IsFirstRun { get; }
@@ -42,6 +48,8 @@ namespace CPUSetSetter.Config.Models
             bool muteHotkeySound,
             bool startMinimized,
             bool disableWelcomeMessage,
+            bool showGameModePopup,
+            bool showUpdatePopup,
             Theme uiTheme,
             bool generateDefaultMasks,
             bool isFirstRun)
@@ -58,15 +66,17 @@ namespace CPUSetSetter.Config.Models
             _muteHotkeySound = muteHotkeySound;
             _startMinimized = startMinimized;
             _disableWelcomeMessage = disableWelcomeMessage;
+            _showGameModePopup = showGameModePopup;
+            _showUpdatePopup = showUpdatePopup;
             _uiTheme = uiTheme;
             IsFirstRun = isFirstRun;
 
             if (generateDefaultMasks)
             {
                 // Create a default set of masks for this system's CPU
-                foreach (LogicalProcessorMask coreMask in CpuInfo.DefaultLogicalProcessorMasks)
+                foreach ((string name, List<bool> boolMask) in CpuInfo.DefaultLogicalProcessorMasks)
                 {
-                    LogicalProcessorMasks.Add(coreMask);
+                    LogicalProcessorMasks.Add(new(name, boolMask, []));
                 }
             }
 

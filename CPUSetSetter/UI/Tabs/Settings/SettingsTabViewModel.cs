@@ -1,6 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CPUSetSetter.Platforms;
 using CPUSetSetter.Themes;
+using CPUSetSetter.Util;
 
 
 namespace CPUSetSetter.UI.Tabs.Settings
@@ -11,6 +13,12 @@ namespace CPUSetSetter.UI.Tabs.Settings
 
         [ObservableProperty]
         private bool _autoStartEnabled = AutoStarter.IsEnabled;
+
+        [RelayCommand]
+        private static void OpenReleasePage()
+        {
+            VersionChecker.OpenLatestReleasePage();
+        }
 
         partial void OnAutoStartEnabledChanged(bool value)
         {

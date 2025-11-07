@@ -152,6 +152,8 @@ namespace CPUSetSetter.Config
                 configJson.MuteHotKeySound,
                 configJson.StartMinimized,
                 configJson.DisableWelcomeMessage,
+                configJson.ShowGameModePopup,
+                configJson.ShowUpdatePopup,
                 Enum.Parse<Theme>(configJson.UiTheme),
                 generateDefaultMasks,
                 isFirstRun);
@@ -166,6 +168,8 @@ namespace CPUSetSetter.Config
             public bool MuteHotKeySound { get; init; }
             public bool StartMinimized { get; init; }
             public bool DisableWelcomeMessage { get; init; }
+            public bool ShowGameModePopup { get; init; }
+            public bool ShowUpdatePopup { get; init; }
             public string UiTheme { get; init; }
             public int ConfigVersion { get; init; } // Can be used in the future to migrate config files
 
@@ -182,6 +186,8 @@ namespace CPUSetSetter.Config
                 MuteHotKeySound = false;
                 StartMinimized = false;
                 DisableWelcomeMessage = false;
+                ShowGameModePopup = true;
+                ShowUpdatePopup = true;
                 UiTheme = Theme.System.ToString();
                 ConfigVersion = 0;
             }
@@ -216,6 +222,8 @@ namespace CPUSetSetter.Config
                 MuteHotKeySound = config.MuteHotkeySound;
                 StartMinimized = config.StartMinimized;
                 DisableWelcomeMessage = config.DisableWelcomeMessage;
+                ShowGameModePopup = config.ShowGameModePopup;
+                ShowUpdatePopup = config.ShowUpdatePopup;
                 UiTheme = config.UiTheme.ToString();
                 ConfigVersion = configVersion;
             }

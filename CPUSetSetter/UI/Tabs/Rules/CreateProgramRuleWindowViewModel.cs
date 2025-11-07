@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CPUSetSetter.Config.Models;
+using CPUSetSetter.Util;
 using Microsoft.Win32;
 
 
@@ -17,7 +18,7 @@ namespace CPUSetSetter.UI.Tabs.Rules
         [ObservableProperty]
         private LogicalProcessorMask _selectedMask = LogicalProcessorMask.NoMask;
 
-        public bool CanCreate => RulePath.Length > 0 && !AppConfig.Instance.ProgramRules.Any(existingRule => existingRule.ProgramPath != RulePath);
+        public bool CanCreate => RulePath.Length > 0 && !AppConfig.Instance.ProgramRules.Any(existingRule => RuleHelpers.PathsEqual(existingRule.ProgramPath, RulePath));
 
         [RelayCommand]
         private void OpenBrowseDialog()

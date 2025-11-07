@@ -11,7 +11,7 @@
         Title="CPU Set Setter"
         Height="547"
         MinHeight="574"
-        Width="940"
+        Width="1020"
         MinWidth="900">
 
     <TabControl>

@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CPUSetSetter.Config.Models;
-using CPUSetSetter.Core;
+using CPUSetSetter.Util;
 using CPUSetSetter.Platforms;
 using System.Collections.Specialized;
 
@@ -62,7 +62,7 @@ namespace CPUSetSetter.UI.Tabs.Processes
             Mask = newMask;
 
             bool ruleSuccess = true;
-            if (updateRule)
+            if (updateRule && ImagePath.Length != 0)
             {
                 // SetMask was called from the Processes tab UI, so the ProgramRule needs to be updated or created too
                 ProgramRule? programRule = RuleHelpers.GetProgramRuleOrNull(ImagePath);

@@ -13,7 +13,7 @@ namespace CPUSetSetter.Platforms
         public IReadOnlyList<string> LogicalProcessorNames { get; }
 
         // Default masks are loaded on demand, so that they are only created when needed
-        public IReadOnlyList<LogicalProcessorMask> DefaultLogicalProcessorMasks => GetDefaultLogicalProcessorMasks();
+        public IReadOnlyList<(string name, List<bool> boolMask)> DefaultLogicalProcessorMasks { get; }
 
         // If the CPU is not supported, an error will raise during construction. So if this property can be retrieved, support is already guaranteed
         public bool IsSupported { get; } = true;
@@ -25,6 +25,7 @@ namespace CPUSetSetter.Platforms
         {
             Manufacturer = GetManufacturer();
             LogicalProcessorNames = GetLogicalProcessorNames();
+            DefaultLogicalProcessorMasks = GetDefaultLogicalProcessorMasks();
         }
 
         private static Manufacturer GetManufacturer()
@@ -99,9 +100,9 @@ namespace CPUSetSetter.Platforms
             return logicalProcessorNames;
         }
 
-        private List<LogicalProcessorMask> GetDefaultLogicalProcessorMasks()
+        private List<(string name, List<bool> boolMask)> GetDefaultLogicalProcessorMasks()
         {
-            List<LogicalProcessorMask> result = [];
+            List<(string name, List<bool> boolMask)> result = [];
 
             // Add a P-Cores and E-Cores default core mask for supported Intel CPUs
             if (Manufacturer == Manufacturer.Intel && _hasECores)
@@ -115,8 +116,8 @@ namespace CPUSetSetter.Platforms
                     else
                         eMask |= core.Affinities[0];
                 }
-                result.Add(new("P-Cores", BitMaskToBoolMask(pMask, LogicalProcessorNames.Count), []));
-                result.Add(new("E-Cores", BitMaskToBoolMask(eMask, LogicalProcessorNames.Count), []));
+                result.Add(("P-Cores", BitMaskToBoolMask(pMask, LogicalProcessorNames.Count)));
+                result.Add(("E-Cores", BitMaskToBoolMask(eMask, LogicalProcessorNames.Count)));
             }
 
             // Add CCD default core masks for multi-CCD CPUs
@@ -148,7 +149,7 @@ namespace CPUSetSetter.Platforms
                     string maskName = "Cache";
                     if (cacheDies.Count >= 2)
                         maskName += i.ToString(CultureInfo.InvariantCulture);
-                    result.Add(new(maskName, BitMaskToBoolMask(cacheDies[i].Affinities[0], LogicalProcessorNames.Count), []));
+                    result.Add((maskName, BitMaskToBoolMask(cacheDies[i].Affinities[0], LogicalProcessorNames.Count)));
                 }
 
                 // Add the remaining dies, calling them Freq if there were any Cache dies
@@ -157,7 +158,7 @@ namespace CPUSetSetter.Platforms
                     string maskName = cacheDies.Count >= 1 ? "Freq" : "CCD";
                     if (freqDies.Count >= 2)
                         maskName += i.ToString(CultureInfo.InvariantCulture);
-                    result.Add(new(maskName, BitMaskToBoolMask(freqDies[i].Affinities[0], LogicalProcessorNames.Count), []));
+                    result.Add((maskName, BitMaskToBoolMask(freqDies[i].Affinities[0], LogicalProcessorNames.Count)));
                 }
             }
 

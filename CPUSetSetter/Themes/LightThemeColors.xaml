@@ -1,0 +1,27 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <SolidColorBrush x:Key="BackgroundBrush" Color="White"/>
+    <SolidColorBrush x:Key="ControlBackgroundBrush" Color="White"/>
+    <SolidColorBrush x:Key="DisabledBackgroundBrush" Color="#F4F4F4"/>
+    <SolidColorBrush x:Key="ClickableBackgroundBrush" Color="#DDDDDD"/>
+    <SolidColorBrush x:Key="HoverBackgroundBrush" Color="#BEE6FD"/>
+    <SolidColorBrush x:Key="SelectedBackgroundBrush" Color="#CCE8FF"/>
+    
+    <SolidColorBrush x:Key="ForegroundBrush" Color="Black"/>
+    <SolidColorBrush x:Key="DisabledForegroundBrush" Color="#838383"/>
+
+    <SolidColorBrush x:Key="BorderBrush" Color="#CCCCCC"/>
+    <SolidColorBrush x:Key="DisabledBorderBrush" Color="#ADB2B5"/>
+    <SolidColorBrush x:Key="ClickableBorderBrush" Color="#707070"/>
+    <SolidColorBrush x:Key="HoverBorderBrush" Color="#3C7FB1"/>
+
+    <SolidColorBrush x:Key="ComboBoxItemBackgroundBrush" Color="White"/>
+    <SolidColorBrush x:Key="DataGridHeaderBorderBrush" Color="#CCCCCC"/>
+    <SolidColorBrush x:Key="ScrollBarBackgroundBrush" Color="#E0E0E0"/>
+
+    <SolidColorBrush x:Key="ErrorBrush" Color="#D83E3B"/>
+
+    <Thickness x:Key="GroupBoxBorderThickness">1</Thickness>
+
+</ResourceDictionary>

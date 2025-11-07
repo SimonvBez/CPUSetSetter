@@ -3,7 +3,7 @@ using Microsoft.Extensions.FileSystemGlobbing;
 using System.IO;
 
 
-namespace CPUSetSetter.Core
+namespace CPUSetSetter.Util
 {
     public static class RuleHelpers
     {
@@ -55,7 +55,11 @@ namespace CPUSetSetter.Core
 
         public static bool PathsEqual(string path1, string path2)
         {
-            return NormalizePath(path1) == NormalizePath(path2);
+            return string.Equals(
+                NormalizePath(path1),
+                NormalizePath(path2),
+                OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal
+            );
         }
 
         private static string NormalizePath(string path)

@@ -75,6 +75,7 @@
 
                             <!--Program Rule Reapply button-->
                             <Button Grid.Column="0"
+                                    BorderThickness="0.7"
                                     Command="{Binding DataContext.ProgramRuleReapplyCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                     CommandParameter="{Binding}"
                                     ToolTipService.ShowOnDisabled="True">
@@ -105,6 +106,7 @@
 
                             <!--Program Rule Remove button-->
                             <Button Grid.Column="1"
+                                    BorderThickness="0.7"
                                     Command="{Binding DataContext.ProgramRuleRemoveCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                     CommandParameter="{Binding}"
                                     ToolTipService.ShowOnDisabled="True">
@@ -225,7 +227,9 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
+                            <!--Reapply Rule Template button-->
                             <Button Grid.Column="0"
+                                    BorderThickness="0.7"
                                     Command="{Binding DataContext.RuleTemplateReapplyCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                     CommandParameter="{Binding}"
                                     ToolTipService.ShowOnDisabled="True">
@@ -247,8 +251,10 @@
 
                                 <Image Source="{StaticResource ReapplyImageSource}"/>
                             </Button>
-                            
+
+                            <!--Remove Rule Template button-->
                             <Button Grid.Column="2"
+                                    BorderThickness="0.7"
                                     Command="{Binding DataContext.RuleTemplateRemoveCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                     CommandParameter="{Binding}"
                                     ToolTip="Remove this Template">
