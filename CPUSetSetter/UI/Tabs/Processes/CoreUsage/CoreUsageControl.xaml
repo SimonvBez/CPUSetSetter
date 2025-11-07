@@ -21,7 +21,7 @@
             </Style>
         </Grid.Style>
         <Grid.RowDefinitions>
-            <RowDefinition Height="40"/>
+            <RowDefinition Height="60"/>
         </Grid.RowDefinitions>
         <!-- Bar container -->
         <Border Grid.Row="0" Background="Gray" CornerRadius="2" VerticalAlignment="Stretch" ClipToBounds="True">
