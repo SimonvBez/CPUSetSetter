@@ -1,9 +1,9 @@
 ﻿using CPUSetSetter.Config.Models;
-using CPUSetSetter.Util;
 using CPUSetSetter.Platforms;
 using CPUSetSetter.TrayIcon;
 using CPUSetSetter.UI;
 using CPUSetSetter.UI.Tabs.Processes;
+using CPUSetSetter.Util;
 using Microsoft.Win32;
 using System.Globalization;
 using System.IO;
@@ -95,6 +95,18 @@ namespace CPUSetSetter
                     "Welcome! Here you can apply a Core Mask to a process. Changes are also saved and applied automatically the next time it runs.\n" +
                     "Use the Masks tab to customize your Core Masks and Hotkeys. For the advanced, use the Rules tab to create Templates for entire folders.\n" +
                     "I hope this tool may be of use to you! For questions, issues, feedback or just to say Hi, please comment/open an Issue on GitHub!\n");
+            }
+
+            if (AppConfig.Instance.HasGeneratedDefaultMasks)
+            {
+                List<string> names = [];
+                foreach (LogicalProcessorMask mask in AppConfig.Instance.LogicalProcessorMasks)
+                {
+                    if (!mask.IsNoMask)
+                        names.Add($"'{mask.Name}'");
+                }
+                WindowLogger.Write($"The following default Core Masks have been created: {string.Join(", ", names)}");
+                AppConfig.Instance.Save();
             }
 
             // Check for updates in the background

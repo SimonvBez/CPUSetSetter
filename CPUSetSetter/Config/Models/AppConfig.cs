@@ -37,6 +37,8 @@ namespace CPUSetSetter.Config.Models
         [ObservableProperty]
         private Theme _uiTheme;
 
+        public bool HasGeneratedDefaultMasks { get; }
+
         public bool IsFirstRun { get; }
 
         private readonly Lock _saveTaskLock = new();
@@ -69,6 +71,7 @@ namespace CPUSetSetter.Config.Models
             _showGameModePopup = showGameModePopup;
             _showUpdatePopup = showUpdatePopup;
             _uiTheme = uiTheme;
+            HasGeneratedDefaultMasks = generateDefaultMasks;
             IsFirstRun = isFirstRun;
 
             if (generateDefaultMasks)
