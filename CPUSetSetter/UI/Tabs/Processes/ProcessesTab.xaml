@@ -6,6 +6,7 @@
       xmlns:local="clr-namespace:CPUSetSetter.UI.Tabs.Processes"
       xmlns:config="clr-namespace:CPUSetSetter.Config.Models"
       xmlns:ui="clr-namespace:CPUSetSetter.UI"
+      xmlns:coreuse="clr-namespace:CPUSetSetter.UI.Tabs.Processes.CoreUsage"
       d:DataContext="{d:DesignInstance Type=local:ProcessesTabViewModel}"
       mc:Ignorable="d">
 
@@ -102,34 +103,16 @@
         </DataGrid.Columns>
     </DataGrid>
 
-    <!--Current foreground process and Log-->
+    <!--Core Usage and Log-->
     <Grid Grid.Row="2">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="250"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!--Current foreground process-->
-        <GroupBox Grid.Column="0"
-                  Header="Current foreground process">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="60"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-
-                <TextBlock Grid.Column="0" Margin="5"
-                           Text="Name:&#x0a;Mask:"/>
-
-                <TextBlock Grid.Column="1" Margin="5">
-                    <TextBlock.Text>
-                        <MultiBinding StringFormat="{}{0}&#x0a;{1}">
-                            <Binding Path="CurrentForegroundProcess.Name"/>
-                            <Binding Path="CurrentForegroundProcess.Mask.Name"/>
-                        </MultiBinding>
-                    </TextBlock.Text>
-                </TextBlock>
-            </Grid>
+        <!-- Core Usage -->
+        <GroupBox Grid.Column="0" Header="Core Usage">
+            <coreuse:CoreUsageControl/>
         </GroupBox>
 
         <!--Log-->
@@ -142,6 +125,5 @@
                      TextChanged="Log_TextChanged"
                      TextWrapping="Wrap"/>
         </GroupBox>
-
     </Grid>
 </Grid>

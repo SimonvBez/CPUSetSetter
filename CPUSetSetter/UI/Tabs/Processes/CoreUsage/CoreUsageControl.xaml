@@ -1,0 +1,68 @@
+﻿<UserControl x:Class="CPUSetSetter.UI.Tabs.Processes.CoreUsage.CoreUsageControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:CPUSetSetter.UI.Tabs.Processes.CoreUsage"
+             mc:Ignorable="d"
+             x:Name="root">
+
+    <UserControl.Resources>
+        <local:RelativeToAbsoluteConverter x:Key="RelativeToAbsoluteConverter"/>
+    </UserControl.Resources>
+
+    <ItemsControl x:Name="coreUsagesItemsControl">
+
+        <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+                <UniformGrid Rows="2"/>
+            </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+
+        <ItemsControl.ItemTemplate>
+            <DataTemplate>
+                <!-- Background bar -->
+                <Border Grid.Row="0" Margin="1"
+                        BorderBrush="{Binding BarBorderBrush, ElementName=root}"
+                        BorderThickness="1"
+                        SnapsToDevicePixels="True">
+
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="{Binding BarBackground, ElementName=root}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsParked}" Value="True">
+                                    <Setter Property="Background" Value="{Binding BarParkedBackground, ElementName=root}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+
+                    <!-- Core utility bar-->
+                    <Border CornerRadius="1,1,0,0"
+                            VerticalAlignment="Bottom">
+
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Background" Value="{Binding BarForeground, ElementName=root}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsParked}" Value="True">
+                                        <Setter Property="Background" Value="{Binding BarParkedForeground, ElementName=root}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+
+                        <Border.Height>
+                            <MultiBinding Converter="{StaticResource RelativeToAbsoluteConverter}">
+                                <Binding Path="Utility"/>
+                                <Binding RelativeSource="{RelativeSource AncestorType=Border}" Path="ActualHeight"/>
+                            </MultiBinding>
+                        </Border.Height>
+                    </Border>
+                </Border>
+
+            </DataTemplate>
+        </ItemsControl.ItemTemplate>
+    </ItemsControl>
+</UserControl>

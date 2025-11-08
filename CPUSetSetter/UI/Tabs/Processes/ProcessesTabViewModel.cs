@@ -21,9 +21,6 @@ namespace CPUSetSetter.UI.Tabs.Processes
         [ObservableProperty]
         private string _processNameFilter = string.Empty;
 
-        [ObservableProperty]
-        private ProcessListEntryViewModel? _currentForegroundProcess;
-
         public ProcessesTabViewModel(Dispatcher dispatcher)
         {
             _dispatcher = dispatcher;
@@ -39,7 +36,6 @@ namespace CPUSetSetter.UI.Tabs.Processes
             runningProcessesView.LiveSortingProperties.Add(nameof(ProcessListEntryViewModel.AverageCpuUsage));
             runningProcessesView.Filter = item => ((ProcessListEntryViewModel)item).Name.Contains(ProcessNameFilter, StringComparison.OrdinalIgnoreCase);
 
-            Task.Run(ForegroundProcessUpdateLoop);
             Task.Run(ProcessCpuUsageUpdateLoop);
         }
 
@@ -48,8 +44,7 @@ namespace CPUSetSetter.UI.Tabs.Processes
         /// </summary>
         public void OnMaskHotkeyPressed(LogicalProcessorMask mask)
         {
-            UpdateCurrentForegroundProcess();
-            var foregroundProcess = CurrentForegroundProcess;
+            ProcessListEntryViewModel? foregroundProcess = GetCurrentForegroundProcess();
             if (foregroundProcess is not null)
             {
                 bool success = foregroundProcess.SetMask(mask, true);
@@ -122,29 +117,16 @@ namespace CPUSetSetter.UI.Tabs.Processes
             });
         }
 
-        private async Task ForegroundProcessUpdateLoop()
-        {
-            while (true)
-            {
-                UpdateCurrentForegroundProcess();
-                await Task.Delay(2000);
-            }
-        }
-
-        private void UpdateCurrentForegroundProcess()
+        private ProcessListEntryViewModel? GetCurrentForegroundProcess()
         {
             IntPtr hwnd = NativeMethods.GetForegroundWindow();
             if (hwnd == 0)
             {
-                return;
+                return null;
             }
 
             NativeMethods.GetWindowThreadProcessId(hwnd, out uint pid);
-
-            _dispatcher.BeginInvoke(() =>
-            {
-                CurrentForegroundProcess = RunningProcesses.FirstOrDefault(x => x!.Pid == pid, null);
-            });
+            return RunningProcesses.FirstOrDefault(x => x!.Pid == pid, null);
         }
 
         private async Task ProcessCpuUsageUpdateLoop()

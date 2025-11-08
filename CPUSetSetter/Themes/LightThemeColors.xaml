@@ -7,7 +7,7 @@
     <SolidColorBrush x:Key="ClickableBackgroundBrush" Color="#DDDDDD"/>
     <SolidColorBrush x:Key="HoverBackgroundBrush" Color="#BEE6FD"/>
     <SolidColorBrush x:Key="SelectedBackgroundBrush" Color="#CCE8FF"/>
-    
+
     <SolidColorBrush x:Key="ForegroundBrush" Color="Black"/>
     <SolidColorBrush x:Key="DisabledForegroundBrush" Color="#838383"/>
 
@@ -23,5 +23,11 @@
     <SolidColorBrush x:Key="ErrorBrush" Color="#D83E3B"/>
 
     <Thickness x:Key="GroupBoxBorderThickness">1</Thickness>
+
+    <SolidColorBrush x:Key="CoreUsageBarBackgroundBrush" Color="#C0C0C0"/>
+    <SolidColorBrush x:Key="CoreUsageBarParkedBackgroundBrush" Color="#808080"/>
+    <SolidColorBrush x:Key="CoreUsageBarForegroundBrush" Color="#00ADDA"/>
+    <SolidColorBrush x:Key="CoreUsageBarParkedForegroundBrush" Color="#545E60"/>
+    <SolidColorBrush x:Key="CoreUsageBarBorderBrush" Color="#696969"/>
 
 </ResourceDictionary>
