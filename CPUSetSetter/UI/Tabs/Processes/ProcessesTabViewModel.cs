@@ -1,9 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CPUSetSetter.Config.Models;
 using CPUSetSetter.Platforms;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Threading;
@@ -46,7 +44,22 @@ namespace CPUSetSetter.UI.Tabs.Processes
         /// </summary>
         public void OnMaskHotkeyPressed(LogicalProcessorMask mask)
         {
-            // Functionality removed as foreground process handling is no longer supported
+            ProcessListEntryViewModel? foregroundProcess = GetCurrentForegroundProcess();
+            if (foregroundProcess is not null)
+            {
+                bool success = foregroundProcess.SetMask(mask, true);
+                if (success)
+                {
+                    if (mask.IsNoMask)
+                        HotkeySoundPlayer.Instance.PlayCleared();
+                    else
+                        HotkeySoundPlayer.Instance.PlayApplied();
+                }
+                else
+                {
+                    HotkeySoundPlayer.PlayError();
+                }
+            }
         }
 
         /// <summary>
@@ -102,6 +115,18 @@ namespace CPUSetSetter.UI.Tabs.Processes
                     }
                 }
             });
+        }
+
+        private ProcessListEntryViewModel? GetCurrentForegroundProcess()
+        {
+            IntPtr hwnd = NativeMethods.GetForegroundWindow();
+            if (hwnd == 0)
+            {
+                return null;
+            }
+
+            NativeMethods.GetWindowThreadProcessId(hwnd, out uint pid);
+            return RunningProcesses.FirstOrDefault(x => x!.Pid == pid, null);
         }
 
         private async Task ProcessCpuUsageUpdateLoop()
