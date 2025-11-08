@@ -7,7 +7,6 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <UseWindowsForms>true</UseWindowsForms>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ApplicationIcon>icon.ico</ApplicationIcon>
   </PropertyGroup>
@@ -18,11 +17,18 @@
     
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-    <PackageReference Include="System.Management" Version="9.0.8" />
+    <PackageReference Include="gong-wpf-dragdrop" Version="4.0.0" />
+    <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="9.0.10" />
+    <PackageReference Include="System.Management" Version="9.0.10" />
+    <PackageReference Include="TaskScheduler" Version="2.12.2" />
   </ItemGroup>
     
   <ItemGroup>
     <Resource Include="Resources\*" CopyToOutputDirectory="Never" LogicalName="%(Filename)%(Extension)" />
+  </ItemGroup>
+    
+  <ItemGroup>
+    <ProjectReference Include="..\CPUSetSetter.TrayIcon\CPUSetSetter.TrayIcon.csproj" />
   </ItemGroup>
 
 </Project>

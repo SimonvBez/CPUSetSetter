@@ -1,17 +1,16 @@
 ﻿using CPUSetSetter.Config.Models;
 using System.IO;
 using System.Media;
-using System.Windows;
 
 
-namespace CPUSetSetter
+namespace CPUSetSetter.Util
 {
     public class HotkeySoundPlayer
     {
         private readonly SoundPlayer _applied;
         private readonly SoundPlayer _cleared;
 
-        public static HotkeySoundPlayer Instance { get; } = new();
+        public static HotkeySoundPlayer Default { get; } = new HotkeySoundPlayer();
 
         public HotkeySoundPlayer()
         {
@@ -21,7 +20,7 @@ namespace CPUSetSetter
 
         private static SoundPlayer LoadSound(string resourceName)
         {
-            using Stream resourceStream = Application.GetResourceStream(new Uri($"pack://application:,,,/CPUSetSetter;component/{resourceName}")).Stream;
+            using Stream resourceStream = App.GetResourceStream(new Uri($"pack://application:,,,/CPUSetSetter;component/{resourceName}")).Stream;
 
             SoundPlayer player = new(resourceStream);
             player.Load();

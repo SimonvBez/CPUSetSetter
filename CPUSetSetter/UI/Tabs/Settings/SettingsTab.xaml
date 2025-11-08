@@ -1,0 +1,123 @@
+﻿<Grid x:Class="CPUSetSetter.UI.Tabs.Settings.SettingsTab"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:local="clr-namespace:CPUSetSetter.UI.Tabs.Settings"
+      xmlns:config="clr-namespace:CPUSetSetter.Config.Models"
+      xmlns:themes="clr-namespace:CPUSetSetter.Themes"
+      xmlns:util="clr-namespace:CPUSetSetter.Util"
+      d:DataContext="{d:DesignInstance Type=local:SettingsTabViewModel}"
+      mc:Ignorable="d"
+      Margin="20">
+
+    <Grid.RowDefinitions>
+        <RowDefinition Height="20"/>
+        <RowDefinition Height="20"/>
+        <RowDefinition Height="20"/>
+        <RowDefinition Height="20"/>
+        <RowDefinition Height="20"/>
+        <RowDefinition Height="20"/>
+        <RowDefinition Height="24"/>
+        <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+
+    <BulletDecorator Grid.Row="0">
+        <BulletDecorator.Bullet>
+            <CheckBox IsChecked="{Binding MuteHotkeySound, Source={x:Static config:AppConfig.Instance}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+        </BulletDecorator.Bullet>
+
+        <TextBlock Text="Mute hotkey sound"/>
+    </BulletDecorator>
+
+    <BulletDecorator Grid.Row="1">
+        <BulletDecorator.Bullet>
+            <CheckBox IsChecked="{Binding StartMinimized, Source={x:Static config:AppConfig.Instance}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+        </BulletDecorator.Bullet>
+
+        <TextBlock Text="Start minimized in tray"/>
+    </BulletDecorator>
+
+    <BulletDecorator Grid.Row="2">
+        <BulletDecorator.Bullet>
+            <CheckBox IsChecked="{Binding DisableWelcomeMessage, Source={x:Static config:AppConfig.Instance}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+        </BulletDecorator.Bullet>
+
+        <TextBlock Text="Disable welcome message"/>
+    </BulletDecorator>
+
+    <BulletDecorator Grid.Row="3">
+        <BulletDecorator.Bullet>
+            <CheckBox IsChecked="{Binding AutoStartEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+        </BulletDecorator.Bullet>
+
+        <TextBlock Text="Start with Windows"/>
+    </BulletDecorator>
+
+    <BulletDecorator Grid.Row="4">
+        <BulletDecorator.Bullet>
+            <CheckBox IsChecked="{Binding ShowGameModePopup, Source={x:Static config:AppConfig.Instance}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+        </BulletDecorator.Bullet>
+
+        <TextBlock Text="Show warning popup when Windows Game Mode is enabled"/>
+    </BulletDecorator>
+
+    <BulletDecorator Grid.Row="5">
+        <BulletDecorator.Bullet>
+            <CheckBox IsChecked="{Binding ShowUpdatePopup, Source={x:Static config:AppConfig.Instance}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+        </BulletDecorator.Bullet>
+
+        <TextBlock Text="Show popup when a new version is available"/>
+    </BulletDecorator>
+
+    <BulletDecorator Grid.Row="6">
+        <BulletDecorator.Bullet>
+            <TextBlock Text="Theme:"/>
+        </BulletDecorator.Bullet>
+
+        <ComboBox Margin="5,0,0,0"
+                  Width="80"
+                  HorizontalAlignment="Left"
+                  ItemsSource="{Binding AvailableThemes}"
+                  SelectedValue="{Binding UiTheme, Source={x:Static config:AppConfig.Instance}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+    </BulletDecorator>
+
+    <GroupBox Grid.Row="7" Margin="0,20,0,0"
+              Width="250"
+              HorizontalAlignment="Left"
+              Header="About">
+        <Grid Margin="5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="25"/>
+                <RowDefinition Height="24"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0">
+                <Run Text="Current version:"/>
+                <Run Text="{Binding VersionString, Source={x:Static util:VersionChecker.Instance}, Mode=OneWay}"/>
+            </TextBlock>
+
+            <TextBlock Grid.Row="1" Margin="0,5,0,0"
+                       Text="{Binding VersionCheckState, Source={x:Static util:VersionChecker.Instance}}"/>
+
+            <Button Grid.Row="2"
+                    Command="{Binding OpenReleasePageCommand}"
+                    Content="Open Release page"
+                    Width="150"
+                    HorizontalAlignment="Left">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                        <Setter Property="Visibility" Value="Hidden"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding NewVersionAvailable, Source={x:Static util:VersionChecker.Instance}}" Value="True">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </Grid>
+    </GroupBox>
+
+</Grid>

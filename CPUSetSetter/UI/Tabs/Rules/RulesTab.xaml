@@ -1,0 +1,290 @@
+﻿<Grid x:Class="CPUSetSetter.UI.Tabs.Rules.RulesTab"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:local="clr-namespace:CPUSetSetter.UI.Tabs.Rules"
+      xmlns:config="clr-namespace:CPUSetSetter.Config.Models"
+      xmlns:dd="clr-namespace:GongSolutions.Wpf.DragDrop;assembly=GongSolutions.Wpf.DragDrop"
+      d:DataContext="{d:DesignInstance Type=local:RulesTabViewModel}"
+      mc:Ignorable="d"
+      Margin="5">
+
+    <Grid.Resources>
+        <BitmapImage x:Key="RemoveImageSource" UriSource="pack://application:,,,/CPUSetSetter;component/remove.png"/>
+        <BitmapImage x:Key="ReapplyImageSource" UriSource="pack://application:,,,/CPUSetSetter;component/reapply.png"/>
+    </Grid.Resources>
+
+    <Grid.RowDefinitions>
+        <RowDefinition Height="1.5*"/>
+        <RowDefinition Height="25"/>
+        <RowDefinition Height="20"/>
+        <RowDefinition Height="*"/>
+        <RowDefinition Height="35"/>
+    </Grid.RowDefinitions>
+
+    <!--Program Rules-->
+    <DataGrid Grid.Row="0" Margin="0,0,0,10"
+              ItemsSource="{Binding ProgramRules, Source={x:Static config:AppConfig.Instance}}"
+              AutoGenerateColumns="False"
+              RowHeight="24"
+              HeadersVisibility="Column"
+              VerticalScrollBarVisibility="Visible"
+              CanUserReorderColumns="False"
+              CanUserDeleteRows="False"
+              CanUserAddRows="False"
+              CanUserResizeRows="False">
+
+        <DataGrid.Columns>
+            <!--Path column-->
+            <DataGridTextColumn Header="Program Rules"
+                                Binding="{Binding ProgramPath}"
+                                IsReadOnly="True"
+                                Width="*"/>
+
+            <!--Core Mask column-->
+            <DataGridTemplateColumn Header="Core Mask"
+                                    IsReadOnly="True"
+                                    Width="120"
+                                    SortMemberPath="Mask.Name">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                        <ComboBox ItemsSource="{Binding LogicalProcessorMasks, Source={x:Static config:AppConfig.Instance}}"
+                                  SelectedValue="{Binding Mask, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+
+            <!--Action buttons column-->
+            <DataGridTemplateColumn IsReadOnly="True"
+                                    Width="54">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!--Program Rule Reapply button-->
+                            <Button Grid.Column="0"
+                                    BorderThickness="0.7"
+                                    Command="{Binding DataContext.ProgramRuleReapplyCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                    CommandParameter="{Binding}"
+                                    ToolTipService.ShowOnDisabled="True">
+
+                                <!--Disable the Reapply button when the Program Rule is not matching a Rule Template-->
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                        <Setter Property="IsEnabled" Value="False"/>
+                                        <Setter Property="Opacity" Value="0.4"/>
+                                        <Setter Property="ToolTip" Value="Rule is not deviating from Template; nothing to Reapply"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsDeviatingFromRuleTemplate}" Value="True">
+                                                <Setter Property="IsEnabled" Value="True"/>
+                                                <Setter Property="Opacity" Value="1"/>
+                                                <Setter Property="ToolTip" Value="Reapply Template"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding MatchingRuleTemplate}" Value="{x:Null}">
+                                                <Setter Property="IsEnabled" Value="False"/>
+                                                <Setter Property="Opacity" Value="0.4"/>
+                                                <Setter Property="ToolTip" Value="No matching Template to reapply"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+
+                                <Image Source="{StaticResource ReapplyImageSource}"/>
+                            </Button>
+
+                            <!--Program Rule Remove button-->
+                            <Button Grid.Column="1"
+                                    BorderThickness="0.7"
+                                    Command="{Binding DataContext.ProgramRuleRemoveCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                    CommandParameter="{Binding}"
+                                    ToolTipService.ShowOnDisabled="True">
+
+                                <!--Disable the Remove button when the Program Rule falls under a RuleTemplate AND has an active process-->
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                        <Setter Property="IsEnabled" Value="False"/>
+                                        <Setter Property="Opacity" Value="0.4"/>
+                                        <Setter Property="ToolTip" Value="Cannot be removed due to matching Rule Template AND running process(es)"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding HasRunningProcesses}" Value="False">
+                                                <Setter Property="IsEnabled" Value="True"/>
+                                                <Setter Property="Opacity" Value="1"/>
+                                                <Setter Property="ToolTip" Value="Remove this Program Rule"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding MatchingRuleTemplate}" Value="{x:Null}">
+                                                <Setter Property="IsEnabled" Value="True"/>
+                                                <Setter Property="Opacity" Value="1"/>
+                                                <Setter Property="ToolTip" Value="Remove this Program Rule"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+
+                                <Image Source="{StaticResource RemoveImageSource}"/>
+                            </Button>
+                        </Grid>
+
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+        </DataGrid.Columns>
+    </DataGrid>
+
+    <Grid Grid.Row="1">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="95"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <!--Create Program Rule button-->
+        <Button Grid.Column="0" Margin="0,0,10,0"
+                Command="{Binding CreateProgramRuleCommand}"
+                Content="Create..."/>
+
+        <TextBlock Grid.Column="1" Margin="0,0,5,0"
+                   VerticalAlignment="Center"
+                   Text="Search:"/>
+
+        <!--Program Rule search bar-->
+        <TextBox Grid.Column="2" Margin="0,0,5,0"
+                 Text="{Binding ProgramRuleFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <!--Template-deviating rules only-->
+        <CheckBox Grid.Column="3"
+                  IsChecked="{Binding ShowOnlyDeviatingProgramRule, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <TextBlock Grid.Column="4"
+                   VerticalAlignment="Center"
+                   Text="Show only Rules deviating from Templates"/>
+    </Grid>
+
+    <Separator Grid.Row="2"/>
+
+    <!--Rule Templates-->
+    <DataGrid Grid.Row="3" Margin="0,0,0,10"
+              ItemsSource="{Binding RuleTemplates, Source={x:Static config:AppConfig.Instance}}"
+              AutoGenerateColumns="False"
+              RowHeight="24"
+              HeadersVisibility="Column"
+              VerticalScrollBarVisibility="Visible"
+              CanUserReorderColumns="False"
+              CanUserDeleteRows="False"
+              CanUserAddRows="False"
+              CanUserResizeRows="False"
+              CanUserSortColumns="False"
+              dd:DragDrop.IsDragSource="True"
+              dd:DragDrop.IsDropTarget="True">
+
+        <DataGrid.Columns>
+            <!--GlobRule column-->
+            <DataGridTextColumn Header="Rule Templates (double click to edit, drag-and-drop to reorder)"
+                                Width="*"
+                                Binding="{Binding RuleGlob}"/>
+
+            <!--Core Mask column-->
+            <DataGridTemplateColumn Header="Core Mask"
+                                    Width="120"
+                                    IsReadOnly="True"
+                                    SortMemberPath="Mask.DisplayName">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                        <ComboBox ItemsSource="{Binding LogicalProcessorMasks, Source={x:Static config:AppConfig.Instance}}"
+                                  SelectedValue="{Binding Mask, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+
+            <!--Action buttons column-->
+            <DataGridTemplateColumn IsReadOnly="True"
+                                    Width="54">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                        <Grid Margin="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!--Reapply Rule Template button-->
+                            <Button Grid.Column="0"
+                                    BorderThickness="0.7"
+                                    Command="{Binding DataContext.RuleTemplateReapplyCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                    CommandParameter="{Binding}"
+                                    ToolTipService.ShowOnDisabled="True">
+
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                        <Setter Property="IsEnabled" Value="False"/>
+                                        <Setter Property="Opacity" Value="0.4"/>
+                                        <Setter Property="ToolTip" Value="No Rules are deviating from Template; nothing to reapply"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding HasDeviatingProgramRules}" Value="True">
+                                                <Setter Property="IsEnabled" Value="True"/>
+                                                <Setter Property="Opacity" Value="1"/>
+                                                <Setter Property="ToolTip" Value="Overwrite all deviating Program Rules to this Core Mask"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+
+                                <Image Source="{StaticResource ReapplyImageSource}"/>
+                            </Button>
+
+                            <!--Remove Rule Template button-->
+                            <Button Grid.Column="2"
+                                    BorderThickness="0.7"
+                                    Command="{Binding DataContext.RuleTemplateRemoveCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                    CommandParameter="{Binding}"
+                                    ToolTip="Remove this Template">
+                                <Image Source="{StaticResource RemoveImageSource}"/>
+                            </Button>
+                        </Grid>
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+        </DataGrid.Columns>
+    </DataGrid>
+
+    <Grid Grid.Row="4">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="95"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Button Grid.Column="0" Margin="0,0,10,0"
+                Command="{Binding CreateRuleTemplateCommand}"
+                Content="Create..."/>
+
+        <TextBlock Grid.Column="1">
+            <TextBlock.Inlines>
+                <Run Text="A Rule Template will create a new Program Rule for any matching process that doesn't have a Program Rules yet. Click"/>
+                <Run Text="Create..." FontWeight="Bold"/>
+                <Run Text="to see examples."/>
+                <Run Text="&#x0a;The priority goes top to bottom," FontWeight="Bold"/>
+                <Run Text="meaning the first Template to 'match' a new process will be the one to create a Program Rule for it."/>
+            </TextBlock.Inlines>
+        </TextBlock>
+    </Grid>
+
+</Grid>

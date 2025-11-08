@@ -1,10 +1,14 @@
-﻿using System.Globalization;
+﻿using CPUSetSetter.Config.Models;
+using CPUSetSetter.Platforms;
+using CPUSetSetter.TrayIcon;
+using CPUSetSetter.UI;
+using CPUSetSetter.UI.Tabs.Processes;
+using CPUSetSetter.Util;
+using Microsoft.Win32;
+using System.Globalization;
 using System.IO;
-using System.Security.Principal;
 using System.Windows;
 using System.Windows.Markup;
-using Application = System.Windows.Application;
-using MessageBox = System.Windows.MessageBox;
 
 
 namespace CPUSetSetter
@@ -14,26 +18,46 @@ namespace CPUSetSetter
     /// </summary>
     public partial class App : Application
     {
-        private NotifyIcon? _trayIcon;
+        private AppTrayIcon? trayIcon;
         private Mutex? singleInstanceMutex;
         private const string mutexName = "CPUSetSetterLock";
 
-        public static bool IsElevated { get; private set; }
-
         protected override void OnStartup(StartupEventArgs e)
         {
-            base.OnStartup(e);
-
-            Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
-
-            using (WindowsIdentity identity = WindowsIdentity.GetCurrent())
-            {
-                WindowsPrincipal principal = new(identity);
-                IsElevated = principal.IsInRole(WindowsBuiltInRole.Administrator);
-            }
-
             // Show unhandled exceptions in an error dialog box
             AddDialogExceptionHandler();
+
+            // Set the working directory to the directory of the executable, so the config .json file will always be in the right place
+            Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+
+            // Check if the app was launched as an elevated AutoStart child process
+            if (e.Args.Contains(AutoStarter.LaunchArgumentEnable))
+            {
+                bool success = AutoStarter.Enable();
+                Environment.Exit(success ? 0 : 1);
+            }
+            if (e.Args.Contains(AutoStarter.LaunchArgumentDisable))
+            {
+                bool success = AutoStarter.Disable();
+                Environment.Exit(success ? 0 : 1);
+            }
+
+            // Quit when this CPU is not supported
+            try
+            {
+                if (!CpuInfo.IsSupported)
+                {
+                    throw new UnsupportedCpu();
+                }
+            }
+            catch (UnsupportedCpu ex)
+            {
+                MessageBox.Show($"This system's CPU is unfortunately not supported: {ex.Message}", "CPU Set Setter", MessageBoxButton.OK, MessageBoxImage.Error);
+                ExitApp();
+                return;
+            }
+
+            base.OnStartup(e);
 
             // Check if the app is already running
             singleInstanceMutex = new(true, mutexName, out bool isOwned);
@@ -44,47 +68,56 @@ namespace CPUSetSetter
                 return;
             }
 
-            // Quit when this CPU is not supported
-            if (Environment.ProcessorCount > 64)
-            {
-                MessageBox.Show("Failed to open: More than 64 logical processors are not supported", "CPU Set Setter", MessageBoxButton.OK, MessageBoxImage.Error);
-                ExitApp();
-                return;
-            }
+            // Load the config, which also loads the app's UI theme
+            AppConfig.Load();
+            RuleHelpers.OnConfigLoaded();
 
             // Set the app's culture to the local culture
             SetAppCulture();
 
             // Set up the tray icon
-            ContextMenuStrip trayMenu = new();
-            trayMenu.Items.Add("Open", null, (_, _) => ShowMainWindow());
-            trayMenu.Items.Add("Close", null, (_, _) => ExitApp());
             using Stream iconStream = GetResourceStream(new Uri("pack://application:,,,/CPUSetSetter;component/tray.ico")).Stream;
-            _trayIcon = new()
-            {
-                Icon = new Icon(iconStream),
-                Visible = true,
-                ContextMenuStrip = trayMenu,
-                Text = "CPU Set Setter"
-            };
+            trayIcon = new(iconStream);
+            trayIcon.OpenClicked += (_, _) => ShowMainWindow();
+            trayIcon.CloseClicked += (_, _) => ExitApp();
 
-            // Show the app when clicking the tray icon
-            _trayIcon.MouseClick += (_, e) =>
+            if (AppConfig.Instance.IsFirstRun)
             {
-                switch (e.Button)
+                // Promote the tray icon directly onto the Taskbar instead of in the "up-arrow" menu
+                // Some users did not notice the tray icon because it was hidden by default
+                // To respect the user's choice, this is only done the first time the app is ran
+                PromoteTrayIcon();
+            }
+
+            if (!AppConfig.Instance.DisableWelcomeMessage)
+            {
+                WindowLogger.Write(
+                    "Welcome! Here you can apply a Core Mask to a process. Changes are also saved and applied automatically the next time it runs.\n" +
+                    "Use the Masks tab to customize your Core Masks and Hotkeys. For the advanced, use the Rules tab to create Templates for entire folders.\n" +
+                    "I hope this tool may be of use to you! For questions, issues, feedback or just to say Hi, please comment/open an Issue on GitHub!\n");
+            }
+
+            if (AppConfig.Instance.HasGeneratedDefaultMasks)
+            {
+                List<string> names = [];
+                foreach (LogicalProcessorMask mask in AppConfig.Instance.LogicalProcessorMasks)
                 {
-                    case MouseButtons.Left:
-                        ShowMainWindow();
-                        break;
-                    case MouseButtons.Middle:
-                        ExitApp();
-                        break;
+                    if (!mask.IsNoMask)
+                        names.Add($"'{mask.Name}'");
                 }
-            };
+                WindowLogger.Write($"The following default Core Masks have been created: {string.Join(", ", names)}");
+                AppConfig.Instance.Save();
+            }
+
+            // Check for updates in the background
+            VersionChecker.Instance.RunVersionChecker();
+
+            // Show a warning if Windows Game Mode is enabled
+            WindowsGameModeWarning.ShowIfEnabled();
 
             // Create the rest of the app
             MainWindow = new MainWindow();
-            if (!Config.Default.StartMinimized)
+            if (!AppConfig.Instance.StartMinimized)
             {
                 ShowMainWindow();
             }
@@ -109,6 +142,36 @@ namespace CPUSetSetter
             );
         }
 
+        /// <summary>
+        /// 'Promote' the app's tray icon, meaning it is unhidden from the 'up-arrow' menu 
+        /// </summary>
+        private static void PromoteTrayIcon()
+        {
+            string? appExePath = Environment.ProcessPath;
+            if (appExePath is null)
+                return;
+
+            using RegistryKey? notifyKey = Registry.CurrentUser.OpenSubKey(@"Control Panel\NotifyIconSettings");
+            if (notifyKey is null)
+                return;
+
+            foreach (string subkeyName in notifyKey.GetSubKeyNames())
+            {
+                using RegistryKey? appKey = notifyKey.OpenSubKey(subkeyName, true);
+                if (appKey is null)
+                    continue;
+
+                object? exePathValue = appKey.GetValue("ExecutablePath");
+                if (exePathValue is null || !string.Equals(exePathValue.ToString(), appExePath, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                // Only promote the tray icon when it has no promote status set yet
+                object? isPromoted = appKey.GetValue("IsPromoted");
+                if (isPromoted is null)
+                    appKey.SetValue("IsPromoted", 1, RegistryValueKind.DWord);
+            }
+        }
+
         private void ShowMainWindow()
         {
             MainWindow.Show();
@@ -118,17 +181,8 @@ namespace CPUSetSetter
 
         private void ExitApp()
         {
-            if (_trayIcon is not null)
-            {
-                _trayIcon.Visible = false;
-                _trayIcon.Dispose();
-            }
+            trayIcon?.Dispose();
             Shutdown();
         }
     }
 }
-
-/*
- * TODO:
- * - Low priority: Add list of saved process settings
- */

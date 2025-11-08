@@ -1,0 +1,76 @@
+﻿<Grid x:Class="CPUSetSetter.UI.Tabs.Masks.MasksTab"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:local="clr-namespace:CPUSetSetter.UI.Tabs.Masks"
+      xmlns:config="clr-namespace:CPUSetSetter.Config.Models"
+      xmlns:ui="clr-namespace:CPUSetSetter.UI"
+      d:DataContext="{d:DesignInstance Type=local:MasksTabViewModel}"
+      mc:Ignorable="d"
+      Margin="5">
+
+    <Grid.RowDefinitions>
+        <RowDefinition Height="*"/>
+        <RowDefinition Height="30"/>
+        <RowDefinition Height="55"/>
+    </Grid.RowDefinitions>
+
+    <Grid Grid.Row="0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!--Mask list and Create/Remove buttons-->
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="28"/>
+            </Grid.RowDefinitions>
+
+            <!--List of existing masks-->
+            <ListBox Grid.Row="0" Margin="0,0,0,10"
+                     ItemsSource="{Binding LogicalProcessorMasks, Source={x:Static config:AppConfig.Instance}}"
+                     SelectedValue="{Binding SelectedMask, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Name}"/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <!--Create/Remove buttons-->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0" Margin="0,0,5,0"
+                        Content="Create new..."
+                        Command="{Binding CreateNewMaskCommand}"/>
+                <Button Grid.Column="1" Margin="5,0,0,0"
+                        Content="Remove"
+                        Command="{Binding RemoveMaskCommand}"
+                        IsEnabled="{Binding CanRemoveMask}"/>
+            </Grid>
+        </Grid>
+
+        <!--Settings of the selected mask-->
+        <local:MaskEditorControl Grid.Column="1" Margin="10,0,0,0"
+                                 BoolMask="{Binding SelectedMask.BoolMask}"
+                                 Hotkeys="{Binding SelectedMask.Hotkeys}"/>
+    </Grid>
+
+    <Separator Grid.Row="1"/>
+
+    <TextBlock Grid.Row="2">
+        <TextBlock.Inlines>
+            <Run Text="This is where you can manage your Masks. A Mask defines which CPU cores a process can run on."/>
+            <Run Text="&#x0a;Once a Mask is created, it can be applied to a process by selecting it in the Processes tab."/>
+            <Run Text="&#x0a;You can also configure a hotkey for a Mask, which allows you to apply it to the current foreground process without tabbing-out."/>
+        </TextBlock.Inlines>
+    </TextBlock>
+
+</Grid>
