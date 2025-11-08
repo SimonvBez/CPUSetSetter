@@ -6,7 +6,7 @@
       xmlns:local="clr-namespace:CPUSetSetter.UI.Tabs.Processes"
       xmlns:config="clr-namespace:CPUSetSetter.Config.Models"
       xmlns:ui="clr-namespace:CPUSetSetter.UI"
-      xmlns:coreUsage="clr-namespace:CPUSetSetter.UI.Tabs.Processes.CoreUsage"
+      xmlns:coreuse="clr-namespace:CPUSetSetter.UI.Tabs.Processes.CoreUsage"
       d:DataContext="{d:DesignInstance Type=local:ProcessesTabViewModel}"
       mc:Ignorable="d">
 
@@ -106,13 +106,13 @@
     <!--Core Usage and Log-->
     <Grid Grid.Row="2">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="260"/>
+            <ColumnDefinition Width="250"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
         <!-- Core Usage -->
         <GroupBox Grid.Column="0" Header="Core Usage">
-            <coreUsage:CoreUsageControl />
+            <coreuse:CoreUsageControl/>
         </GroupBox>
 
         <!--Log-->
