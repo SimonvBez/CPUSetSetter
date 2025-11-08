@@ -113,7 +113,7 @@ namespace CPUSetSetter.UI.Tabs.Processes.CoreUsage
         {
             // Create the Utility% counters for each logical processor
             PerformanceCounter[] utilityCounters = new PerformanceCounter[coreUsages.Count];
-            
+
             for (int i = 0; i < utilityCounters.Length; ++i)
             {
                 utilityCounters[i] = new("Processor Information", "% Processor Utility", $"0,{i}");

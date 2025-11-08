@@ -28,7 +28,7 @@
             <Run Text="&#x0a;* matches any part of a single folder or file name."/>
             <Run Text="&#x0a;** matches any number of folders, including subfolders. When used at the end, it also matches any file name."/>
             <Run Text="&#x0a;&#x0a;Examples (green means the process matches):"/>
-            
+
             <Run Text="&#x0a;C:\Games\** " FontWeight="Bold"/>
             <Run Text="->"/>
             <Run Text="C:\Games\game.exe" Foreground="Green"/>
@@ -36,13 +36,13 @@
             <Run Text="C:\Games\Steam\The Finals\Discovery.exe" Foreground="Green"/>
             <Run Text="but not"/>
             <Run Text="C:\More Games\game.exe" Foreground="Red"/>
-            
+
             <Run Text="&#x0a;C:\Games\* " FontWeight="Bold"/>
             <Run Text="->"/>
             <Run Text="C:\Games\game.exe" Foreground="Green"/>
             <Run Text="but not"/>
             <Run Text="C:\Games\Steam\The Finals\Discovery.exe" Foreground="Red"/>
-            
+
             <Run Text="&#x0a;C:\Games\*\* " FontWeight="Bold"/>
             <Run Text="->"/>
             <Run Text="C:\Games\Outer Wilds\OuterWilds.exe" Foreground="Green"/>
@@ -50,7 +50,7 @@
             <Run Text="C:\Games\A\B\C.exe" Foreground="Red"/>
             <Run Text="or"/>
             <Run Text="C:\Games\A.exe" Foreground="Red"/>
-            
+
             <Run Text="&#x0a;**\bf6.exe " FontWeight="Bold"/>
             <Run Text="->"/>
             <Run Text="C:\Games\Battlefield 6\bf6.exe" Foreground="Green"/>
@@ -58,14 +58,13 @@
             <Run Text="D:\Battlefield 6\SP\bf6.exe" Foreground="Green"/>
             <Run Text="but not"/>
             <Run Text="C:\Games\bbf6.exe" Foreground="Red"/>
-            
+
             <Run Text="&#x0a;**\*Cheat* " FontWeight="Bold"/>
             <Run Text="->"/>
             <Run Text="C:\Games\BF6\EAAntiCheat.Installer.exe" Foreground="Green"/>
             <Run Text="(Use with &lt;no mask&gt; to create an exclusion for anti-cheat launchers)"/>
-            
-            <Run Text="&#x0a;&#x0a;When creating an exclusion, don't forget to drag the Rule Template to the top so it takes priority!"/>
 
+            <Run Text="&#x0a;&#x0a;When creating an exclusion, don't forget to drag the Rule Template to the top so it takes priority!"/>
         </TextBlock>
 
         <Grid Grid.Row="1">
@@ -74,7 +73,7 @@
                 <RowDefinition Height="3"/>
                 <RowDefinition Height="24"/>
             </Grid.RowDefinitions>
-            
+
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>

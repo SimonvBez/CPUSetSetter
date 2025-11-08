@@ -5,7 +5,7 @@ namespace CPUSetSetter.TrayIcon
 {
     public class AppTrayIcon : IDisposable
     {
-        private NotifyIcon? _trayIcon;
+        private readonly NotifyIcon? _trayIcon;
 
         public event EventHandler? OpenClicked;
         public event EventHandler? CloseClicked;

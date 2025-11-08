@@ -8,7 +8,7 @@ namespace CPUSetSetter.UI.Tabs.Processes
         [ObservableProperty]
         private string _text = "";
 
-        private Queue<string> _logLines = new();
+        private readonly Queue<string> _logLines = new();
         private readonly Lock _lock = new();
         private bool _isUpdating = false;
 

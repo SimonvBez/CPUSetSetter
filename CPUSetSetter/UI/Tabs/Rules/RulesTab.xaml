@@ -135,7 +135,7 @@
                                 <Image Source="{StaticResource RemoveImageSource}"/>
                             </Button>
                         </Grid>
-                        
+
                     </DataTemplate>
                 </DataGridTemplateColumn.CellTemplate>
             </DataGridTemplateColumn>
@@ -172,7 +172,6 @@
                    VerticalAlignment="Center"
                    Text="Show only Rules deviating from Templates"/>
     </Grid>
-
 
     <Separator Grid.Row="2"/>
 
