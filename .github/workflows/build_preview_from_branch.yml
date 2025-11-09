@@ -26,12 +26,9 @@ jobs:
       - name: Publish
         run: dotnet publish CPUSetSetter/CPUSetSetter.csproj -c Release /p:DebugType=None /p:DebugSymbols=false /p:PublishSingleFile=true /p:PublishTrimmed=false /p:PublishReadyToRun=true /p:SelfContained=false -o publish/CPUSetSetter
 
-      - name: Compress build files
-        run: Compress-Archive -Path publish\* -DestinationPath CPUSetSetter.zip
-
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: CPUSetSetter-preview
-          path: CPUSetSetter.zip
+          path: publish/CPUSetSetter
           retention-days: 3
