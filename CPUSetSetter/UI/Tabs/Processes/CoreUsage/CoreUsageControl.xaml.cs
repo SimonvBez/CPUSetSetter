@@ -164,7 +164,7 @@ namespace CPUSetSetter.UI.Tabs.Processes.CoreUsage
                     }
                 });
 
-                int delayTime = windowIsVisible ? 1000 : 5000; // Poll the CPU usage less often when not visible
+                int delayTime = windowIsVisible ? 1500 : 6000; // Poll the CPU usage less often when not visible
                 await Task.Delay(delayTime);
             }
         }

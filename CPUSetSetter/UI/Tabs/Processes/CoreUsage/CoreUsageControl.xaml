@@ -25,7 +25,8 @@
                 <Border Grid.Row="0" Margin="1"
                         BorderBrush="{Binding BarBorderBrush, ElementName=root}"
                         BorderThickness="1"
-                        SnapsToDevicePixels="True">
+                        SnapsToDevicePixels="True"
+                        ToolTip="{Binding Name}">
 
                     <Border.Style>
                         <Style TargetType="Border">

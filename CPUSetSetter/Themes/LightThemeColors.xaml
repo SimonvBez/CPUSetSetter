@@ -24,7 +24,7 @@
 
     <Thickness x:Key="GroupBoxBorderThickness">1</Thickness>
 
-    <SolidColorBrush x:Key="CoreUsageBarBackgroundBrush" Color="#C0C0C0"/>
+    <SolidColorBrush x:Key="CoreUsageBarBackgroundBrush" Color="#C8C8C8"/>
     <SolidColorBrush x:Key="CoreUsageBarParkedBackgroundBrush" Color="#808080"/>
     <SolidColorBrush x:Key="CoreUsageBarForegroundBrush" Color="#00ADDA"/>
     <SolidColorBrush x:Key="CoreUsageBarParkedForegroundBrush" Color="#545E60"/>
