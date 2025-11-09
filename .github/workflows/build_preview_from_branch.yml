@@ -1,0 +1,37 @@
+name: Build Preview
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch_name:
+        description: "Branch to build"
+        required: true
+        default: "main"
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch_name }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Publish
+        run: dotnet publish CPUSetSetter/CPUSetSetter.csproj -c Release /p:DebugType=None /p:DebugSymbols=false /p:PublishSingleFile=true /p:PublishTrimmed=false /p:PublishReadyToRun=true /p:SelfContained=false -o publish/CPUSetSetter
+
+      - name: Compress build files
+        run: Compress-Archive -Path publish\* -DestinationPath CPUSetSetter.zip
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CPUSetSetter-preview
+          path: CPUSetSetter.zip
+          retention-days: 3
