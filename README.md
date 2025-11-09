@@ -32,13 +32,14 @@ This tool is inspired by Process Lasso, bringing quick and easy access to CPU Se
 > [!CAUTION]
 > **IMPORTANT!** When using this on games, **always** disable Windows Game Mode. Even if CPPC Preferred Cores is set to Frequency instead of Driver. Performance reductions may occur when Game Mode is left enabled.
 
+# The text below has not been updated yet for v2.0.0, I will work on updating the README very soon
+
 If you're on a supported dual-CCD CPU (9950X3D, 9900X3D, 7950X3D, 7900X3D), CPU Set Setter will auto-create a "Cache" and "Freq" CPU Set for you. Just:
 1. Download the [latest Release](https://github.com/SimonvBez/CPUSetSetter/releases/latest), extract and run.
 2. Open the **Processes tab**.
 3. Apply the "Cache" CPU Set to your open game.
 4. (Optional) Apply the "Freq" CPU Set to heavy background apps like OBS.
 5. Done - your choices are saved and auto-applied next time, as long as CPU Set Setter is running.
-6. (Optional) Run `CreateStartupTask.bat` to make CPU Set Setter start automatically when your computer starts
 
 If you're on another CPU or want to otherwise tweak which cores can be used, you can create/modify your own CPU Set in **Settings**:
 - Name your CPU Set, Add it and Pick the cores you want for it
