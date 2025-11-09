@@ -9,8 +9,8 @@
         Title="Create a new Mask"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
-        Height="530"
-        Width="500">
+        SizeToContent="WidthAndHeight"
+        MinWidth="500">
 
     <Grid Margin="10">
         <Grid.RowDefinitions>

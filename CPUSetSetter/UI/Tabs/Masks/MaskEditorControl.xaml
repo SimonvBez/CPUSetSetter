@@ -24,7 +24,7 @@
 
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <ItemsControl ItemsSource="{Binding}" Width="105">
+                    <ItemsControl ItemsSource="{Binding}" Width="Auto" MinWidth="105">
 
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
