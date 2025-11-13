@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 
 
@@ -212,6 +213,29 @@ namespace CPUSetSetter.UI.Tabs.Masks
 
             HotkeyListener.KeyPressed -= OnKeyPressed;
             GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Toggle the MaskBit when the mouse is hovered over the UI element with LMB down
+        /// </summary>
+        private void MaskBitBorder_MouseEnter(object sender, MouseEventArgs e)
+        {
+            Border border = (Border)sender;
+            BulletDecorator enteredBulletDecorator = (BulletDecorator)border.Child;
+            CheckBox cb = (CheckBox)enteredBulletDecorator.Bullet;
+            if (e.LeftButton == MouseButtonState.Pressed)
+                cb.IsChecked = !cb.IsChecked;
+        }
+
+        /// <summary>
+        /// Toggle the MaskBit when the LMB is pressed down on the UI element
+        /// </summary>
+        private void MaskBitBorder_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            Border border = (Border)sender;
+            BulletDecorator enteredBulletDecorator = (BulletDecorator)border.Child;
+            CheckBox cb = (CheckBox)enteredBulletDecorator.Bullet;
+            cb.IsChecked = !cb.IsChecked;
         }
     }
 }
