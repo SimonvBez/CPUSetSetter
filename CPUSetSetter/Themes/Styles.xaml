@@ -475,4 +475,8 @@
         <Setter Property="BarBorderBrush" Value="{DynamicResource CoreUsageBarBorderBrush}"/>
     </Style>
 
+    <Style TargetType="GridSplitter">
+        <Setter Property="Background" Value="{DynamicResource ClickableBorderBrush}"/>
+    </Style>
+
 </ResourceDictionary>

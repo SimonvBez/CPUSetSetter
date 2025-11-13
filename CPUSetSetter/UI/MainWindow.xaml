@@ -9,7 +9,7 @@
         xmlns:settings="clr-namespace:CPUSetSetter.UI.Tabs.Settings"
         mc:Ignorable="d"
         Title="CPU Set Setter"
-        Height="547"
+        Height="574"
         MinHeight="574"
         Width="1020"
         MinWidth="900">
