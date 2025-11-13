@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CPUSetSetter.Config.Models;
 using CPUSetSetter.Platforms;
+using CPUSetSetter.Util;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Data;
@@ -51,9 +52,9 @@ namespace CPUSetSetter.UI.Tabs.Processes
                 if (success)
                 {
                     if (mask.IsNoMask)
-                        HotkeySoundPlayer.Instance.PlayCleared();
+                        HotkeySoundPlayer.Default.PlayCleared();
                     else
-                        HotkeySoundPlayer.Instance.PlayApplied();
+                        HotkeySoundPlayer.Default.PlayApplied();
                 }
                 else
                 {
