@@ -1,5 +1,4 @@
-﻿using CPUSetSetter.Config.Models;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Management;
 using System.Runtime.InteropServices;
 
@@ -19,7 +18,8 @@ namespace CPUSetSetter.Platforms
         public bool IsSupported { get; } = true;
 
         private List<ProcessorRelationship> _coreRelations = [];
-        private bool _hasECores = false;
+        private bool _hasPECores = false;
+        private bool _hasPELPECores = false; // Performance, Efficient and Low-Power Efficient
 
         public CpuInfoWindows()
         {
@@ -58,7 +58,8 @@ namespace CPUSetSetter.Platforms
                     "(Do you have more than 64 CPU threads/logical cores?)");
             }
 
-            _hasECores = _coreRelations.Any(core => core.EfficiencyClass >= 1);
+            _hasPECores = _coreRelations.Max(core => core.EfficiencyClass) == 1;
+            _hasPELPECores = _coreRelations.Max(core => core.EfficiencyClass) == 2;
 
             List<string> logicalProcessorNames = [];
             int logicalProcessorsNum = 0;
@@ -74,7 +75,7 @@ namespace CPUSetSetter.Platforms
 
                 // Prefix with P- or E- on Intel
                 string prefix = string.Empty;
-                if (Manufacturer == Manufacturer.Intel && _hasECores)
+                if (Manufacturer == Manufacturer.Intel && _hasPECores)
                 {
                     prefix = _coreRelations[coreNum].EfficiencyClass >= 1 ? "P-" : "E-";
                 }
@@ -102,22 +103,29 @@ namespace CPUSetSetter.Platforms
 
         private List<(string name, List<bool> boolMask)> GetDefaultLogicalProcessorMasks()
         {
-            List<(string name, List<bool> boolMask)> result = [];
+            List<(string name, List<bool> boolMask)> defaultMasks = [];
 
             // Add a P-Cores and E-Cores default core mask for supported Intel CPUs
-            if (Manufacturer == Manufacturer.Intel && _hasECores)
+            if (Manufacturer == Manufacturer.Intel && (_hasPECores || _hasPELPECores))
             {
                 UIntPtr pMask = 0;
                 UIntPtr eMask = 0;
+                UIntPtr lpeMask = 0;
+                int pClass = _hasPELPECores ? 2 : 1;
+                int eClass = _hasPELPECores ? 1 : 0;
                 foreach (ProcessorRelationship core in _coreRelations)
                 {
-                    if (core.EfficiencyClass >= 1)
+                    if (core.EfficiencyClass == pClass)
                         pMask |= core.Affinities[0];
-                    else
+                    else if (core.EfficiencyClass == eClass)
                         eMask |= core.Affinities[0];
+                    else if (core.EfficiencyClass == 0)
+                        lpeMask |= core.Affinities[0];
                 }
-                result.Add(("P-Cores", BitMaskToBoolMask(pMask, LogicalProcessorNames.Count)));
-                result.Add(("E-Cores", BitMaskToBoolMask(eMask, LogicalProcessorNames.Count)));
+                defaultMasks.Add(("P-Cores", BitMaskToBoolMask(pMask, LogicalProcessorNames.Count)));
+                defaultMasks.Add(("E-Cores", BitMaskToBoolMask(eMask, LogicalProcessorNames.Count)));
+                if (_hasPELPECores)
+                    defaultMasks.Add(("LPE-Cores", BitMaskToBoolMask(lpeMask, LogicalProcessorNames.Count)));
             }
 
             // Add CCD default core masks for multi-CCD CPUs
@@ -149,7 +157,7 @@ namespace CPUSetSetter.Platforms
                     string maskName = "Cache";
                     if (cacheDies.Count >= 2)
                         maskName += i.ToString(CultureInfo.InvariantCulture);
-                    result.Add((maskName, BitMaskToBoolMask(cacheDies[i].Affinities[0], LogicalProcessorNames.Count)));
+                    defaultMasks.Add((maskName, BitMaskToBoolMask(cacheDies[i].Affinities[0], LogicalProcessorNames.Count)));
                 }
 
                 // Add the remaining dies, calling them Freq if there were any Cache dies
@@ -158,9 +166,25 @@ namespace CPUSetSetter.Platforms
                     string maskName = cacheDies.Count >= 1 ? "Freq" : "CCD";
                     if (freqDies.Count >= 2)
                         maskName += i.ToString(CultureInfo.InvariantCulture);
-                    result.Add((maskName, BitMaskToBoolMask(freqDies[i].Affinities[0], LogicalProcessorNames.Count)));
+                    defaultMasks.Add((maskName, BitMaskToBoolMask(freqDies[i].Affinities[0], LogicalProcessorNames.Count)));
                 }
             }
+
+            // Add no SMT masks for any default mask
+            List<(string name, List<bool> boolMask)> result = [];
+            string noSMTSuffix = Manufacturer == Manufacturer.Intel ? " no HT" : " no SMT";
+            bool hasStripped;
+            foreach (var defaultMask in defaultMasks)
+            {
+                result.Add(defaultMask);
+                List<bool> noSMTMask = StripSMT(defaultMask.boolMask, out hasStripped);
+                if (hasStripped)
+                    result.Add((defaultMask.name + noSMTSuffix, noSMTMask));
+            }
+
+            List<bool> allNoSMTMask = StripSMT(Enumerable.Repeat(true, LogicalProcessorNames.Count).ToList(), out hasStripped);
+            if (hasStripped)
+                result.Add(("All" + noSMTSuffix, allNoSMTMask));
 
             return result;
         }
@@ -171,6 +195,23 @@ namespace CPUSetSetter.Platforms
                 throw new ArgumentException($"maskLength cannot be greater than {UIntPtr.Size * 8} (the bit size of UIntPtr)");
 
             return Enumerable.Range(0, maskLength).Select(i => (mask & ((UIntPtr)1 << i)) != 0).ToList();
+        }
+
+        /// <summary>
+        /// Returns the given boolMask with any SMT processors set to false
+        /// </summary>
+        private List<bool> StripSMT(List<bool> boolMask, out bool hasStripped)
+        {
+            List<bool> boolMaskNoSMT = [];
+            hasStripped = false;
+            for (int i = 0; i < boolMask.Count; ++i)
+            {
+                bool isSMTLogicalProcessor = LogicalProcessorNames[i][^2] == 'T' && LogicalProcessorNames[i][^1] != '0';
+                if (boolMask[i] && isSMTLogicalProcessor)
+                    hasStripped = true;
+                boolMaskNoSMT.Add(boolMask[i] && !isSMTLogicalProcessor);
+            }
+            return boolMaskNoSMT;
         }
 
         private static List<ProcessorRelationship> GetCoreRelationships()
