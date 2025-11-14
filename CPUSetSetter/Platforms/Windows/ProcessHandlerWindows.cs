@@ -1,6 +1,7 @@
 ﻿using CPUSetSetter.Config.Models;
 using CPUSetSetter.UI.Tabs.Processes;
 using Microsoft.Win32.SafeHandles;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 
 
@@ -135,7 +136,10 @@ namespace CPUSetSetter.Platforms.Windows
                 else
                 {
                     int error = Marshal.GetLastWin32Error();
-                    WindowLogger.Write($"ERROR: Could not apply CPU Set to '{_executableName}': {new System.ComponentModel.Win32Exception(error).Message}");
+                    string errorMessage = $"ERROR: Could not apply CPU Set to '{_executableName}': {new Win32Exception(error).Message}";
+                    if (error == 5)
+                        errorMessage += " Likely due to anti-cheat";
+                    WindowLogger.Write(errorMessage);
                     return false;
                 }
             }
