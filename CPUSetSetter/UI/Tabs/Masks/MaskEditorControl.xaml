@@ -34,10 +34,29 @@
 
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel Margin="0,0,0,5" Orientation="Horizontal">
-                                    <CheckBox IsChecked="{Binding IsEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                    <TextBlock Margin="5,0,0,0" Text="{Binding LogicalProcessorName}"/>
-                                </StackPanel>
+                                <!--Border with mouse-click and hover events-->
+                                <Border BorderThickness="1" MouseEnter="MaskBitBorder_MouseEnter" MouseLeftButtonDown="MaskBitBorder_MouseLeftButtonDown">
+                                    <BulletDecorator Margin="1.5">
+                                        <BulletDecorator.Bullet>
+                                            <!--The CheckBox is toggled by the Border's events, IsEnabled is False-->
+                                            <CheckBox IsChecked="{Binding IsEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="False"/>
+                                        </BulletDecorator.Bullet>
+
+                                        <TextBlock Margin="5,0,0,0" Text="{Binding LogicalProcessorName}"/>
+                                    </BulletDecorator>
+
+                                    <!--Mouse Hover effect-->
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="{DynamicResource HoverBackgroundBrush}"/>
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource HoverBorderBrush}"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
 
