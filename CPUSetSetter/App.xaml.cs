@@ -79,7 +79,7 @@ namespace CPUSetSetter
             using Stream iconStream = GetResourceStream(new Uri("pack://application:,,,/CPUSetSetter;component/tray.ico")).Stream;
             trayIcon = new(iconStream);
             trayIcon.OpenClicked += (_, _) => ShowMainWindow();
-            trayIcon.CloseClicked += (_, _) => ExitApp();
+            trayIcon.CloseClicked += (_, _) => ExitAppGracefully();
 
             if (AppConfig.Instance.IsFirstRun)
             {
@@ -177,6 +177,14 @@ namespace CPUSetSetter
             MainWindow.Show();
             MainWindow.WindowState = WindowState.Normal;
             MainWindow.Activate();
+        }
+
+        private void ExitAppGracefully()
+        {
+            if (AppConfig.Instance.ClearMasksOnClose)
+                RuleHelpers.ClearAllProcessMasksNoSave();
+
+            ExitApp();
         }
 
         private void ExitApp()

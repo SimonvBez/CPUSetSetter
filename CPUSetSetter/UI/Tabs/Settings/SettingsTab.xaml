@@ -18,6 +18,7 @@
         <RowDefinition Height="20"/>
         <RowDefinition Height="20"/>
         <RowDefinition Height="20"/>
+        <RowDefinition Height="20"/>
         <RowDefinition Height="24"/>
         <RowDefinition Height="Auto"/>
     </Grid.RowDefinitions>
@@ -54,7 +55,16 @@
         <TextBlock Text="Start with Windows"/>
     </BulletDecorator>
 
-    <BulletDecorator Grid.Row="4">
+    <BulletDecorator Grid.Row="4"
+                     ToolTip="Clear the Masks on any running process when closing CPU Set Setter through the tray icon">
+        <BulletDecorator.Bullet>
+            <CheckBox IsChecked="{Binding ClearMasksOnClose, Source={x:Static config:AppConfig.Instance}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+        </BulletDecorator.Bullet>
+
+        <TextBlock Text="Clear Masks on close"/>
+    </BulletDecorator>
+
+    <BulletDecorator Grid.Row="5">
         <BulletDecorator.Bullet>
             <CheckBox IsChecked="{Binding ShowGameModePopup, Source={x:Static config:AppConfig.Instance}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
         </BulletDecorator.Bullet>
@@ -62,7 +72,7 @@
         <TextBlock Text="Show warning popup when Windows Game Mode is enabled"/>
     </BulletDecorator>
 
-    <BulletDecorator Grid.Row="5">
+    <BulletDecorator Grid.Row="6">
         <BulletDecorator.Bullet>
             <CheckBox IsChecked="{Binding ShowUpdatePopup, Source={x:Static config:AppConfig.Instance}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
         </BulletDecorator.Bullet>
@@ -70,7 +80,7 @@
         <TextBlock Text="Show popup when a new version is available"/>
     </BulletDecorator>
 
-    <BulletDecorator Grid.Row="6">
+    <BulletDecorator Grid.Row="7">
         <BulletDecorator.Bullet>
             <TextBlock Text="Theme:"/>
         </BulletDecorator.Bullet>
@@ -82,7 +92,7 @@
                   SelectedValue="{Binding UiTheme, Source={x:Static config:AppConfig.Instance}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
     </BulletDecorator>
 
-    <GroupBox Grid.Row="7" Margin="0,20,0,0"
+    <GroupBox Grid.Row="8" Margin="0,20,0,0"
               Width="250"
               HorizontalAlignment="Left"
               Header="About">

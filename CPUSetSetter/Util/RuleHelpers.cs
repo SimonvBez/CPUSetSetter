@@ -1,4 +1,5 @@
 ﻿using CPUSetSetter.Config.Models;
+using CPUSetSetter.UI.Tabs.Processes;
 using Microsoft.Extensions.FileSystemGlobbing;
 using System.IO;
 
@@ -10,6 +11,18 @@ namespace CPUSetSetter.Util
         public static void OnConfigLoaded()
         {
             RuleTemplate.OnConfigLoaded();
+        }
+
+        /// <summary>
+        /// Clear the mask of any running process, but don't save this to the config.
+        /// Used when closing CPU Set Setter
+        /// </summary>
+        public static void ClearAllProcessMasksNoSave()
+        {
+            foreach (ProcessListEntryViewModel process in ProcessesTabViewModel.RunningProcesses)
+            {
+                process.SetMask(LogicalProcessorMask.NoMask, false);
+            }
         }
 
         /// <summary>
