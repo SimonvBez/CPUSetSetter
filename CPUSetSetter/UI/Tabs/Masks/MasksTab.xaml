@@ -6,6 +6,7 @@
       xmlns:local="clr-namespace:CPUSetSetter.UI.Tabs.Masks"
       xmlns:config="clr-namespace:CPUSetSetter.Config.Models"
       xmlns:ui="clr-namespace:CPUSetSetter.UI"
+      xmlns:dd="clr-namespace:GongSolutions.Wpf.DragDrop;assembly=GongSolutions.Wpf.DragDrop"
       d:DataContext="{d:DesignInstance Type=local:MasksTabViewModel}"
       mc:Ignorable="d"
       Margin="5">
@@ -32,7 +33,9 @@
             <!--List of existing masks-->
             <ListBox Grid.Row="0" Margin="0,0,0,10"
                      ItemsSource="{Binding LogicalProcessorMasks, Source={x:Static config:AppConfig.Instance}}"
-                     SelectedValue="{Binding SelectedMask, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                     SelectedValue="{Binding SelectedMask, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     dd:DragDrop.IsDragSource="True"
+                     dd:DragDrop.IsDropTarget="True">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding Name}"/>
