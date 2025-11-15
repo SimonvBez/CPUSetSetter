@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CPUSetSetter.Platforms;
 using CPUSetSetter.Themes;
+using CPUSetSetter.UI.Tabs.Processes;
 using System.Collections.ObjectModel;
 
 
@@ -40,8 +41,6 @@ namespace CPUSetSetter.Config.Models
         [ObservableProperty]
         private Theme _uiTheme;
 
-        public bool HasGeneratedDefaultMasks { get; }
-
         public bool IsFirstRun { get; }
 
         private readonly Lock _saveTaskLock = new();
@@ -58,7 +57,8 @@ namespace CPUSetSetter.Config.Models
             bool clearMasksOnClose,
             Theme uiTheme,
             bool generateDefaultMasks,
-            bool isFirstRun)
+            bool isFirstRun,
+            int configVersion)
         {
             if (_exists)
             {
@@ -76,16 +76,42 @@ namespace CPUSetSetter.Config.Models
             _showUpdatePopup = showUpdatePopup;
             _clearMasksOnClose = clearMasksOnClose;
             _uiTheme = uiTheme;
-            HasGeneratedDefaultMasks = generateDefaultMasks;
             IsFirstRun = isFirstRun;
+
+            if (!DisableWelcomeMessage)
+            {
+                WindowLogger.Write(
+                    "Welcome! Here you can apply a Core Mask to a process. Changes are also saved and applied automatically the next time it runs.\n" +
+                    "Use the Masks tab to customize your Core Masks and Hotkeys. For the advanced, use the Rules tab to create Templates for entire folders.\n" +
+                    "I hope this tool may be of use to you! For questions, issues, feedback or just to say Hi, please comment/open an Issue on GitHub!\n");
+            }
+
+            bool hasChangesToSave = false;
 
             if (generateDefaultMasks)
             {
                 // Create a default set of masks for this system's CPU
+                List<string> names = [];
                 foreach ((string name, List<bool> boolMask) in CpuInfo.DefaultLogicalProcessorMasks)
                 {
+                    names.Add(name);
                     LogicalProcessorMasks.Add(new(name, boolMask, []));
                 }
+                if (names.Count > 0)
+                {
+                    hasChangesToSave = true;
+                    WindowLogger.Write($"The following default Core Masks have been created: {string.Join(", ", names)}");
+                }
+            }
+
+            if (MigrateConfig(configVersion))
+            {
+                hasChangesToSave = true;
+            }
+
+            if (hasChangesToSave)
+            {
+                Save();
             }
 
             SaveOnCollectionChanged(LogicalProcessorMasks);
@@ -124,6 +150,32 @@ namespace CPUSetSetter.Config.Models
         partial void OnUiThemeChanged(Theme value)
         {
             AppTheme.ApplyTheme(value);
+        }
+
+        private bool MigrateConfig(int loadedConfigVersion)
+        {
+            bool hasMigrated = loadedConfigVersion < AppConfigFile.ConfigVersion;
+
+            if (loadedConfigVersion < 2)
+            {
+                // Config 1 -> 2 migration
+                // New default masks were added. If they are not present yet, add them to the user's config
+                List<string> newNames = [];
+                foreach ((string name, List<bool> boolMask) in CpuInfo.DefaultLogicalProcessorMasks)
+                {
+                    if (!LogicalProcessorMasks.Any(existing => existing.Name == name))
+                    {
+                        newNames.Add(name);
+                        LogicalProcessorMasks.Add(new(name, boolMask, []));
+                    }
+                }
+                if (newNames.Count > 0)
+                {
+                    WindowLogger.Write($"The following new default Core Masks have been created: {string.Join(", ", newNames)}");
+                }
+            }
+
+            return hasMigrated;
         }
     }
 }

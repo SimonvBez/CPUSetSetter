@@ -16,7 +16,7 @@ namespace CPUSetSetter.Config
         private const string fileName = "CPUSetSetter_config.json";
         private const string saveTempName = "CPUSetSetter_config_new.json";
         private const string backupNameTemplate = "CPUSetSetter_config_backup{0}.json";
-        private const int configVersion = 1;
+        public const int ConfigVersion = 2;
 
         public static void Save(AppConfig config)
         {
@@ -157,7 +157,8 @@ namespace CPUSetSetter.Config
                 configJson.ClearMasksOnClose,
                 Enum.Parse<Theme>(configJson.UiTheme),
                 generateDefaultMasks,
-                isFirstRun);
+                isFirstRun,
+                configJson.ConfigVersion);
         }
 
         private class ConfigJson
@@ -229,7 +230,7 @@ namespace CPUSetSetter.Config
                 ShowUpdatePopup = config.ShowUpdatePopup;
                 ClearMasksOnClose = config.ClearMasksOnClose;
                 UiTheme = config.UiTheme.ToString();
-                ConfigVersion = configVersion;
+                ConfigVersion = AppConfigFile.ConfigVersion;
             }
         }
 
