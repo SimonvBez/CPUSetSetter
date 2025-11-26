@@ -85,7 +85,7 @@
                                 ui:DataGridExtensions.SortDesc="True"/>
 
             <!--Core mask column-->
-            <DataGridTemplateColumn Header="Core mask"
+            <DataGridTemplateColumn Header="Core Mask"
                                     Width="120"
                                     SortMemberPath="Mask.DisplayName"
                                     ui:DataGridExtensions.SortDesc="True">

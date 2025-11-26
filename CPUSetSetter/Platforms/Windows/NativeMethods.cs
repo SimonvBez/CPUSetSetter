@@ -11,11 +11,11 @@ namespace CPUSetSetter.Platforms
 
         [LibraryImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static partial bool SetProcessDefaultCpuSetMasks(SafeProcessHandle hProcess, GROUP_AFFINITY[]? cpuSetMasks, uint cpuSetMaskCount);
+        public static partial bool GetSystemCpuSetInformation(IntPtr Information, uint BufferLength, ref uint ReturnedLength, SafeProcessHandle Process, uint Flags);
 
         [LibraryImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static partial bool GetProcessDefaultCpuSetMasks(SafeProcessHandle hProcess, [Out] GROUP_AFFINITY[]? cpuSetMasks, uint cpuSetMaskCount, out uint requiredMaskCount);
+        public static partial bool SetProcessDefaultCpuSets(SafeProcessHandle Process, uint[]? CpuSetIds, uint CpuSetIdCount);
 
         [LibraryImport("kernel32.dll", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -147,5 +147,27 @@ namespace CPUSetSetter.Platforms
         public fixed byte Reserved[18];             // Reserved[18]
         public ushort GroupCount;                   // Number of entries in GroupMask[]
         // Followed by GROUP_AFFINITY GroupMask[GroupCount] (variable length)
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct SYSTEM_CPU_SET_INFORMATION
+    {
+        public uint Size;
+        public CPU_SET_INFORMATION_TYPE Type;
+        public uint Id;
+        public ushort Group;
+        public byte LogicalProcessorIndex;
+        public byte CoreIndex;
+        public byte LastLevelCacheIndex;
+        public byte NumaNodeIndex;
+        public byte EfficiencyClass;
+        public byte AllFlags;
+        public uint Reserved; // union with `byte SchedulingClass`
+        public ulong AllocationTag;
+    }
+
+    public enum CPU_SET_INFORMATION_TYPE : int
+    {
+        CpuSetInformation = 0
     }
 }
