@@ -19,6 +19,8 @@ namespace CPUSetSetter.Platforms
 
         public static bool IsSupported => Default.IsSupported;
 
+        public static bool DieDetectionFailed => Default.DieDetectionFailed;
+
 
         private static ICpuInfo? _default;
 
@@ -33,6 +35,7 @@ namespace CPUSetSetter.Platforms
         IReadOnlyList<string> LogicalProcessorNames { get; }
         IReadOnlyList<(string name, List<bool> boolMask)> DefaultLogicalProcessorMasks { get; }
         bool IsSupported { get; }
+        bool DieDetectionFailed { get; }
     }
 
     public enum Manufacturer

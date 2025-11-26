@@ -19,7 +19,7 @@
         <RowDefinition Height="1.5*" MinHeight="105"/>
         <RowDefinition Height="2"/>
         <RowDefinition Height="*" MinHeight="80"/>
-        <RowDefinition Height="35"/>
+        <RowDefinition Height="Auto"/>
     </Grid.RowDefinitions>
 
     <!--Program Rules-->

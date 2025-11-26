@@ -10,10 +10,8 @@
         FocusManager.FocusedElement="{Binding ElementName=ruleGlobInput}"
         Title="Create a new Rule Template"
         WindowStartupLocation="CenterOwner"
-        MinHeight="385"
-        MaxHeight="385"
-        Width="700"
-        MinWidth="700">
+        ResizeMode="NoResize"
+        SizeToContent="WidthAndHeight">
 
     <Grid Margin="10">
         <Grid.RowDefinitions>
@@ -22,7 +20,7 @@
             <RowDefinition Height="38"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0">
+        <TextBlock Grid.Row="0" Margin="0,0,0,10">
             <Run Text="When a new process 'matches' with a Rule Template, a new Program Rule will be created for that process automatically."/>
             <Run Text="&#x0a;&#x0a;A Rule Template is written like a path with wildcards (* and/or **)."/>
             <Run Text="&#x0a;* matches any part of a single folder or file name."/>

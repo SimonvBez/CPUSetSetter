@@ -86,6 +86,11 @@ namespace CPUSetSetter.Config.Models
                     "I hope this tool may be of use to you! For questions, issues, feedback or just to say Hi, please comment/open an Issue on GitHub!\n");
             }
 
+            if (CpuInfo.DieDetectionFailed && CpuInfo.Manufacturer == Manufacturer.AMD)
+            {
+                WindowLogger.Write("INFO: CCD detection does not work on Windows 10. If you have a multi-CCD CPU, you need to create the CCD Core Masks manually.");
+            }
+
             bool hasChangesToSave = false;
 
             if (generateDefaultMasks)

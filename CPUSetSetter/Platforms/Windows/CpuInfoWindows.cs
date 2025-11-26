@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.ComponentModel;
+using System.Globalization;
 using System.Management;
 using System.Runtime.InteropServices;
 
@@ -16,6 +17,8 @@ namespace CPUSetSetter.Platforms
 
         // If the CPU is not supported, an error will raise during construction. So if this property can be retrieved, support is already guaranteed
         public bool IsSupported { get; } = true;
+
+        public bool DieDetectionFailed { get; private set; } = false;
 
         private List<ProcessorRelationship> _coreRelations = [];
         private bool _hasPECores = false;
@@ -220,10 +223,23 @@ namespace CPUSetSetter.Platforms
             return cores.Cast<ProcessorRelationship>().ToList();
         }
 
-        private static List<ProcessorRelationship> GetDieRelationships()
+        private List<ProcessorRelationship> GetDieRelationships()
         {
-            List<object> dies = GetProcessorInfo(LOGICAL_PROCESSOR_RELATIONSHIP.RelationProcessorDie);
-            return dies.Cast<ProcessorRelationship>().ToList();
+            try
+            {
+                List<object> dies = GetProcessorInfo(LOGICAL_PROCESSOR_RELATIONSHIP.RelationProcessorDie);
+                return dies.Cast<ProcessorRelationship>().ToList();
+            }
+            catch (Win32Exception e)
+            {
+                if (e.NativeErrorCode == 31)
+                {
+                    // RelationProcessorDie is not implemented on this system (probably Windows 10). Skip the Die detection
+                    DieDetectionFailed = true;
+                    return [];
+                }
+                throw;
+            }
         }
 
         private static List<CacheRelationship> GetCacheRelationships()
