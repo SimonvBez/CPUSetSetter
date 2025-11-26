@@ -49,9 +49,6 @@
               CanUserResizeRows="False"
               ui:DataGridExtensions.SortDesc="True">
 
-        <!--KNOWN VISUAL BUG: The Cell Style here is not re-made on a theme change
-            The fix would be to have a single Styles.xaml, and a Dark/LightTheme.xaml
-            with only color definitions-->
         <DataGrid.CellStyle>
             <Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
                 <Style.Triggers>
@@ -76,12 +73,13 @@
                                 Width="3*">
             </DataGridTextColumn>
 
+            <!--Average CPU usage column-->
             <DataGridTextColumn Header="Avg CPU"
                                 Binding="{Binding AverageCpuPercentageStr}"
                                 SortMemberPath="AverageCpuUsage"
                                 IsReadOnly="True"
                                 CanUserResize="False"
-                                Width="60"
+                                Width="Auto"
                                 ui:DataGridExtensions.SortDesc="True"/>
 
             <!--Core mask column-->
