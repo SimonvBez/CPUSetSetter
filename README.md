@@ -7,7 +7,7 @@
 Make your games and apps run on the right CPU cores &mdash; for smoother performance on AMD Dual-CCD and Intel Hybrid processors.
 
 **Requirements:**
-- **Windows 11**
+- **Windows 10+**
 - **.NET Desktop Runtime 9** (Follow in-app instructions)
 
 # What it does
@@ -76,7 +76,7 @@ Just:
 2. If prompted, install the .NET 9 Runtime (the app will guide you).
 3. Open the **Processes tab**.
 4. Apply the appropriate CPU Set to your open game:
-   - **AMD**: Apply "Cache" or "CCD0" for gaming
+   - **AMD**: Apply "Cache" or "CCD0" for gaming (for some, CCD1 was better for gaming. Try both!)
    - **Intel**: Apply "P-Cores" for gaming
 5. (Optional) Apply the other CPU Set to heavy background apps:
    - **AMD**: Apply "Freq" or "CCD1" to OBS, browsers, etc.

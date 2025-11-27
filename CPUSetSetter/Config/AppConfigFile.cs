@@ -13,10 +13,16 @@ namespace CPUSetSetter.Config
     {
         private static readonly JsonSerializerOptions jsonOptions = new() { WriteIndented = true };
 
-        private const string fileName = "CPUSetSetter_config.json";
-        private const string saveTempName = "CPUSetSetter_config_new.json";
-        private const string backupNameTemplate = "CPUSetSetter_config_backup{0}.json";
+        private static readonly string configDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CPU Set Setter");
+        private static readonly string fileName = Path.Combine(configDirectory, "CPUSetSetter_config.json");
+        private static readonly string saveTempName = Path.Combine(configDirectory, "CPUSetSetter_config_new.json");
+        private static readonly string backupNameTemplate = Path.Combine(configDirectory, "CPUSetSetter_config_backup{0}.json");
         public const int ConfigVersion = 2;
+
+        static AppConfigFile()
+        {
+            Directory.CreateDirectory(configDirectory);
+        }
 
         public static void Save(AppConfig config)
         {

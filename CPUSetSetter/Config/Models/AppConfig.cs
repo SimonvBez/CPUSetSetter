@@ -13,6 +13,8 @@ namespace CPUSetSetter.Config.Models
         public static readonly AppConfig Instance = AppConfigFile.Load();
         public static AppConfig Load() => Instance; // Function to more explicitly control when the config gets loaded
 
+        private Task? _saveTask = null;
+
         // Masks that can be used by program rules and rule templates
         public ObservableCollection<LogicalProcessorMask> LogicalProcessorMasks { get; }
         // Program rules that define which mask should be used on a specific program
@@ -136,7 +138,7 @@ namespace CPUSetSetter.Config.Models
                 if (!_isSaving)
                 {
                     _isSaving = true;
-                    App.Current.Dispatcher.BeginInvoke(DelayedSave);
+                    _saveTask = App.Current.Dispatcher.BeginInvoke(DelayedSave).Task;
                 }
             }
         }
@@ -150,6 +152,11 @@ namespace CPUSetSetter.Config.Models
                 AppConfigFile.Save(this);
                 _isSaving = false;
             }
+        }
+
+        public void WaitForSave()
+        {
+            _saveTask?.Wait();
         }
 
         partial void OnUiThemeChanged(Theme value)

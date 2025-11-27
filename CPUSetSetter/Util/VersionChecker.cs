@@ -99,12 +99,11 @@ namespace CPUSetSetter.Util
                     string latestReleaseTag = await GetLatestReleaseTag();
                     if (latestReleaseTag.StartsWith('v'))
                     {
-                        latestReleaseTag = latestReleaseTag[1..];
-                        Version latestVersion = new(latestReleaseTag);
+                        Version latestVersion = new(latestReleaseTag[1..]);
                         if (latestVersion > AppVersion!)
                         {
                             NewVersionAvailable = true;
-                            VersionCheckState = "A new version is available!";
+                            VersionCheckState = $"A new version is available! ({latestReleaseTag})";
                             return;
                         }
                         VersionCheckState = "Currently up-to-date";
