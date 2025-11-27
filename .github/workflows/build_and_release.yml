@@ -45,17 +45,38 @@ jobs:
           echo "RELEASE_DESC=$desc" >> $env:GITHUB_ENV
         shell: pwsh
 
-      - name: Publish
-        run: dotnet publish CPUSetSetter/CPUSetSetter.csproj -c Release /p:DebugType=None /p:DebugSymbols=false /p:FileVersion=${{ env.VERSION }} /p:Version=${{ env.VERSION }} /p:PublishSingleFile=true /p:PublishTrimmed=false /p:PublishReadyToRun=true /p:SelfContained=false -o publish/CPUSetSetter
+      - name: Publish normal
+        run: dotnet publish CPUSetSetter/CPUSetSetter.csproj -c Release /p:DebugType=None /p:DebugSymbols=false /p:FileVersion=${{ env.VERSION }} /p:Version=${{ env.VERSION }} /p:SelfContained=false -o publish/CPUSetSetter
+
+      - name: Publish self-contained
+        run: dotnet publish CPUSetSetter/CPUSetSetter.csproj -c Release /p:DebugType=None /p:DebugSymbols=false /p:FileVersion=${{ env.VERSION }} /p:Version=${{ env.VERSION }} /p:PublishSingleFile=true /p:SelfContained=true -o publish/CPUSetSetter_net9_included
+
+      - name: Include licenses
+        run: |
+          dotnet tool install --global nuget-license
+          nuget-license -i .\CPUSetSetter\CPUSetSetter.csproj -t -d .\third-party-licenses
+          Copy-Item -Path .\third-party-licenses -Destination .\publish\CPUSetSetter -Recurse
+          Copy-Item -Path .\third-party-licenses -Destination .\publish\CPUSetSetter_net9_included -Recurse
+          Copy-Item -Path .\LICENSE -Destination .\publish\CPUSetSetter\LICENSE.txt
+          Copy-Item -Path .\LICENSE -Destination .\publish\CPUSetSetter_net9_included\LICENSE.txt
+
+      - name: Build installer
+        run: |
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /O".\release_files" /DMyAppVersion=${{ env.VERSION }} .\Installer_script\Installer.iss
 
       - name: Compress Release files
-        run: Compress-Archive -Path publish\* -DestinationPath CPUSetSetter.zip
+        run: |
+          Compress-Archive -Path .\publish\CPUSetSetter -DestinationPath .\release_files\CPUSetSetter.zip
+          Compress-Archive -Path .\publish\CPUSetSetter_net9_included -DestinationPath .\release_files\CPUSetSetter_net9_included.zip
+
+      - name: Show Release file hashes
+        run: Get-FileHash .\release_files\* | Format-List Algorithm, Path, Hash
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}
           body: ${{ env.RELEASE_DESC }}
-          files: CPUSetSetter.zip
+          files: release_files/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

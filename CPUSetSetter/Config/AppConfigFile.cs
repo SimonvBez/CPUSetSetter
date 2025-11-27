@@ -13,10 +13,18 @@ namespace CPUSetSetter.Config
     {
         private static readonly JsonSerializerOptions jsonOptions = new() { WriteIndented = true };
 
-        private const string fileName = "CPUSetSetter_config.json";
-        private const string saveTempName = "CPUSetSetter_config_new.json";
-        private const string backupNameTemplate = "CPUSetSetter_config_backup{0}.json";
+        private const string oldConfigPath = "CPUSetSetter_config.json";
+
+        private static readonly string configDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CPU Set Setter");
+        private static readonly string configPath = Path.Combine(configDirectory, "CPUSetSetter_config.json");
+        private static readonly string saveTempPath = Path.Combine(configDirectory, "CPUSetSetter_config_new.json");
+        private static readonly string backupNameTemplate = Path.Combine(configDirectory, "CPUSetSetter_config_backup{0}.json");
         public const int ConfigVersion = 2;
+
+        static AppConfigFile()
+        {
+            Directory.CreateDirectory(configDirectory);
+        }
 
         public static void Save(AppConfig config)
         {
@@ -24,10 +32,10 @@ namespace CPUSetSetter.Config
             try
             {
                 // Save the new config to a temp file before overwriting the config, in case the serialization fails and clears the config
-                FileStream fileStream = File.Create(saveTempName);
+                FileStream fileStream = File.Create(saveTempPath);
                 JsonSerializer.Serialize(fileStream, configJson, options: jsonOptions);
                 fileStream.Dispose();
-                File.Move(saveTempName, fileName, true);
+                File.Move(saveTempPath, configPath, true);
             }
             catch (Exception ex)
             {
@@ -37,7 +45,14 @@ namespace CPUSetSetter.Config
 
         public static AppConfig Load()
         {
-            if (!File.Exists(fileName))
+            // Copy the old config to the new location, if the new one doesn't exist yet
+            if (File.Exists(oldConfigPath) && !File.Exists(configPath))
+            {
+                WindowLogger.Write($"INFO: The config file location has been migrated to '{configPath}'\n");
+                File.Copy(oldConfigPath, configPath);
+            }
+
+            if (!File.Exists(configPath))
             {
                 // The config file does not exist yet, use the defaults
                 return JsonToConfig(ConfigJson.Default, true, true, out bool _);
@@ -45,7 +60,7 @@ namespace CPUSetSetter.Config
 
             try
             {
-                using FileStream fileStream = File.OpenRead(fileName);
+                using FileStream fileStream = File.OpenRead(configPath);
                 ConfigJson configJson = JsonSerializer.Deserialize<ConfigJson>(fileStream, options: jsonOptions) ?? throw new NullReferenceException();
                 AppConfig config = JsonToConfig(configJson, false, false, out bool hadSoftError);
 
@@ -92,7 +107,7 @@ namespace CPUSetSetter.Config
                 string backupName = string.Format(backupNameTemplate, i++);
                 try
                 {
-                    File.Copy(fileName, backupName, false);
+                    File.Copy(configPath, backupName, false);
                     return backupName;
                 }
                 catch (IOException)

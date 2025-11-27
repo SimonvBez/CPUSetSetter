@@ -8,6 +8,8 @@ namespace CPUSetSetter.UI
 {
     public partial class MainWindow : Window
     {
+        private bool _listIsPaused = false;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -15,6 +17,8 @@ namespace CPUSetSetter.UI
             // Listen for the Ctrl key, so the processes list's live sorting can be paused
             PreviewKeyDown += (_, e) => KeyPressed(e);
             PreviewKeyUp += (_, e) => KeyReleased(e);
+
+            Deactivated += (_, _) => ResumeListUpdates();
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -24,18 +28,28 @@ namespace CPUSetSetter.UI
             base.OnClosing(e);
         }
 
-        private static void KeyPressed(KeyEventArgs e)
+        private void KeyPressed(KeyEventArgs e)
         {
-            if ((e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl) && !e.IsRepeat)
+            if ((e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl) && !_listIsPaused)
             {
+                _listIsPaused = true;
                 ProcessesTabViewModel.Instance?.PauseListUpdates();
             }
         }
 
-        private static void KeyReleased(KeyEventArgs e)
+        private void KeyReleased(KeyEventArgs e)
         {
-            if ((e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl) && !e.IsRepeat)
+            if (e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl)
             {
+                ResumeListUpdates();
+            }
+        }
+
+        private void ResumeListUpdates()
+        {
+            if (_listIsPaused)
+            {
+                _listIsPaused = false;
                 ProcessesTabViewModel.Instance?.ResumeListUpdates();
             }
         }

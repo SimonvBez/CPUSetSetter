@@ -10,6 +10,9 @@ namespace CPUSetSetter.UI
 
         public void SuppressNotifications(bool suppress)
         {
+            if (suppress == suppressNotifications)
+                return;
+
             suppressNotifications = suppress;
             if (!suppress)
             {
