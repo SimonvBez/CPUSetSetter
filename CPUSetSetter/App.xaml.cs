@@ -30,7 +30,7 @@ namespace CPUSetSetter
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            WindowLogger.Write("this is so i can fake 1.0.2")
+            WindowLogger.Write("this is so i can fake 1.0.2");
             // Show unhandled exceptions in an error dialog box
             AddDialogExceptionHandler();
 
