@@ -53,8 +53,7 @@ jobs:
           dotnet tool install --global nuget-license
           nuget-license -i .\CPUSetSetter\CPUSetSetter.csproj -t -d .\third-party-licenses
           Copy-Item -Path .\third-party-licenses -Destination .\publish\CPUSetSetter -Recurse          
-          Copy-Item -Path .\LICENSE -Destination .\publish\CPUSetSetter\LICENSE.txt
-          Copy-Item -Path .\LICENSE -Destination .\publish\CPUSetSetter_net9_included\LICENSE.txt     
+          Copy-Item -Path .\LICENSE -Destination .\publish\CPUSetSetter\LICENSE.txt              
    
 
       - name: Show Release file hashes
