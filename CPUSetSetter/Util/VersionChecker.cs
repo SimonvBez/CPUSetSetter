@@ -84,14 +84,14 @@ namespace CPUSetSetter.Util
                         "A new version of CPU Set Setter is available!\n" +
                         "Would you like to install the update now?\n" +
                         "(This popup can be disabled in the Settings tab)",
-                        $"New CPU Set Setter update available ({value.TargetFullRelease})",
+                        $"New CPU Set Setter update available ({value.TargetFullRelease.Version})",
                         MessageBoxButton.YesNo,
                         MessageBoxImage.Information);
 
                     if (result == MessageBoxResult.Yes)
                     {
                         using var cts = new CancellationTokenSource();
-                        var progressDialog = new ProgressDialog($"Downloading update {value.TargetFullRelease}...", cts);
+                        var progressDialog = new ProgressDialog($"Downloading update {value.TargetFullRelease.Version}...", cts);
                         progressDialog.Owner = App.Current.MainWindow;
                         progressDialog.Show();
                         
@@ -135,7 +135,7 @@ namespace CPUSetSetter.Util
                     {
                         //there is an update. lets prompt the user to install
                         NewVersionAvailable = newUpdate;
-                        VersionCheckState = $"A new version is available! ({newUpdate.TargetFullRelease})";
+                        VersionCheckState = $"A new version is available! ({newUpdate.TargetFullRelease.Version})";
                         return;
                     }
                     else
