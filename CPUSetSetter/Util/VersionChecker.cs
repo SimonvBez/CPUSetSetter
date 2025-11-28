@@ -121,10 +121,10 @@ namespace CPUSetSetter.Util
                         VersionCheckState = "Currently up-to-date";
                     }
                 }
-                catch (HttpRequestException)
+                catch (HttpRequestException e)
                 {
                     // Failed to reach GitHub, assume internet is down and try again soon
-                    VersionCheckState = "Version check failed";
+                    VersionCheckState = "Version check failed" + e.Message;
                     nextRetry = TimeSpan.FromSeconds(60);
                 }               
                 catch (Exception e)
