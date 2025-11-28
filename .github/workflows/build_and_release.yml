@@ -46,7 +46,7 @@ jobs:
         shell: pwsh
 
       - name: Publish normal
-        run: dotnet publish CPUSetSetter/CPUSetSetter.csproj -c Release /p:DebugType=None /p:DebugSymbols=false /p:FileVersion=${{ env.VERSION }} /p:Version=${{ env.VERSION }} /p:SelfContained=false -o publish/CPUSetSetter
+        run: dotnet publish CPUSetSetter/CPUSetSetter.csproj -c Release /p:DebugType=None /p:DebugSymbols=false /p:FileVersion=${{ env.VERSION }} /p:Version=${{ env.VERSION }} /p:SelfContained=true -o publish/CPUSetSetter
 
       - name: Publish self-contained
         run: dotnet publish CPUSetSetter/CPUSetSetter.csproj -c Release /p:DebugType=None /p:DebugSymbols=false /p:FileVersion=${{ env.VERSION }} /p:Version=${{ env.VERSION }} /p:PublishSingleFile=true /p:SelfContained=true -o publish/CPUSetSetter_net9_included
