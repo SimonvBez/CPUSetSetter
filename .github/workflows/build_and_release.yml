@@ -75,11 +75,9 @@ jobs:
       - name: Create Velopack Release
         run: |
           dotnet tool install -g vpk
-          vpk download github --repoUrl https://github.com/${{ github.repository }}
+          vpk download github --repoUrl https://github.com/${{ github.repository }} --token ${{ secrets.GITHUB_TOKEN }}
           vpk pack -u CPUSetSetter -v ${{ env.VERSION }} -p .\publish\CPUSetSetter
-          vpk upload github --repoUrl https://github.com/${{ github.repository }} --publish --releaseName "CPU Set Setter ${{ env.VERSION }}" --tag ${{ env.RELEASE_TAG }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          vpk upload github --repoUrl https://github.com/${{ github.repository }} --token ${{ secrets.GITHUB_TOKEN }} --publish --releaseName "CPU Set Setter ${{ env.VERSION }}" --tag ${{ env.RELEASE_TAG }}
 
       - name: Create Release
         uses: softprops/action-gh-release@v2

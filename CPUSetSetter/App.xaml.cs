@@ -22,12 +22,15 @@ namespace CPUSetSetter
         private Mutex? singleInstanceMutex;
         private const string mutexName = "CPUSetSetterLock";
 
+        static App()
+        {
+            VelopackApp.Build().Run();
+        }
+
         protected override void OnStartup(StartupEventArgs e)
         {
             // Show unhandled exceptions in an error dialog box
             AddDialogExceptionHandler();
-
-            VelopackApp.Build().Run();
 
             // Set the working directory to the directory of the executable, so the config .json file will always be in the right place
             Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
