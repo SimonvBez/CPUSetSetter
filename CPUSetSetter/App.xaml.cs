@@ -8,6 +8,7 @@ using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Markup;
+using Velopack;
 
 
 namespace CPUSetSetter
@@ -25,6 +26,8 @@ namespace CPUSetSetter
         {
             // Show unhandled exceptions in an error dialog box
             AddDialogExceptionHandler();
+
+            VelopackApp.Build().Run();
 
             // Set the working directory to the directory of the executable, so the config .json file will always be in the right place
             Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
