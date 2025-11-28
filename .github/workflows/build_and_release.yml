@@ -72,6 +72,15 @@ jobs:
       - name: Show Release file hashes
         run: Get-FileHash .\release_files\* | Format-List Algorithm, Path, Hash
 
+      - name: Create Velopack Release
+        run: |
+          dotnet tool install -g vpk
+          vpk download github --repoUrl https://github.com/${{ github.repository }}
+          vpk pack -u CPUSetSetter -v ${{ env.VERSION }} -p .\publish\CPUSetSetter
+          vpk upload github --repoUrl https://github.com/${{ github.repository }} --publish --releaseName "CPU Set Setter ${{ env.VERSION }}" --tag ${{ env.RELEASE_TAG }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
