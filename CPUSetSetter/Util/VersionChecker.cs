@@ -69,9 +69,9 @@ namespace CPUSetSetter.Util
             Process.Start(new ProcessStartInfo { FileName = "https://github.com/SimonvBez/CPUSetSetter/releases/latest", UseShellExecute = true });
         }
 
-        partial void OnNewVersionAvailableChanged(UpdateInfo? newVersion)
+        partial void OnNewVersionAvailableChanged(UpdateInfo? value)
         {
-            if (newVersion == null)
+            if (value == null)
                 return;
 
             WindowLogger.Write("A new version of CPU Set Setter is available on GitHub!");
@@ -91,10 +91,10 @@ namespace CPUSetSetter.Util
                     if (result == MessageBoxResult.Yes)
                     {
                        
-                        await UpdateManager.DownloadUpdatesAsync(newVersion);
+                        await UpdateManager.DownloadUpdatesAsync(value);
                         
                       
-                        UpdateManager.ApplyUpdatesAndRestart(newVersion);                        
+                        UpdateManager.ApplyUpdatesAndRestart(value);                        
                     }
                 });
             }
