@@ -1,11 +1,9 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CPUSetSetter.Config.Models;
 using CPUSetSetter.UI.Tabs.Processes;
 using System.Diagnostics;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Reflection;
-using System.Text.Json;
 using System.Windows;
 using Velopack;
 using Velopack.Sources;
@@ -20,8 +18,10 @@ namespace CPUSetSetter.Util
     {
         public static VersionChecker Instance { get; } = new();
 
+        private static readonly string LatestReleaseUrl = "https://github.com/raicovx/CPUSetSetter/releases/latest";
+        
         // The app version is only set in Releases. During development it will be the default 1.0.0.0
-        private static Version DevVersion => new(1, 0, 0, 1);
+        private static Version DevVersion => new(1, 0, 0, 0);
 
         [ObservableProperty]
         private UpdateInfo? _newVersionAvailable = null;
@@ -33,8 +33,8 @@ namespace CPUSetSetter.Util
 
         private readonly IFileDownloader FileDownloader = new FileDownloader();
 
-        public UpdateManager UpdateManager;    
-
+        public UpdateManager UpdateManager;
+        
         public string VersionString
         {
             get
@@ -66,7 +66,7 @@ namespace CPUSetSetter.Util
 
         public static void OpenLatestReleasePage()
         {
-            Process.Start(new ProcessStartInfo { FileName = "https://github.com/SimonvBez/CPUSetSetter/releases/latest", UseShellExecute = true });
+            Process.Start(new ProcessStartInfo { FileName = LatestReleaseUrl, UseShellExecute = true });
         }
 
         partial void OnNewVersionAvailableChanged(UpdateInfo? value)
@@ -84,17 +84,40 @@ namespace CPUSetSetter.Util
                         "A new version of CPU Set Setter is available!\n" +
                         "Would you like to install the update now?\n" +
                         "(This popup can be disabled in the Settings tab)",
-                        "New CPU Set Setter update available",
+                        $"New CPU Set Setter update available ({value.TargetFullRelease})",
                         MessageBoxButton.YesNo,
                         MessageBoxImage.Information);
 
                     if (result == MessageBoxResult.Yes)
                     {
-                       
-                        await UpdateManager.DownloadUpdatesAsync(value);
+                        using var cts = new CancellationTokenSource();
+                        var progressDialog = new ProgressDialog($"Downloading update {value.TargetFullRelease}...", cts);
+                        progressDialog.Owner = App.Current.MainWindow;
+                        progressDialog.Show();
                         
-                      
-                        UpdateManager.ApplyUpdatesAndRestart(value);                        
+                        try
+                        {
+                            await UpdateManager.DownloadUpdatesAsync(value, progress: (percent) =>
+                            {
+                                App.Current.Dispatcher.Invoke(() =>
+                                {
+                                    progressDialog.SetProgress(percent);
+                                });
+                            }, cancelToken: cts.Token);
+
+                            progressDialog.Close();
+                            UpdateManager.ApplyUpdatesAndRestart(value);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            progressDialog.Close();
+                            MessageBox.Show("Update download was cancelled.", "Download Cancelled", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
+                        catch (Exception ex)
+                        {
+                            progressDialog.Close();
+                            MessageBox.Show($"There was an error downloading the update.", "Download Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
                     }
                 });
             }
