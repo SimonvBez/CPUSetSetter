@@ -178,7 +178,7 @@ namespace CPUSetSetter.Platforms.Windows
                     
                     if (item.Type != CPU_SET_INFORMATION_TYPE.CpuSetInformation)
                     {
-                        throw new InvalidCastException("Invalid data type encounted; aborting");
+                        throw new InvalidCastException("Invalid data type encountered; aborting");
                     }
 
                     cpuSets.Add(item.LogicalProcessorIndex, item.Id);
