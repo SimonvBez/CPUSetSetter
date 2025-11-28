@@ -2,6 +2,7 @@
 using CPUSetSetter.Platforms;
 using CPUSetSetter.TrayIcon;
 using CPUSetSetter.UI;
+using CPUSetSetter.UI.Tabs.Processes;
 using CPUSetSetter.Util;
 using Microsoft.Win32;
 using System.Globalization;
@@ -29,6 +30,7 @@ namespace CPUSetSetter
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            WindowLogger.Write("this is so i can fake 1.0.2")
             // Show unhandled exceptions in an error dialog box
             AddDialogExceptionHandler();
 
