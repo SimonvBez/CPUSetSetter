@@ -9,7 +9,6 @@ using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Markup;
-using Velopack;
 
 
 namespace CPUSetSetter
@@ -21,16 +20,10 @@ namespace CPUSetSetter
     {
         private AppTrayIcon? trayIcon;
         private Mutex? singleInstanceMutex;
-        private const string mutexName = "CPUSetSetterLock";
-
-        static App()
-        {
-            VelopackApp.Build().Run();
-        }
+        private const string mutexName = "CPUSetSetterLock";        
 
         protected override void OnStartup(StartupEventArgs e)
-        {
-            WindowLogger.Write("this is so i can fake 1.0.2");
+        {            
             // Show unhandled exceptions in an error dialog box
             AddDialogExceptionHandler();
 

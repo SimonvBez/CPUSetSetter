@@ -50,7 +50,7 @@ namespace CPUSetSetter.Util
         }
 
         public VersionChecker() {
-            UpdateManager = new UpdateManager(new GithubSource("https://github.com/raicovx/CPUSetSetter", "", false, FileDownloader));
+            UpdateManager = new UpdateManager(new GithubSource("https://github.com/raicovx/CPUSetSetter", null, false, FileDownloader));
         }
 
         public void RunVersionChecker()
