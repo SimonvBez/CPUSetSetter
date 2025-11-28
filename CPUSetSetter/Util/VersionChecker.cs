@@ -127,10 +127,10 @@ namespace CPUSetSetter.Util
                     VersionCheckState = "Version check failed";
                     nextRetry = TimeSpan.FromSeconds(60);
                 }               
-                catch (Exception)
+                catch (Exception e)
                 {
                     // Any other exception (probably NoSuccessResponseException), assume GitHub doesn't want a request for a while
-                    VersionCheckState = "Version check failed";
+                    VersionCheckState = "Version check failed " + e.Message;
                     nextRetry = TimeSpan.FromHours(24);
                 }
 
