@@ -17,6 +17,12 @@ namespace CPUSetSetter.Util
     {
         private static readonly HttpClient _httpClient = new();
 
+        static FileDownloader()
+        {
+            // Set User-Agent header - GitHub requires this
+            _httpClient.DefaultRequestHeaders.Add("User-Agent", "CPUSetSetter");
+        }
+
         public async Task DownloadFile(string url, string targetFile, Action<int> progress, IDictionary<string, string>? headers = null, double timeout = 30, CancellationToken cancelToken = default)
         {
             try
