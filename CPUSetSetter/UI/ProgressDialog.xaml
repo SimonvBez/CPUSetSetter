@@ -7,13 +7,16 @@
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
-        Topmost="True">
-    <Grid Background="White" Margin="20">
+        Topmost="True"
+        Background="{DynamicResource BackgroundBrush}"
+        Foreground="{DynamicResource ForegroundBrush}">
+    <Grid Margin="20">
         <StackPanel VerticalAlignment="Center">
             <TextBlock x:Name="MessageText"
                        Text="Downloading update..."
                        FontSize="14"
                        TextAlignment="Center"
+                       Foreground="{DynamicResource ForegroundBrush}"
                        Margin="0,0,0,15"/>
             
             <ProgressBar x:Name="ProgressBar"
@@ -28,7 +31,7 @@
                        Text="0%"
                        FontSize="12"
                        TextAlignment="Center"
-                       Foreground="Gray"
+                       Foreground="{DynamicResource DisabledForegroundBrush}"
                        Margin="0,0,0,15"/>
             
             <Button x:Name="CancelButton"
@@ -36,7 +39,11 @@
                     Click="CancelButton_Click"
                     Padding="10,5"
                     HorizontalAlignment="Center"
-                    Width="100"/>
+                    Width="100"
+                    Background="{DynamicResource ClickableBackgroundBrush}"
+                    Foreground="{DynamicResource ForegroundBrush}"
+                    BorderBrush="{DynamicResource ClickableBorderBrush}"
+                    BorderThickness="1"/>
         </StackPanel>
     </Grid>
 </Window>
