@@ -79,7 +79,7 @@ namespace CPUSetSetter.Util
             if (AppConfig.Instance.ShowUpdatePopup)
             {
                 App.Current.Dispatcher.InvokeAsync(async () =>
-                {
+                {                   
                     MessageBoxResult result = MessageBox.Show(
                         "A new version of CPU Set Setter is available!\n" +
                         "Would you like to install the update now?\n" +
@@ -90,6 +90,14 @@ namespace CPUSetSetter.Util
 
                     if (result == MessageBoxResult.Yes)
                     {
+                        // Bring the main window to foreground if it's minimized in tray
+                        if (App.Current.MainWindow != null)
+                        {
+                            App.Current.MainWindow.Show();
+                            App.Current.MainWindow.WindowState = System.Windows.WindowState.Normal;
+                            App.Current.MainWindow.Activate();
+                        }
+
                         using var cts = new CancellationTokenSource();
                         var progressDialog = new ProgressDialog($"Downloading update {value.TargetFullRelease.Version}...", cts);
                         progressDialog.Owner = App.Current.MainWindow;
