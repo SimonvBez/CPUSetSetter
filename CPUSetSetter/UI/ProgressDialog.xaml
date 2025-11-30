@@ -9,12 +9,12 @@
         ShowInTaskbar="False"
         Topmost="True">
     <Grid Margin="20">
-        <StackPanel VerticalAlignment="Center">
+        <StackPanel VerticalAlignment="Top">
             <TextBlock x:Name="MessageText"
                        Text="Downloading update..."
                        FontSize="14"
                        TextAlignment="Center"                       
-                       Margin="0,0,0,15" Height="25"/>
+                       Margin="0,0,0,15"/>
             
             <ProgressBar x:Name="ProgressBar"
                          Height="25"
