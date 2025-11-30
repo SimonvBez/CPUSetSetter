@@ -2,22 +2,19 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Downloading Update"
-        Height="200"
+        Height="225"
         Width="400"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
-        Topmost="True"
-        Background="{DynamicResource BackgroundBrush}"
-        Foreground="{DynamicResource ForegroundBrush}">
+        Topmost="True">
     <Grid Margin="20">
         <StackPanel VerticalAlignment="Center">
             <TextBlock x:Name="MessageText"
                        Text="Downloading update..."
                        FontSize="14"
-                       TextAlignment="Center"
-                       Foreground="{DynamicResource ForegroundBrush}"
-                       Margin="0,0,0,15"/>
+                       TextAlignment="Center"                       
+                       Margin="0,0,0,15" Height="25"/>
             
             <ProgressBar x:Name="ProgressBar"
                          Height="25"
@@ -30,8 +27,7 @@
             <TextBlock x:Name="ProgressText"
                        Text="0%"
                        FontSize="12"
-                       TextAlignment="Center"
-                       Foreground="{DynamicResource DisabledForegroundBrush}"
+                       TextAlignment="Center"                       
                        Margin="0,0,0,15"/>
             
             <Button x:Name="CancelButton"
@@ -39,10 +35,7 @@
                     Click="CancelButton_Click"
                     Padding="10,5"
                     HorizontalAlignment="Center"
-                    Width="100"
-                    Background="{DynamicResource ClickableBackgroundBrush}"
-                    Foreground="{DynamicResource ForegroundBrush}"
-                    BorderBrush="{DynamicResource ClickableBorderBrush}"
+                    Width="100"            
                     BorderThickness="1"/>
         </StackPanel>
     </Grid>

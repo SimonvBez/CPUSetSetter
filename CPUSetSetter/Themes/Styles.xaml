@@ -1,9 +1,10 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:ui="clr-namespace:CPUSetSetter.UI"
-                    xmlns:masks="clr-namespace:CPUSetSetter.UI.Tabs.Masks"
-                    xmlns:rules="clr-namespace:CPUSetSetter.UI.Tabs.Rules"
-                    xmlns:coreuse="clr-namespace:CPUSetSetter.UI.Tabs.Processes.CoreUsage">
+xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+xmlns:ui="clr-namespace:CPUSetSetter.UI"
+xmlns:util="clr-namespace:CPUSetSetter.Util"
+xmlns:masks="clr-namespace:CPUSetSetter.UI.Tabs.Masks"
+xmlns:rules="clr-namespace:CPUSetSetter.UI.Tabs.Rules"
+xmlns:coreuse="clr-namespace:CPUSetSetter.UI.Tabs.Processes.CoreUsage">
 
     <!-- Window Styles -->
     <Style TargetType="Window">
@@ -15,6 +16,7 @@
     <Style TargetType="masks:CreateMaskWindow" BasedOn="{StaticResource {x:Type Window}}"/>
     <Style TargetType="rules:CreateRuleTemplateWindow" BasedOn="{StaticResource {x:Type Window}}"/>
     <Style TargetType="rules:CreateProgramRuleWindow" BasedOn="{StaticResource {x:Type Window}}"/>
+    <Style TargetType="util:ProgressDialog" BasedOn="{StaticResource {x:Type Window}}"/>
 
     <!-- TextBlock Style -->
     <Style TargetType="TextBlock">
@@ -465,6 +467,13 @@
     <!-- Tooltip Style -->
     <Style TargetType="ToolTip">
         <Setter Property="Background" Value="{DynamicResource BackgroundBrush}"/>
+    </Style>
+
+    <!-- ProgressBar Style -->
+    <Style TargetType="ProgressBar">
+        <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
     </Style>
 
     <Style TargetType="coreuse:CoreUsageControl">
