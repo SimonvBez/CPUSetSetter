@@ -114,7 +114,7 @@ namespace CPUSetSetter.Util
                             }, cancelToken: cts.Token);
 
                             progressDialog.Close();
-                            UpdateManager.ApplyUpdatesAndRestart(value);
+                            UpdateManager.ApplyUpdatesAndRestart(value, [value.TargetFullRelease.Version.ToString()]);
                         }
                         catch (OperationCanceledException)
                         {
