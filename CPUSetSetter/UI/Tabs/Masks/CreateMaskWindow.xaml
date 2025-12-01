@@ -24,7 +24,8 @@
             <local:MaskEditorControl x:Name="maskEditor"
                                      Margin="5"
                                      BoolMask="{Binding BoolMask}"
-                                     Hotkeys="{Binding Hotkeys}"/>
+                                     Hotkeys="{Binding Hotkeys}"
+                                     MaskType="{Binding MaskType}"/>
         </GroupBox>
 
         <Grid Grid.Row="2" Margin="0,10,0,0">

@@ -8,6 +8,7 @@
 
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="28"/>
         </Grid.RowDefinitions>
@@ -64,10 +65,17 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
+        
+        <!--Mask Type buttons-->
+        <StackPanel Grid.Row="1" Margin="0,10,0,0" ToolTip="The method of how this Mask is applied. Use 'CPU Set' if unsure">
+            <TextBlock Text="Mask type:"/>
+            <RadioButton Content="CPU Set"/>
+            <RadioButton Content="Affinity"/>
+        </StackPanel>
 
         <!--Hotkey input field-->
         <Grid x:Name="hotkeyGrid"
-              Grid.Row="1" Margin="0,5,0,0">
+              Grid.Row="2" Margin="0,5,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>

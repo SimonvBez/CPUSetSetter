@@ -13,7 +13,7 @@ namespace CPUSetSetter.UI.Tabs.Masks
         [NotifyPropertyChangedFor(nameof(CanRemoveMask))]
         private LogicalProcessorMask? _selectedMask;
 
-        public bool CanRemoveMask => SelectedMask is not null && !SelectedMask.IsNoMask;
+        public bool CanRemoveMask => SelectedMask is not null && SelectedMask.MaskType != MaskApplyType.NoMask;
 
         [RelayCommand]
         private void CreateNewMask()

@@ -16,6 +16,8 @@ namespace CPUSetSetter.Platforms.Windows
         private readonly uint _pid;
         private readonly SafeProcessHandle _queryLimitedInfoHandle;
         private SafeProcessHandle? _setLimitedInfoHandle;
+        private SafeProcessHandle? _setInfoHandle;
+        private MaskApplyType _previousMaskType = MaskApplyType.NoMask;
 
         static ProcessHandlerWindows()
         {
@@ -73,7 +75,38 @@ namespace CPUSetSetter.Platforms.Windows
 
         public bool ApplyMask(LogicalProcessorMask mask)
         {
-            return ApplyCpuSet(mask);
+            bool result;
+
+            switch (mask.MaskType)
+            {
+                case MaskApplyType.NoMask:
+                    // Clear the previous mask
+                    if (_previousMaskType == MaskApplyType.CPUSet)
+                        result = ApplyCpuSet(mask);
+                    else if (_previousMaskType == MaskApplyType.Affinity)
+                        result = ApplyAffinity(mask);
+                    else
+                        throw new NotImplementedException();
+                    break;
+
+                case MaskApplyType.CPUSet:
+                    if (_previousMaskType == MaskApplyType.Affinity)
+                        ApplyAffinity(LogicalProcessorMask.NoMask); // Clear the previous Affinity if the MaskType has changed
+                    result = ApplyCpuSet(mask);
+                    break;
+
+                case MaskApplyType.Affinity:
+                    if (_previousMaskType == MaskApplyType.CPUSet)
+                        ApplyCpuSet(LogicalProcessorMask.NoMask); // Clear the previous CPU Set if the MaskType has changed
+                    result = ApplyAffinity(mask);
+                    break;
+
+                default:
+                    throw new NotImplementedException();
+            }
+
+            _previousMaskType = mask.MaskType;
+            return result;
         }
 
         /// <summary>
@@ -101,7 +134,7 @@ namespace CPUSetSetter.Platforms.Windows
             }
 
             bool success;
-            if (mask.IsNoMask)
+            if (mask.MaskType == MaskApplyType.NoMask)
             {
                 // Clear the CPU Set
                 success = NativeMethods.SetProcessDefaultCpuSets(_setLimitedInfoHandle, null, 0);
@@ -146,6 +179,68 @@ namespace CPUSetSetter.Platforms.Windows
             return false;
         }
 
+        private bool ApplyAffinity(LogicalProcessorMask mask)
+        {
+            if (_setInfoHandle is null)
+            {
+                _setInfoHandle = NativeMethods.OpenProcess(ProcessAccessFlags.PROCESS_SET_INFORMATION, false, _pid);
+                if (_setInfoHandle.IsInvalid)
+                {
+                    int error = Marshal.GetLastWin32Error();
+                    string extraHelpString = (error == 5 && !Environment.IsPrivilegedProcess) ? " Try restarting as Admin" : "";
+                    WindowLogger.Write($"ERROR: Could not open process '{_executableName}': {new Win32Exception(error).Message}{extraHelpString}");
+                    return false;
+                }
+            }
+            else if (_setInfoHandle.IsInvalid)
+            {
+                // The handle was already made previously, don't bother trying again
+                return false;
+            }
+
+            bool success;
+            if (mask.MaskType == MaskApplyType.NoMask)
+            {
+                success = NativeMethods.SetProcessAffinityMask(_setInfoHandle, 0);
+                if (success)
+                {
+                    WindowLogger.Write($"Cleared Affinity of '{_executableName}'");
+                    return true;
+                }
+                else
+                {
+                    int error = Marshal.GetLastWin32Error();
+                    WindowLogger.Write($"ERROR: Could not clear Affinity of '{_executableName}': {new System.ComponentModel.Win32Exception(error).Message}");
+                    return false;
+                }
+            }
+            else
+            {
+                UIntPtr bitMask = 0;
+                for (int i = 0; i < mask.BoolMask.Count; ++i)
+                {
+                    if (mask.BoolMask[i])
+                        bitMask |= (UIntPtr)1 << i;
+                }
+
+                success = NativeMethods.SetProcessAffinityMask(_setInfoHandle, bitMask);
+                if (success)
+                {
+                    WindowLogger.Write($"Applied Affinity '{mask.Name}' to '{_executableName}'");
+                    return true;
+                }
+                else
+                {
+                    int error = Marshal.GetLastWin32Error();
+                    string errorMessage = $"ERROR: Could not apply Affinity to '{_executableName}': {new Win32Exception(error).Message}";
+                    if (error == 5)
+                        errorMessage += " Likely due to anti-cheat";
+                    WindowLogger.Write(errorMessage);
+                    return false;
+                }
+            }
+        }
+
         /// <summary>
         /// Get the CPU Set Id of each logical processor 
         /// </summary>
@@ -178,7 +273,7 @@ namespace CPUSetSetter.Platforms.Windows
                     
                     if (item.Type != CPU_SET_INFORMATION_TYPE.CpuSetInformation)
                     {
-                        throw new InvalidCastException("Invalid data type encounted; aborting");
+                        throw new InvalidCastException("Invalid data type encountered; aborting");
                     }
 
                     cpuSets.Add(item.LogicalProcessorIndex, item.Id);
@@ -197,6 +292,7 @@ namespace CPUSetSetter.Platforms.Windows
         {
             _queryLimitedInfoHandle.Dispose();
             _setLimitedInfoHandle?.Dispose();
+            _setInfoHandle?.Dispose();
             _cpuTimeMovingAverageBuffer.Clear();
         }
 
