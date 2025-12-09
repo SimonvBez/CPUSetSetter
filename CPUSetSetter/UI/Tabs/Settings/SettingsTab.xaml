@@ -1,29 +1,18 @@
-﻿<Grid x:Class="CPUSetSetter.UI.Tabs.Settings.SettingsTab"
-      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-      xmlns:local="clr-namespace:CPUSetSetter.UI.Tabs.Settings"
-      xmlns:config="clr-namespace:CPUSetSetter.Config.Models"
-      xmlns:themes="clr-namespace:CPUSetSetter.Themes"
-      xmlns:util="clr-namespace:CPUSetSetter.Util"
-      d:DataContext="{d:DesignInstance Type=local:SettingsTabViewModel}"
-      mc:Ignorable="d"
-      Margin="20">
+﻿<StackPanel x:Class="CPUSetSetter.UI.Tabs.Settings.SettingsTab"
+            xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+            xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+            xmlns:local="clr-namespace:CPUSetSetter.UI.Tabs.Settings"
+            xmlns:config="clr-namespace:CPUSetSetter.Config.Models"
+            xmlns:themes="clr-namespace:CPUSetSetter.Themes"
+            xmlns:util="clr-namespace:CPUSetSetter.Util"
+            d:DataContext="{d:DesignInstance Type=local:SettingsTabViewModel}"
+            mc:Ignorable="d"
+            Margin="20"
+            Orientation="Vertical">
 
-    <Grid.RowDefinitions>
-        <RowDefinition Height="20"/>
-        <RowDefinition Height="20"/>
-        <RowDefinition Height="20"/>
-        <RowDefinition Height="20"/>
-        <RowDefinition Height="20"/>
-        <RowDefinition Height="20"/>
-        <RowDefinition Height="20"/>
-        <RowDefinition Height="24"/>
-        <RowDefinition Height="Auto"/>
-    </Grid.RowDefinitions>
-
-    <BulletDecorator Grid.Row="0">
+    <BulletDecorator Margin="0,0,0,4">
         <BulletDecorator.Bullet>
             <CheckBox IsChecked="{Binding MuteHotkeySound, Source={x:Static config:AppConfig.Instance}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
         </BulletDecorator.Bullet>
@@ -31,7 +20,7 @@
         <TextBlock Text="Mute hotkey sound"/>
     </BulletDecorator>
 
-    <BulletDecorator Grid.Row="1">
+    <BulletDecorator Margin="0,0,0,4">
         <BulletDecorator.Bullet>
             <CheckBox IsChecked="{Binding StartMinimized, Source={x:Static config:AppConfig.Instance}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
         </BulletDecorator.Bullet>
@@ -39,7 +28,7 @@
         <TextBlock Text="Start minimized in tray"/>
     </BulletDecorator>
 
-    <BulletDecorator Grid.Row="2">
+    <BulletDecorator Margin="0,0,0,4">
         <BulletDecorator.Bullet>
             <CheckBox IsChecked="{Binding DisableWelcomeMessage, Source={x:Static config:AppConfig.Instance}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
         </BulletDecorator.Bullet>
@@ -47,7 +36,7 @@
         <TextBlock Text="Disable welcome message"/>
     </BulletDecorator>
 
-    <BulletDecorator Grid.Row="3">
+    <BulletDecorator Margin="0,0,0,4">
         <BulletDecorator.Bullet>
             <CheckBox IsChecked="{Binding AutoStartEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
         </BulletDecorator.Bullet>
@@ -55,7 +44,7 @@
         <TextBlock Text="Start with Windows"/>
     </BulletDecorator>
 
-    <BulletDecorator Grid.Row="4"
+    <BulletDecorator Margin="0,0,0,4"
                      ToolTip="Clear the Masks on any running process when closing CPU Set Setter through the tray icon">
         <BulletDecorator.Bullet>
             <CheckBox IsChecked="{Binding ClearMasksOnClose, Source={x:Static config:AppConfig.Instance}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
@@ -64,7 +53,7 @@
         <TextBlock Text="Clear Masks on close"/>
     </BulletDecorator>
 
-    <BulletDecorator Grid.Row="5">
+    <BulletDecorator Margin="0,0,0,4">
         <BulletDecorator.Bullet>
             <CheckBox IsChecked="{Binding ShowGameModePopup, Source={x:Static config:AppConfig.Instance}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
         </BulletDecorator.Bullet>
@@ -72,7 +61,7 @@
         <TextBlock Text="Show warning popup when Windows Game Mode is enabled"/>
     </BulletDecorator>
 
-    <BulletDecorator Grid.Row="6">
+    <BulletDecorator Margin="0,0,0,4">
         <BulletDecorator.Bullet>
             <CheckBox IsChecked="{Binding ShowUpdatePopup, Source={x:Static config:AppConfig.Instance}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
         </BulletDecorator.Bullet>
@@ -80,7 +69,7 @@
         <TextBlock Text="Show popup when a new version is available"/>
     </BulletDecorator>
 
-    <BulletDecorator Grid.Row="7">
+    <BulletDecorator Margin="0,2,0,4" Height="24">
         <BulletDecorator.Bullet>
             <TextBlock Text="Theme:"/>
         </BulletDecorator.Bullet>
@@ -92,7 +81,7 @@
                   SelectedValue="{Binding UiTheme, Source={x:Static config:AppConfig.Instance}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
     </BulletDecorator>
 
-    <GroupBox Grid.Row="8" Margin="0,20,0,0"
+    <GroupBox Margin="0,20,0,0"
               Width="250"
               HorizontalAlignment="Left"
               Header="About">
@@ -130,4 +119,4 @@
         </Grid>
     </GroupBox>
 
-</Grid>
+</StackPanel>
