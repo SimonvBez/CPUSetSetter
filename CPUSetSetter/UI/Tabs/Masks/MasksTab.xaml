@@ -63,7 +63,8 @@
         <!--Settings of the selected mask-->
         <local:MaskEditorControl Grid.Column="1" Margin="10,0,0,0"
                                  BoolMask="{Binding SelectedMask.BoolMask}"
-                                 Hotkeys="{Binding SelectedMask.Hotkeys}"/>
+                                 Hotkeys="{Binding SelectedMask.Hotkeys}"
+                                 MaskType="{Binding SelectedMask.MaskType, Mode=TwoWay}"/>
     </Grid>
 
     <Separator Grid.Row="1"/>

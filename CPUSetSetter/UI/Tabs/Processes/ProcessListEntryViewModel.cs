@@ -2,7 +2,6 @@
 using CPUSetSetter.Config.Models;
 using CPUSetSetter.Util;
 using CPUSetSetter.Platforms;
-using System.Collections.Specialized;
 
 
 namespace CPUSetSetter.UI.Tabs.Processes
@@ -27,7 +26,7 @@ namespace CPUSetSetter.UI.Tabs.Processes
         private LogicalProcessorMask _mask;
 
         [ObservableProperty]
-        private bool _failedToOpen = false;
+        private bool _previousApplyFailed = false;
 
         public string AverageCpuPercentageStr => AverageCpuUsage == -1 ? "" : $"{AverageCpuUsage * 100:F1}%";
 
@@ -56,7 +55,7 @@ namespace CPUSetSetter.UI.Tabs.Processes
         public bool SetMask(LogicalProcessorMask newMask, bool updateRule)
         {
             if (newMask == _lastAppliedMask) // Return the previous status if the mask is still the same
-                return !FailedToOpen;
+                return !PreviousApplyFailed;
 
             _lastAppliedMask = newMask;
             Mask = newMask;
@@ -74,8 +73,7 @@ namespace CPUSetSetter.UI.Tabs.Processes
                 ruleSuccess = programRule.SetMask(newMask, true);
             }
             bool success = _processHandler.ApplyMask(newMask);
-            if (!success)
-                FailedToOpen = true;
+            PreviousApplyFailed = !success;
             return success && ruleSuccess;
         }
 
@@ -85,18 +83,15 @@ namespace CPUSetSetter.UI.Tabs.Processes
         partial void OnMaskChanged(LogicalProcessorMask? oldValue, LogicalProcessorMask newValue)
         {
             if (oldValue is not null)
-                oldValue.BoolMask.CollectionChanged -= OnMaskBitsChanged;
-            newValue.BoolMask.CollectionChanged += OnMaskBitsChanged;
+                oldValue.MaskChanged -= OnMaskEdited;
+            newValue.MaskChanged += OnMaskEdited;
             SetMask(newValue, true);
         }
 
-        private void OnMaskBitsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        private void OnMaskEdited(object? sender, EventArgs e)
         {
-            if (e.Action != NotifyCollectionChangedAction.Replace)
-                throw new ArgumentException("Only Replace actions are allowed for mask bits");
-
-            // One of the logical processors in the mask has changed, apply it
-            _processHandler.ApplyMask(Mask);
+            // One of the logical processors in the mask or the type has changed, apply it
+            PreviousApplyFailed = !_processHandler.ApplyMask(Mask);
         }
 
         /// <summary>
@@ -105,7 +100,7 @@ namespace CPUSetSetter.UI.Tabs.Processes
         public void Dispose()
         {
             RuleHelpers.GetProgramRuleOrNull(ImagePath)?.RemoveRunningProcess(this);
-            Mask.BoolMask.CollectionChanged -= OnMaskBitsChanged;
+            Mask.MaskChanged -= OnMaskEdited;
             _processHandler.Dispose();
             GC.SuppressFinalize(this);
         }

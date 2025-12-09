@@ -15,7 +15,7 @@ namespace CPUSetSetter.UI.Tabs.Masks
         private ObservableCollection<bool> _boolMask;
 
         [ObservableProperty]
-        private MaskApplyType _maskType;
+        private MaskApplyType _maskType = MaskApplyType.CPUSet;
 
         [ObservableProperty]
         private ObservableCollection<VKey> _hotkeys;

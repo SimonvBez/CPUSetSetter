@@ -2,6 +2,7 @@
 using CPUSetSetter.UI.Tabs.Processes;
 using Microsoft.Win32.SafeHandles;
 using System.ComponentModel;
+using System.Drawing;
 using System.Runtime.InteropServices;
 
 
@@ -201,7 +202,12 @@ namespace CPUSetSetter.Platforms.Windows
             bool success;
             if (mask.MaskType == MaskApplyType.NoMask)
             {
-                success = NativeMethods.SetProcessAffinityMask(_setInfoHandle, 0);
+                UIntPtr allMask = 0;
+                for (int i = 0; i < CpuInfo.LogicalProcessorCount; ++i)
+                {
+                    allMask |= (UIntPtr)1 << i;
+                }
+                success = NativeMethods.SetProcessAffinityMask(_setInfoHandle, allMask);
                 if (success)
                 {
                     WindowLogger.Write($"Cleared Affinity of '{_executableName}'");
@@ -210,7 +216,7 @@ namespace CPUSetSetter.Platforms.Windows
                 else
                 {
                     int error = Marshal.GetLastWin32Error();
-                    WindowLogger.Write($"ERROR: Could not clear Affinity of '{_executableName}': {new System.ComponentModel.Win32Exception(error).Message}");
+                    WindowLogger.Write($"ERROR: Could not clear Affinity of '{_executableName}': {new Win32Exception(error).Message}");
                     return false;
                 }
             }

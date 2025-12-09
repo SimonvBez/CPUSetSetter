@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Input;
 
 
@@ -39,7 +40,7 @@ namespace CPUSetSetter.UI.Tabs.Masks
                 nameof(MaskType),
                 typeof(MaskApplyType?),
                 typeof(MaskEditorControl),
-                new PropertyMetadata(null, OnMaskTypeChanged));
+                new FrameworkPropertyMetadata(null, OnMaskTypeChanged) { BindsTwoWayByDefault = true, DefaultUpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
 
         // Properties
         public ObservableCollection<bool>? BoolMask

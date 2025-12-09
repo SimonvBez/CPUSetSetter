@@ -1,5 +1,4 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CPUSetSetter.Util;
 using CPUSetSetter.Platforms;
 using CPUSetSetter.UI.Tabs.Processes;
 using System.Collections.Immutable;
@@ -31,6 +30,8 @@ namespace CPUSetSetter.Config.Models
 
         public ObservableCollection<VKey> Hotkeys { get; init; }
 
+        public event EventHandler<EventArgs>? MaskChanged;
+
         private LogicalProcessorMask(string name, string displayName, MaskApplyType maskType, List<bool> mask, List<VKey> hotkeys)
         {
             _name = name;
@@ -46,6 +47,8 @@ namespace CPUSetSetter.Config.Models
             _hotkeyCallback.Pressed += OnHotkeyPressed;
 
             Hotkeys.CollectionChanged += OnHotkeysCollectionChanged;
+
+            BoolMask.CollectionChanged += OnMaskBitChanged;
 
             HotkeyListener.Default.AddCallback(_hotkeyCallback);
         }
@@ -106,12 +109,26 @@ namespace CPUSetSetter.Config.Models
             ProcessesTabViewModel.Instance?.OnMaskHotkeyPressed(this);
         }
 
+        private void OnMaskBitChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action != NotifyCollectionChangedAction.Replace)
+                throw new ArgumentException("Only Replace actions are allowed for mask bits");
+
+            MaskChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        partial void OnMaskTypeChanged(MaskApplyType value)
+        {
+            MaskChanged?.Invoke(this, EventArgs.Empty);
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
                 Hotkeys.CollectionChanged -= OnHotkeysCollectionChanged;
                 _hotkeyCallback.Pressed -= OnHotkeyPressed;
+                BoolMask.CollectionChanged -= OnMaskBitChanged;
                 HotkeyListener.Default.RemoveCallback(_hotkeyCallback);
             }
             base.Dispose(disposing);
