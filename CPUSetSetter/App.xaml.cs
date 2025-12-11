@@ -2,6 +2,7 @@
 using CPUSetSetter.Platforms;
 using CPUSetSetter.TrayIcon;
 using CPUSetSetter.UI;
+using CPUSetSetter.UI.Tabs.Processes;
 using CPUSetSetter.Util;
 using Microsoft.Win32;
 using System.Globalization;
@@ -20,9 +21,15 @@ namespace CPUSetSetter
         private AppTrayIcon? trayIcon;
         private Mutex? singleInstanceMutex;
         private const string mutexName = "CPUSetSetterLock";
+        
+        /// <summary>
+        /// Set in Program.cs from restart argument provided in VersionChecker
+        /// when the app is restarted after an update
+        /// </summary>
+        public string? UpdatedVersion { get; set; }
 
         protected override void OnStartup(StartupEventArgs e)
-        {
+        {            
             // Show unhandled exceptions in an error dialog box
             AddDialogExceptionHandler();
 
@@ -99,6 +106,16 @@ namespace CPUSetSetter
             if (!AppConfig.Instance.StartMinimized)
             {
                 ShowMainWindow();
+            }
+
+            // Show update success message if the app was just updated
+            if (!string.IsNullOrEmpty(UpdatedVersion))
+            {
+                MessageBox.Show(
+                    $"CPU Set Setter has been successfully updated to version {UpdatedVersion}!",
+                    "CPUSetSetter Update Successful",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
             }
         }
 
