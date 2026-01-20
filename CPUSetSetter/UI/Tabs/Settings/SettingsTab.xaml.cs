@@ -6,7 +6,7 @@ namespace CPUSetSetter.UI.Tabs.Settings
     /// <summary>
     /// Interaction logic for SettingsTab.xaml
     /// </summary>
-    public partial class SettingsTab : Grid
+    public partial class SettingsTab : StackPanel
     {
         public SettingsTab()
         {

@@ -19,7 +19,7 @@ namespace CPUSetSetter.Config
         private static readonly string configPath = Path.Combine(configDirectory, "CPUSetSetter_config.json");
         private static readonly string saveTempPath = Path.Combine(configDirectory, "CPUSetSetter_config_new.json");
         private static readonly string backupNameTemplate = Path.Combine(configDirectory, "CPUSetSetter_config_backup{0}.json");
-        public const int ConfigVersion = 2;
+        public const int ConfigVersion = 3;
 
         static AppConfigFile()
         {
@@ -143,7 +143,8 @@ namespace CPUSetSetter.Config
                 }
 
                 List<VKey> hotkeys = jsonMask.Hotkeys.Select(hotkey => Enum.Parse<VKey>(hotkey)).ToList();
-                logicalProcessorMasks.Add(new(jsonMask.Name, jsonMask.BoolMask, hotkeys));
+                MaskApplyType maskType = Enum.Parse<MaskApplyType>(jsonMask.MaskType);
+                logicalProcessorMasks.Add(new(jsonMask.Name, maskType, jsonMask.BoolMask, hotkeys));
             }
 
             // Construct the ProgramRule models from the config
@@ -211,20 +212,23 @@ namespace CPUSetSetter.Config
                 ConfigVersion = 0;
             }
 
+            /// <summary>
+            /// Constructor used for saving the config
+            /// </summary>
             public ConfigJson(AppConfig config)
             {
                 // Get the Hotkeys for the NoMask
-                var noMaskHotkeysVKeys = config.LogicalProcessorMasks.Single(mask => mask.IsNoMask).Hotkeys;
+                var noMaskHotkeysVKeys = config.LogicalProcessorMasks.Single(mask => mask.MaskType == MaskApplyType.NoMask).Hotkeys;
                 NoMaskHotkeys = noMaskHotkeysVKeys.Select(hotkey => hotkey.ToString()).ToList();
 
                 // Filter out the NoMask from the list of logicalProcessorMasks
-                var userDefinedMasks = config.LogicalProcessorMasks.Where(mask => !mask.IsNoMask);
+                var userDefinedMasks = config.LogicalProcessorMasks.Where(mask => mask.MaskType != MaskApplyType.NoMask);
 
                 // Convert the LogicalProcessorMask models to JSON objects
                 Masks = userDefinedMasks.Select(mask =>
                 {
                     List<string> hotkeys = mask.Hotkeys.Select(hotkey => hotkey.ToString()).ToList();
-                    return new LogicalProcessorMaskJson(mask.Name, new(mask.BoolMask), hotkeys);
+                    return new LogicalProcessorMaskJson(mask.Name, mask.MaskType.ToString(), new(mask.BoolMask), hotkeys);
                 }).ToList();
 
                 // Convert the ProgramRules models to JSON objects
@@ -253,6 +257,7 @@ namespace CPUSetSetter.Config
         {
             public string Name { get; init; }
             public List<bool> BoolMask { get; init; }
+            public string MaskType { get; init; }
             public List<string> Hotkeys { get; init; }
 
             [JsonConstructor]
@@ -260,13 +265,15 @@ namespace CPUSetSetter.Config
             {
                 Name = string.Empty;
                 BoolMask = [];
+                MaskType = MaskApplyType.CPUSet.ToString();
                 Hotkeys = [];
             }
 
-            public LogicalProcessorMaskJson(string name, List<bool> boolMask, List<string> hotkeys)
+            public LogicalProcessorMaskJson(string name, string maskType, List<bool> boolMask, List<string> hotkeys)
             {
                 Name = name;
                 BoolMask = boolMask;
+                MaskType = maskType;
                 Hotkeys = hotkeys;
             }
         }

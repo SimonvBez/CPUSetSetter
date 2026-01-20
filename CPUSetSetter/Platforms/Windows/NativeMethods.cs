@@ -17,6 +17,10 @@ namespace CPUSetSetter.Platforms
         [return: MarshalAs(UnmanagedType.Bool)]
         public static partial bool SetProcessDefaultCpuSets(SafeProcessHandle Process, uint[]? CpuSetIds, uint CpuSetIdCount);
 
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static partial bool SetProcessAffinityMask(SafeProcessHandle hProcess, UIntPtr dwProcessAffinityMask);
+
         [LibraryImport("kernel32.dll", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static partial bool QueryFullProcessImageNameW(SafeProcessHandle hProcess, uint dwFlags, [Out] char[] lpExeName, ref uint lpdwSize);
@@ -55,6 +59,7 @@ namespace CPUSetSetter.Platforms
     [Flags]
     public enum ProcessAccessFlags : uint
     {
+        PROCESS_SET_INFORMATION = 0x00000200,
         PROCESS_QUERY_LIMITED_INFORMATION = 0x00001000,
         PROCESS_SET_LIMITED_INFORMATION = 0x00002000
     }

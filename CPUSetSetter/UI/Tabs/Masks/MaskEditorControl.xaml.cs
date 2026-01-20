@@ -1,9 +1,11 @@
-﻿using CPUSetSetter.Platforms;
+﻿using CPUSetSetter.Config.Models;
+using CPUSetSetter.Platforms;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Input;
 
 
@@ -33,6 +35,13 @@ namespace CPUSetSetter.UI.Tabs.Masks
                 typeof(MaskEditorControl),
                 new PropertyMetadata(null, OnHotkeysChanged));
 
+        public static readonly DependencyProperty MaskTypeProperty =
+            DependencyProperty.Register(
+                nameof(MaskType),
+                typeof(MaskApplyType?),
+                typeof(MaskEditorControl),
+                new FrameworkPropertyMetadata(null, OnMaskTypeChanged) { BindsTwoWayByDefault = true, DefaultUpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged });
+
         // Properties
         public ObservableCollection<bool>? BoolMask
         {
@@ -44,6 +53,12 @@ namespace CPUSetSetter.UI.Tabs.Masks
         {
             get => (ObservableCollection<VKey>?)GetValue(HotkeysProperty);
             set => SetValue(HotkeysProperty, value);
+        }
+
+        public MaskApplyType? MaskType
+        {
+            get => (MaskApplyType?)GetValue(MaskTypeProperty);
+            set => SetValue(MaskTypeProperty, value);
         }
 
         // PropertyChanged handlers
@@ -107,6 +122,11 @@ namespace CPUSetSetter.UI.Tabs.Masks
             }
 
             control.UpdateHotkeysDisplay();
+        }
+
+        private static void OnMaskTypeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            // TODO: Handle change of MaskType
         }
 
         // CollectionChanged handlers

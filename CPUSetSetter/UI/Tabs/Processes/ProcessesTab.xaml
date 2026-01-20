@@ -52,7 +52,7 @@
         <DataGrid.CellStyle>
             <Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
                 <Style.Triggers>
-                    <DataTrigger Binding="{Binding FailedToOpen}" Value="True">
+                    <DataTrigger Binding="{Binding PreviousApplyFailed}" Value="True">
                         <Setter Property="Background" Value="{DynamicResource ErrorBrush}"/>
                     </DataTrigger>
                 </Style.Triggers>

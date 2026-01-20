@@ -51,7 +51,7 @@ namespace CPUSetSetter.UI.Tabs.Processes
                 bool success = foregroundProcess.SetMask(mask, true);
                 if (success)
                 {
-                    if (mask.IsNoMask)
+                    if (mask.MaskType == MaskApplyType.NoMask)
                         HotkeySoundPlayer.Default.PlayCleared();
                     else
                         HotkeySoundPlayer.Default.PlayApplied();

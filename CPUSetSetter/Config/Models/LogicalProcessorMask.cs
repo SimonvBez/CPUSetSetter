@@ -1,5 +1,4 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CPUSetSetter.Util;
 using CPUSetSetter.Platforms;
 using CPUSetSetter.UI.Tabs.Processes;
 using System.Collections.Immutable;
@@ -24,19 +23,22 @@ namespace CPUSetSetter.Config.Models
         [ObservableProperty]
         private string _displayName;
 
+        [ObservableProperty]
+        private MaskApplyType _maskType;
+
         public ObservableCollection<bool> BoolMask { get; init; }
 
         public ObservableCollection<VKey> Hotkeys { get; init; }
 
-        public bool IsNoMask { get; }
+        public event EventHandler<EventArgs>? MaskChanged;
 
-        private LogicalProcessorMask(string name, string displayName, List<bool> mask, List<VKey> hotkeys, bool isNoMask)
+        private LogicalProcessorMask(string name, string displayName, MaskApplyType maskType, List<bool> mask, List<VKey> hotkeys)
         {
             _name = name;
             _displayName = displayName;
+            _maskType = maskType;
             BoolMask = new(mask);
             Hotkeys = new(hotkeys);
-            IsNoMask = isNoMask;
 
             SaveOnCollectionChanged(BoolMask);
             SaveOnCollectionChanged(Hotkeys);
@@ -46,18 +48,20 @@ namespace CPUSetSetter.Config.Models
 
             Hotkeys.CollectionChanged += OnHotkeysCollectionChanged;
 
+            BoolMask.CollectionChanged += OnMaskBitChanged;
+
             HotkeyListener.Default.AddCallback(_hotkeyCallback);
         }
 
         /// <summary>
         /// Private constructor for creating the NoMask 
         /// </summary>
-        private LogicalProcessorMask(List<VKey> hotkeys) : this("<no mask>", string.Empty, [], hotkeys, true) { }
+        private LogicalProcessorMask(List<VKey> hotkeys) : this("<no mask>", string.Empty, MaskApplyType.NoMask, [], hotkeys) { }
 
         /// <summary>
         /// Constructor for creating a new logical processor mask
         /// </summary>
-        public LogicalProcessorMask(string name, List<bool> mask, List<VKey> hotkeys) : this(name, name, mask, hotkeys, false) { }
+        public LogicalProcessorMask(string name, MaskApplyType maskType, List<bool> mask, List<VKey> hotkeys) : this(name, name, maskType, mask, hotkeys) { }
 
         /// <summary>
         /// Create a new NoMask with a given hotkey.
@@ -105,15 +109,36 @@ namespace CPUSetSetter.Config.Models
             ProcessesTabViewModel.Instance?.OnMaskHotkeyPressed(this);
         }
 
+        private void OnMaskBitChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action != NotifyCollectionChangedAction.Replace)
+                throw new ArgumentException("Only Replace actions are allowed for mask bits");
+
+            MaskChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        partial void OnMaskTypeChanged(MaskApplyType value)
+        {
+            MaskChanged?.Invoke(this, EventArgs.Empty);
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
                 Hotkeys.CollectionChanged -= OnHotkeysCollectionChanged;
                 _hotkeyCallback.Pressed -= OnHotkeyPressed;
+                BoolMask.CollectionChanged -= OnMaskBitChanged;
                 HotkeyListener.Default.RemoveCallback(_hotkeyCallback);
             }
             base.Dispose(disposing);
         }
+    }
+
+    public enum MaskApplyType
+    {
+        NoMask,
+        CPUSet,
+        Affinity
     }
 }

@@ -102,7 +102,7 @@ namespace CPUSetSetter.Config.Models
                 foreach ((string name, List<bool> boolMask) in CpuInfo.DefaultLogicalProcessorMasks)
                 {
                     names.Add(name);
-                    LogicalProcessorMasks.Add(new(name, boolMask, []));
+                    LogicalProcessorMasks.Add(new(name, MaskApplyType.CPUSet, boolMask, []));
                 }
                 if (names.Count > 0)
                 {
@@ -178,7 +178,7 @@ namespace CPUSetSetter.Config.Models
                     if (!LogicalProcessorMasks.Any(existing => existing.Name == name))
                     {
                         newNames.Add(name);
-                        LogicalProcessorMasks.Add(new(name, boolMask, []));
+                        LogicalProcessorMasks.Add(new(name, MaskApplyType.CPUSet, boolMask, []));
                     }
                 }
                 if (newNames.Count > 0)

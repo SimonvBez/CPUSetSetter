@@ -103,7 +103,7 @@ namespace CPUSetSetter.Config.Models
                 }
 
                 // When requested, this is a NoMask and there is no matching RuleTemplate, remove this ProgramRule
-                if (shouldRemoveWhenNoMask && newMask.IsNoMask && MatchingRuleTemplate is null)
+                if (shouldRemoveWhenNoMask && newMask.MaskType == MaskApplyType.NoMask && MatchingRuleTemplate is null)
                 {
                     Remove(false);
                 }

@@ -15,6 +15,9 @@ namespace CPUSetSetter.UI.Tabs.Masks
         private ObservableCollection<bool> _boolMask;
 
         [ObservableProperty]
+        private MaskApplyType _maskType = MaskApplyType.CPUSet;
+
+        [ObservableProperty]
         private ObservableCollection<VKey> _hotkeys;
 
         [ObservableProperty]
@@ -33,7 +36,7 @@ namespace CPUSetSetter.UI.Tabs.Masks
                 return;
             }
 
-            AppConfig.Instance.LogicalProcessorMasks.Add(new(Name, new(BoolMask), new(Hotkeys)));
+            AppConfig.Instance.LogicalProcessorMasks.Add(new(Name, MaskType, new(BoolMask), new(Hotkeys)));
             _closeWindowAction();
         }
 
