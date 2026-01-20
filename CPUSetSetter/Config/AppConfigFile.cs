@@ -13,17 +13,31 @@ namespace CPUSetSetter.Config
     {
         private static readonly JsonSerializerOptions jsonOptions = new() { WriteIndented = true };
 
-        private const string oldConfigPath = "CPUSetSetter_config.json";
-
-        private static readonly string configDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CPU Set Setter");
-        private static readonly string configPath = Path.Combine(configDirectory, "CPUSetSetter_config.json");
-        private static readonly string saveTempPath = Path.Combine(configDirectory, "CPUSetSetter_config_new.json");
-        private static readonly string backupNameTemplate = Path.Combine(configDirectory, "CPUSetSetter_config_backup{0}.json");
+        private static readonly string configPath;
+        private static readonly string saveTempPath;
+        private static readonly string backupNameTemplate;
         public const int ConfigVersion = 3;
 
         static AppConfigFile()
         {
-            Directory.CreateDirectory(configDirectory);
+            string portableConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CPUSetSetter_config.json");
+
+            string configDirectory;
+            if (File.Exists(portableConfigPath))
+            {
+                // If the config file is placed in the same directory as CPUSetSetter.exe, use it as the portable config location
+                configDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            }
+            else
+            {
+                // Otherwise, place it in AppData
+                configDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CPU Set Setter");
+                Directory.CreateDirectory(configDirectory);
+            }
+
+            configPath = Path.Combine(configDirectory, "CPUSetSetter_config.json");
+            saveTempPath = Path.Combine(configDirectory, "CPUSetSetter_config_new.json");
+            backupNameTemplate = Path.Combine(configDirectory, "CPUSetSetter_config_backup{0}.json");
         }
 
         public static void Save(AppConfig config)
@@ -45,13 +59,6 @@ namespace CPUSetSetter.Config
 
         public static AppConfig Load()
         {
-            // Copy the old config to the new location, if the new one doesn't exist yet
-            if (File.Exists(oldConfigPath) && !File.Exists(configPath))
-            {
-                WindowLogger.Write($"INFO: The config file location has been migrated to '{configPath}'\n");
-                File.Copy(oldConfigPath, configPath);
-            }
-
             if (!File.Exists(configPath))
             {
                 // The config file does not exist yet, use the defaults
