@@ -77,7 +77,7 @@
         </ItemsControl>
         
         <!--Mask Type buttons-->
-        <StackPanel Grid.Row="1" Margin="0,5,0,0" ToolTip="The method of how this Mask is applied to a process.&#x0a;CPU Set is often more stable and works with most anti-cheats.&#x0a;Affinity is a stricter rule but is blocked by most anti-cheats.&#x0a;It's recommended to try a CPU Set on a program first, and try Affinity if it doesn't work well.">
+        <StackPanel Grid.Row="1" Margin="0,5,0,0" ToolTip="The method of how this Mask is applied to a process.&#x0a;CPU Set is often more stable and works with most anti-cheats.&#x0a;Affinity is a stricter rule but is blocked by most anti-cheats.&#x0a;&#x0a;It's recommended to try a CPU Set on a program first, and try Affinity if it doesn't work well.">
             <StackPanel.Style>
                 <Style TargetType="StackPanel">
                     <Setter Property="Visibility" Value="Visible"/>
@@ -96,7 +96,7 @@
             </StackPanel.Style>
             
             <TextBlock Text="Mask type:"/>
-            <RadioButton Content="CPU Set (Use if unsure)"
+            <RadioButton Content="CPU Set (Recommended)"
                          GroupName="MaskMode"
                          IsChecked="{Binding MaskType,
                                              ElementName=root,

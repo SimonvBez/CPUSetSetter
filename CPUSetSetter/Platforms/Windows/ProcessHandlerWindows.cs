@@ -123,7 +123,7 @@ namespace CPUSetSetter.Platforms.Windows
                 if (_setLimitedInfoHandle.IsInvalid)
                 {
                     error = Marshal.GetLastWin32Error();
-                    string extraHelpString = (error == 5 && !Environment.IsPrivilegedProcess) ? " Try restarting as Admin" : "";
+                    string extraHelpString = (error == 5 && !Environment.IsPrivilegedProcess) ? " Try restarting CPU Set Setter as Admin" : "";
                     WindowLogger.Write($"ERROR: Could not open process '{_executableName}': {new Win32Exception(error).Message}{extraHelpString}");
                     return false;
                 }
@@ -188,7 +188,7 @@ namespace CPUSetSetter.Platforms.Windows
                 if (_setInfoHandle.IsInvalid)
                 {
                     int error = Marshal.GetLastWin32Error();
-                    string extraHelpString = (error == 5 && !Environment.IsPrivilegedProcess) ? " Try restarting as Admin" : "";
+                    string extraHelpString = (error == 5 && !Environment.IsPrivilegedProcess) ? " Try restarting CPU Set Setter as Admin" : " Try a CPU Set Mask instead";
                     WindowLogger.Write($"ERROR: Could not open process '{_executableName}': {new Win32Exception(error).Message}{extraHelpString}");
                     return false;
                 }
