@@ -8,7 +8,7 @@ Make your games and apps run on the right CPU cores &mdash; for smoother perform
 
 **Requirements:**
 - **Windows 10+**
-- **.NET Desktop Runtime 9** (Follow in-app instructions)
+- **.NET Desktop Runtime 10** (Follow in-app instructions)
 
 # What it does
 Windows tries its best to schedule tasks automatically, but it may often not be optimal. CPU Set Setter gives you control: you decide which cores your games and apps can use. This tool brings quick and easy access to **CPU Sets** &mdash; almost the same as Affinity, but better &mdash; for free.
@@ -73,7 +73,7 @@ If you're on a supported CPU (AMD Dual-CCD | Intel Hybrid CPU), CPU Set Setter w
 
 Just:
 1. Download the [latest Release](https://github.com/SimonvBez/CPUSetSetter/releases/latest), extract and run.
-2. If prompted, install the .NET 9 Runtime (the app will guide you).
+2. If prompted, install the .NET 10 Runtime (the app will guide you).
 3. Open the **Processes tab**.
 4. Apply the appropriate CPU Set to your open game:
    - **AMD**: Apply "Cache" or "CCD0" for gaming (for some, CCD1 was better for gaming. Try both!)
