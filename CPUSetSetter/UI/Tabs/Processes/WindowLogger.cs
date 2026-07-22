@@ -8,7 +8,7 @@ namespace CPUSetSetter.UI.Tabs.Processes
         [ObservableProperty]
         private string _text = "";
 
-        private readonly Queue<string> _logLines = new();
+        private readonly List<(string Message, int Count)> _logLines = new();
         private readonly Lock _lock = new();
         private bool _isUpdating = false;
 
@@ -23,30 +23,56 @@ namespace CPUSetSetter.UI.Tabs.Processes
         {
             using (_lock.EnterScope())
             {
-                _logLines.Enqueue(message + "\n");
+                if (_logLines.Count > 0 && _logLines[^1].Message == message)
+                {
+                    var last = _logLines[^1];
+                    _logLines[^1] = (last.Message, last.Count + 1);
+                }
+                else
+                {
+                    _logLines.Add((message, 1));
+                }
 
                 // Begin updating the logger text in the UI
                 // A small delay is used before updating, so multiple logs can be rendered in one go
                 if (!_isUpdating)
                 {
                     _isUpdating = true;
-                    Task.Run(UpdateText);
+                    _ = Task.Run(UpdateText);
                 }
             }
         }
 
         private async Task UpdateText()
         {
-            await Task.Delay(30);
-
-            using (_lock.EnterScope())
+            try
             {
-                while (_logLines.Count > 50)
+                await Task.Delay(30);
+
+                string newText;
+                using (_lock.EnterScope())
                 {
-                    _logLines.Dequeue();
+                    while (_logLines.Count > 50)
+                    {
+                        _logLines.RemoveAt(0);
+                    }
+                    newText = string.Join("", _logLines.Select(l => l.Count > 1 ? $"{l.Message} ({l.Count})\n" : $"{l.Message}\n"));
+                    _isUpdating = false;
                 }
-                Text = string.Join("", _logLines);
-                _isUpdating = false;
+
+                if (App.Current?.Dispatcher is { HasShutdownStarted: false } dispatcher)
+                {
+                    await dispatcher.InvokeAsync(() => Text = newText);
+                }
+            }
+            catch (Exception ex)
+            {
+                using (_lock.EnterScope())
+                {
+                    _isUpdating = false;
+                }
+
+                System.Diagnostics.Debug.WriteLine($"WindowLogger update failed: {ex}");
             }
         }
     }

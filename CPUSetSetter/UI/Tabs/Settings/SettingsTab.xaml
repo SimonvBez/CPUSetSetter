@@ -61,6 +61,15 @@
         <TextBlock Text="Show warning popup when Windows Game Mode is enabled"/>
     </BulletDecorator>
 
+    <BulletDecorator Margin="0,0,0,4"
+                     ToolTip="When checked, masks remain applied to running apps even when Windows Game Mode is active. Warning: may cause issues with games when Game Mode is active.">
+        <BulletDecorator.Bullet>
+            <CheckBox IsChecked="{Binding KeepMasksDuringGameMode, Source={x:Static config:AppConfig.Instance}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+        </BulletDecorator.Bullet>
+
+        <TextBlock Text="Keep masks while Windows Game Mode is enabled"/>
+    </BulletDecorator>
+
     <BulletDecorator Margin="0,0,0,4">
         <BulletDecorator.Bullet>
             <CheckBox IsChecked="{Binding ShowUpdatePopup, Source={x:Static config:AppConfig.Instance}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>

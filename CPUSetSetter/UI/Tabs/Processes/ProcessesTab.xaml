@@ -73,10 +73,10 @@
                                 Width="3*">
             </DataGridTextColumn>
 
-            <!--Average CPU usage column-->
-            <DataGridTextColumn Header="Avg CPU"
-                                Binding="{Binding AverageCpuPercentageStr}"
-                                SortMemberPath="AverageCpuUsage"
+            <!--CPU usage column-->
+            <DataGridTextColumn Header="CPU Usage"
+                                Binding="{Binding CpuPercentageStr}"
+                                SortMemberPath="CpuUsage"
                                 IsReadOnly="True"
                                 CanUserResize="False"
                                 Width="Auto"
@@ -85,12 +85,13 @@
             <!--Core mask column-->
             <DataGridTemplateColumn Header="Core Mask"
                                     Width="120"
-                                    SortMemberPath="Mask.DisplayName"
+                                    SortMemberPath="DisplayedMask.DisplayName"
                                     ui:DataGridExtensions.SortDesc="True">
                 <DataGridTemplateColumn.CellTemplate>
                     <DataTemplate>
                         <ComboBox ItemsSource="{Binding LogicalProcessorMasks, Source={x:Static config:AppConfig.Instance}}"
-                                  SelectedValue="{Binding Mask, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                  SelectedValue="{Binding DisplayedMask, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                  IsEnabled="{Binding IsMaskAllowed}">
                             <ComboBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding DisplayName}"/>

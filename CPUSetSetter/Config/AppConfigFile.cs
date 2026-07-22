@@ -16,7 +16,7 @@ namespace CPUSetSetter.Config
         private static readonly string configPath;
         private static readonly string saveTempPath;
         private static readonly string backupNameTemplate;
-        public const int ConfigVersion = 3;
+        public const int ConfigVersion = 4;
 
         static AppConfigFile()
         {
@@ -178,6 +178,7 @@ namespace CPUSetSetter.Config
                 configJson.ShowGameModePopup,
                 configJson.ShowUpdatePopup,
                 configJson.ClearMasksOnClose,
+                configJson.KeepMasksDuringGameMode,
                 Enum.Parse<Theme>(configJson.UiTheme),
                 generateDefaultMasks,
                 isFirstRun,
@@ -196,6 +197,7 @@ namespace CPUSetSetter.Config
             public bool ShowGameModePopup { get; init; }
             public bool ShowUpdatePopup { get; init; }
             public bool ClearMasksOnClose { get; init; }
+            public bool KeepMasksDuringGameMode { get; init; }
             public string UiTheme { get; init; }
             public int ConfigVersion { get; init; } // Can be used in the future to migrate config files
 
@@ -215,6 +217,7 @@ namespace CPUSetSetter.Config
                 ShowGameModePopup = true;
                 ShowUpdatePopup = true;
                 ClearMasksOnClose = false;
+                KeepMasksDuringGameMode = false;
                 UiTheme = Theme.System.ToString();
                 ConfigVersion = 0;
             }
@@ -255,6 +258,7 @@ namespace CPUSetSetter.Config
                 ShowGameModePopup = config.ShowGameModePopup;
                 ShowUpdatePopup = config.ShowUpdatePopup;
                 ClearMasksOnClose = config.ClearMasksOnClose;
+                KeepMasksDuringGameMode = config.KeepMasksDuringGameMode;
                 UiTheme = config.UiTheme.ToString();
                 ConfigVersion = AppConfigFile.ConfigVersion;
             }

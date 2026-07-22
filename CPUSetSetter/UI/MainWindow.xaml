@@ -14,41 +14,59 @@
         Width="1020"
         MinWidth="900">
 
-    <TabControl>
-        <!--Processes Tab-->
-        <TabItem>
-            <TabItem.Header>
-                <TextBlock Text="Processes"/>
-            </TabItem.Header>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-            <proc:ProcessesTab/>
-        </TabItem>
+        <TabControl Grid.Row="0"
+                    Grid.RowSpan="2">
+            <!--Processes Tab-->
+            <TabItem>
+                <TabItem.Header>
+                    <TextBlock Text="Processes"/>
+                </TabItem.Header>
 
-        <!--Masks Tab-->
-        <TabItem>
-            <TabItem.Header>
-                <TextBlock Text="Masks"/>
-            </TabItem.Header>
+                <proc:ProcessesTab x:Name="ProcessesTabControl"/>
+            </TabItem>
 
-            <masks:MasksTab/>
-        </TabItem>
+            <!--Masks Tab-->
+            <TabItem>
+                <TabItem.Header>
+                    <TextBlock Text="Masks"/>
+                </TabItem.Header>
 
-        <!--Rules-->
-        <TabItem>
-            <TabItem.Header>
-                <TextBlock Text="Rules"/>
-            </TabItem.Header>
+                <masks:MasksTab/>
+            </TabItem>
 
-            <rules:RulesTab/>
-        </TabItem>
+            <!--Rules-->
+            <TabItem>
+                <TabItem.Header>
+                    <TextBlock Text="Rules"/>
+                </TabItem.Header>
 
-        <!--Settings-->
-        <TabItem>
-            <TabItem.Header>
-                <TextBlock Text="Settings"/>
-            </TabItem.Header>
+                <rules:RulesTab/>
+            </TabItem>
 
-            <settings:SettingsTab/>
-        </TabItem>
-    </TabControl>
+            <!--Settings-->
+            <TabItem>
+                <TabItem.Header>
+                    <TextBlock Text="Settings"/>
+                </TabItem.Header>
+
+                <settings:SettingsTab/>
+            </TabItem>
+        </TabControl>
+
+        <!--Windows Game Mode Checkbox-->
+        <CheckBox x:Name="GameModeCheckBox"
+                  Grid.Row="0"
+                  Content="Windows Game Mode"
+                  ToolTip="When Windows Game Mode is enabled, all Masks are cleared on any running process to allow for full Core Parking on supported CPUs. Disabling restores all active Masks."
+                  HorizontalAlignment="Right"
+                  VerticalAlignment="Top"
+                  Margin="0,5,5,0"
+                  Panel.ZIndex="1"/>
+    </Grid>
 </Window>

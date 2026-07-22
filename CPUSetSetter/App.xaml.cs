@@ -1,5 +1,6 @@
-﻿using CPUSetSetter.Config.Models;
+using CPUSetSetter.Config.Models;
 using CPUSetSetter.Platforms;
+using CPUSetSetter.Platforms.Windows;
 using CPUSetSetter.TrayIcon;
 using CPUSetSetter.UI;
 using CPUSetSetter.Util;
@@ -17,16 +18,24 @@ namespace CPUSetSetter
     /// </summary>
     public partial class App : Application
     {
-        private AppTrayIcon? trayIcon;
-        private Mutex? singleInstanceMutex;
-        private const string mutexName = "CPUSetSetterLock";
+        private const string MutexName = "CPUSetSetterLock";
+
+        private readonly CancellationTokenSource _applicationLifetimeCancellation = new();
+        private AppTrayIcon? _trayIcon;
+        private Mutex? _singleInstanceMutex;
+        private WindowsGameModeWarning? _gameModeWarning;
+        private EventHandler<bool>? _trayGameModeToggleRequestedHandler;
+        private EventHandler<GameModeStateChangedEventArgs>? _gameModeStateChangedHandler;
+        private bool _ownsSingleInstanceMutex;
+        private bool _shutdownStarted;
+
+        internal IGameModeService? GameModeService { get; private set; }
+        internal CancellationToken ApplicationLifetimeToken => _applicationLifetimeCancellation.Token;
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            // Show unhandled exceptions in an error dialog box
             AddDialogExceptionHandler();
 
-            // Check if the app was launched as an elevated AutoStart child process
             if (e.Args.Contains(AutoStarter.LaunchArgumentEnable))
             {
                 bool success = AutoStarter.Enable();
@@ -38,7 +47,6 @@ namespace CPUSetSetter
                 Environment.Exit(success ? 0 : 1);
             }
 
-            // Quit when this CPU is not supported
             try
             {
                 if (!CpuInfo.IsSupported)
@@ -55,8 +63,8 @@ namespace CPUSetSetter
 
             base.OnStartup(e);
 
-            // Check if the app is already running
-            singleInstanceMutex = new(true, mutexName, out bool isOwned);
+            _singleInstanceMutex = new(true, MutexName, out bool isOwned);
+            _ownsSingleInstanceMutex = isOwned;
             if (!isOwned)
             {
                 MessageBox.Show("Failed to open: App is already running", "CPU Set Setter", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -64,39 +72,83 @@ namespace CPUSetSetter
                 return;
             }
 
-            // Load the config, which also loads the app's UI theme
             AppConfig.Load();
             RuleHelpers.OnConfigLoaded();
-
-            // Set the app's culture to the local culture
             SetAppCulture();
 
-            // Set up the tray icon
+            WindowsGameModeService gameModeService = new(Dispatcher);
+            GameModeService = gameModeService;
+            _ = Task.Run(() => gameModeService.MonitorAsync(ApplicationLifetimeToken));
+
             using Stream iconStream = GetResourceStream(new Uri("pack://application:,,,/CPUSetSetter;component/tray.ico")).Stream;
-            trayIcon = new(iconStream);
-            trayIcon.OpenClicked += (_, _) => ShowMainWindow();
-            trayIcon.CloseClicked += (_, _) => ExitAppGracefully();
+            _trayIcon = new(iconStream);
+            _trayIcon.OpenClicked += OnTrayOpenClicked;
+            _trayIcon.CloseClicked += OnTrayCloseClicked;
+            _trayGameModeToggleRequestedHandler = OnTrayGameModeToggleRequested;
+            _trayIcon.GameModeToggleRequested += _trayGameModeToggleRequestedHandler;
+
+            _gameModeStateChangedHandler = OnGameModeStateChanged;
+            gameModeService.StateChanged += _gameModeStateChangedHandler;
+            UpdateTrayGameModeState(gameModeService.IsEnabled);
 
             if (AppConfig.Instance.IsFirstRun)
             {
-                // Promote the tray icon directly onto the Taskbar instead of in the "up-arrow" menu
-                // Some users did not notice the tray icon because it was hidden by default
-                // To respect the user's choice, this is only done the first time the app is ran
                 PromoteTrayIcon();
             }
 
-            // Check for updates in the background
-            VersionChecker.Instance.RunVersionChecker();
+            VersionChecker.Instance.RunVersionChecker(ApplicationLifetimeToken);
 
-            // Show a warning if Windows Game Mode is enabled
-            WindowsGameModeWarning.ShowIfEnabled();
+            _gameModeWarning = new(gameModeService);
+            _gameModeWarning.ShowIfEnabled();
 
-            // Create the rest of the app
-            MainWindow = new MainWindow();
+            MainWindow = new MainWindow(gameModeService, ApplicationLifetimeToken);
             if (!AppConfig.Instance.StartMinimized)
             {
                 ShowMainWindow();
             }
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            BeginShutdown();
+
+            if (MainWindow is MainWindow mainWindow)
+            {
+                mainWindow.Dispose();
+            }
+
+            _gameModeWarning?.Dispose();
+            _gameModeWarning = null;
+
+            if (GameModeService is not null && _gameModeStateChangedHandler is not null)
+            {
+                GameModeService.StateChanged -= _gameModeStateChangedHandler;
+            }
+            _gameModeStateChangedHandler = null;
+
+            if (_trayIcon is not null)
+            {
+                _trayIcon.OpenClicked -= OnTrayOpenClicked;
+                _trayIcon.CloseClicked -= OnTrayCloseClicked;
+                if (_trayGameModeToggleRequestedHandler is not null)
+                {
+                    _trayIcon.GameModeToggleRequested -= _trayGameModeToggleRequestedHandler;
+                }
+                _trayIcon.Dispose();
+                _trayIcon = null;
+            }
+            _trayGameModeToggleRequestedHandler = null;
+
+            if (_ownsSingleInstanceMutex)
+            {
+                _singleInstanceMutex?.ReleaseMutex();
+                _ownsSingleInstanceMutex = false;
+            }
+            _singleInstanceMutex?.Dispose();
+            _singleInstanceMutex = null;
+
+            _applicationLifetimeCancellation.Dispose();
+            base.OnExit(e);
         }
 
         private void AddDialogExceptionHandler()
@@ -119,37 +171,92 @@ namespace CPUSetSetter
         }
 
         /// <summary>
-        /// 'Promote' the app's tray icon, meaning it is unhidden from the 'up-arrow' menu 
+        /// 'Promote' the app's tray icon, meaning it is unhidden from the 'up-arrow' menu
         /// </summary>
         private static void PromoteTrayIcon()
         {
             string? appExePath = Environment.ProcessPath;
             if (appExePath is null)
+            {
                 return;
+            }
 
             using RegistryKey? notifyKey = Registry.CurrentUser.OpenSubKey(@"Control Panel\NotifyIconSettings");
             if (notifyKey is null)
+            {
                 return;
+            }
 
             foreach (string subkeyName in notifyKey.GetSubKeyNames())
             {
                 using RegistryKey? appKey = notifyKey.OpenSubKey(subkeyName, true);
                 if (appKey is null)
+                {
                     continue;
+                }
 
                 object? exePathValue = appKey.GetValue("ExecutablePath");
                 if (exePathValue is null || !string.Equals(exePathValue.ToString(), appExePath, StringComparison.OrdinalIgnoreCase))
+                {
                     continue;
+                }
 
-                // Only promote the tray icon when it has no promote status set yet
                 object? isPromoted = appKey.GetValue("IsPromoted");
                 if (isPromoted is null)
+                {
                     appKey.SetValue("IsPromoted", 1, RegistryValueKind.DWord);
+                }
+            }
+        }
+
+        private void OnTrayOpenClicked(object? sender, EventArgs e)
+        {
+            ShowMainWindow();
+        }
+
+        private void OnTrayCloseClicked(object? sender, EventArgs e)
+        {
+            ExitAppGracefully();
+        }
+
+        private void OnTrayGameModeToggleRequested(object? sender, bool isEnabled)
+        {
+            if (GameModeService is null)
+            {
+                return;
+            }
+
+            GameModeService.TrySetEnabled(isEnabled);
+            UpdateTrayGameModeState(GameModeService.IsEnabled);
+        }
+
+        private void OnGameModeStateChanged(object? sender, GameModeStateChangedEventArgs e)
+        {
+            if (Dispatcher.CheckAccess())
+            {
+                UpdateTrayGameModeState(e.IsEnabled);
+            }
+            else if (!Dispatcher.HasShutdownStarted)
+            {
+                Dispatcher.InvokeAsync(() => UpdateTrayGameModeState(e.IsEnabled));
+            }
+        }
+
+        private void UpdateTrayGameModeState(bool isEnabled)
+        {
+            if (_trayIcon is not null)
+            {
+                _trayIcon.IsGameModeEnabled = isEnabled;
             }
         }
 
         private void ShowMainWindow()
         {
+            if (MainWindow is null)
+            {
+                return;
+            }
+
             MainWindow.Show();
             MainWindow.WindowState = WindowState.Normal;
             MainWindow.Activate();
@@ -157,17 +264,31 @@ namespace CPUSetSetter
 
         private void ExitAppGracefully()
         {
+            BeginShutdown();
             if (AppConfig.Instance.ClearMasksOnClose)
+            {
                 RuleHelpers.ClearAllProcessMasksNoSave();
+            }
 
             AppConfig.Instance.WaitForSave();
-            ExitApp();
+            Shutdown();
         }
 
         private void ExitApp()
         {
-            trayIcon?.Dispose();
+            BeginShutdown();
             Shutdown();
+        }
+
+        private void BeginShutdown()
+        {
+            if (_shutdownStarted)
+            {
+                return;
+            }
+
+            _shutdownStarted = true;
+            _applicationLifetimeCancellation.Cancel();
         }
     }
 }
