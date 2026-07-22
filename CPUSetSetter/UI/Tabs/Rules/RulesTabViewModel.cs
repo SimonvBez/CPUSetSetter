@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CPUSetSetter.Config.Models;
-using CPUSetSetter.Util;
 using System.Windows.Data;
 
 

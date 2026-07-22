@@ -24,13 +24,17 @@ namespace CPUSetSetter.Config.Models
         [NotifyPropertyChangedFor(nameof(IsDeviatingFromRuleTemplate))]
         private RuleTemplate? _matchingRuleTemplate;
 
+        [ObservableProperty]
+        private bool _autoReapply;
+
         public bool HasRunningProcesses => runningRuleProcesses.Count >= 1;
         public bool IsDeviatingFromRuleTemplate => MatchingRuleTemplate is not null && MatchingRuleTemplate.Mask != Mask;
 
-        public ProgramRule(string programPath, LogicalProcessorMask mask, bool skipSetup)
+        public ProgramRule(string programPath, LogicalProcessorMask mask, bool autoReapply, bool skipSetup)
         {
             ProgramPath = programPath;
             _mask = mask;
+            _autoReapply = autoReapply;
 
             AddAllRunningProcesses();
             if (!skipSetup)
@@ -85,7 +89,7 @@ namespace CPUSetSetter.Config.Models
             OnPropertyChanged(nameof(HasRunningProcesses));
         }
 
-        public bool SetMask(LogicalProcessorMask newMask, bool shouldRemoveWhenNoMask)
+        public bool SetMask(LogicalProcessorMask newMask, bool shouldAutoRemove)
         {
             if (_isSettingMask)
                 return true; // SetMask was called recursively, probably by OnMaskChanged. Ignore it
@@ -102,10 +106,10 @@ namespace CPUSetSetter.Config.Models
                         allSuccess = false;
                 }
 
-                // When requested, this is a NoMask and there is no matching RuleTemplate, remove this ProgramRule
-                if (shouldRemoveWhenNoMask && newMask.MaskType == MaskApplyType.NoMask && MatchingRuleTemplate is null)
+                // When requested, this is a NoMask, AutoReapply is off, and there is no matching RuleTemplate, remove this ProgramRule
+                if (shouldAutoRemove)
                 {
-                    Remove(false);
+                    TryAutoRemove();
                 }
             }
             finally
@@ -135,6 +139,18 @@ namespace CPUSetSetter.Config.Models
         }
 
         /// <summary>
+        /// Check if this ProgramRule should be automatically removed, and if so, remove it.
+        /// If the Mask is a NoMark, AutoReapply is off, and there is no matching RuleTemplate, remove this ProgramRule
+        /// </summary>
+        private void TryAutoRemove()
+        {
+            if (Mask.MaskType == MaskApplyType.NoMask && !AutoReapply && MatchingRuleTemplate is null)
+            {
+                Remove(false);
+            }
+        }
+
+        /// <summary>
         /// Set every process to NoMask before removing itself
         /// </summary>
         private void Remove(bool setToNoMask)
@@ -154,6 +170,16 @@ namespace CPUSetSetter.Config.Models
         {
             SetMask(value, false);
             UpdateDeviationStateToRuleTemplate();
+        }
+
+        partial void OnAutoReapplyChanged(bool value)
+        {
+            AutoReapply = value;
+            // Apply the new AutoReapply state to every process of this Program Rule
+            foreach (ProcessListEntryViewModel process in runningRuleProcesses)
+            {
+                process.AutoReapply = value;
+            }
         }
 
         partial void OnMatchingRuleTemplateChanged(RuleTemplate? oldValue, RuleTemplate? newValue)

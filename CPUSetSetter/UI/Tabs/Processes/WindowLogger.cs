@@ -38,23 +38,41 @@ namespace CPUSetSetter.UI.Tabs.Processes
                 if (!_isUpdating)
                 {
                     _isUpdating = true;
-                    Task.Run(UpdateText);
+                    _ = Task.Run(UpdateText);
                 }
             }
         }
 
         private async Task UpdateText()
         {
-            await Task.Delay(30);
-
-            using (_lock.EnterScope())
+            try
             {
-                while (_logLines.Count > 50)
+                await Task.Delay(30);
+
+                string newText;
+                using (_lock.EnterScope())
                 {
-                    _logLines.RemoveAt(0);
+                    while (_logLines.Count > 50)
+                    {
+                        _logLines.RemoveAt(0);
+                    }
+                    newText = string.Join("", _logLines.Select(l => l.Count > 1 ? $"{l.Message} ({l.Count})\n" : $"{l.Message}\n"));
+                    _isUpdating = false;
                 }
-                Text = string.Join("", _logLines.Select(l => l.Count > 1 ? $"{l.Message} ({l.Count})\n" : $"{l.Message}\n"));
-                _isUpdating = false;
+
+                if (App.Current?.Dispatcher is { HasShutdownStarted: false } dispatcher)
+                {
+                    await dispatcher.InvokeAsync(() => Text = newText);
+                }
+            }
+            catch (Exception ex)
+            {
+                using (_lock.EnterScope())
+                {
+                    _isUpdating = false;
+                }
+
+                System.Diagnostics.Debug.WriteLine($"WindowLogger update failed: {ex}");
             }
         }
     }

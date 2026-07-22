@@ -45,14 +45,14 @@ namespace CPUSetSetter.Util
 
         public VersionChecker() { }
 
-        public void RunVersionChecker()
+        public void RunVersionChecker(CancellationToken cancellationToken)
         {
             if (AppVersion is not null)
             {
                 if (AppVersion == DevVersion)
                     VersionCheckState = "Version check disabled (Dev)";
                 else
-                    Task.Run(RunUpdateChecker); // Only run the update checker when this app is properly versioned
+                    _ = Task.Run(() => RunUpdateChecker(cancellationToken)); // Only run the update checker when this app is properly versioned
             }
         }
 
@@ -89,51 +89,60 @@ namespace CPUSetSetter.Util
             }
         }
 
-        private async Task RunUpdateChecker()
+        private async Task RunUpdateChecker(CancellationToken cancellationToken)
         {
-            while (true)
+            try
             {
-                TimeSpan nextRetry;
-                try
+                while (true)
                 {
-                    string latestReleaseTag = await GetLatestReleaseTag();
-                    if (latestReleaseTag.StartsWith('v'))
+                    cancellationToken.ThrowIfCancellationRequested();
+                    TimeSpan nextRetry;
+                    try
                     {
-                        Version latestVersion = new(latestReleaseTag[1..]);
-                        if (latestVersion > AppVersion!)
+                        string latestReleaseTag = await GetLatestReleaseTag(cancellationToken);
+                        if (latestReleaseTag.StartsWith('v'))
                         {
-                            NewVersionAvailable = true;
-                            VersionCheckState = $"A new version is available! ({latestReleaseTag})";
+                            Version latestVersion = new(latestReleaseTag[1..]);
+                            if (latestVersion > AppVersion!)
+                            {
+                                NewVersionAvailable = true;
+                                VersionCheckState = $"A new version is available! ({latestReleaseTag})";
+                                return;
+                            }
+                            VersionCheckState = "Currently up-to-date";
+                            nextRetry = TimeSpan.FromHours(24); // No update available. Check again the next day
+                        }
+                        else
+                        {
+                            VersionCheckState = "Failed to parse latest version";
                             return;
                         }
-                        VersionCheckState = "Currently up-to-date";
-                        nextRetry = TimeSpan.FromHours(24); // No update available. Check again the next day
                     }
-                    else
+                    catch (HttpRequestException)
                     {
-                        // A response was received, but not in the "vx.x.x" format like expected
-                        VersionCheckState = "Failed to parse latest version";
-                        return;
+                        VersionCheckState = "Version check failed";
+                        nextRetry = TimeSpan.FromSeconds(60);
                     }
-                }
-                catch (HttpRequestException)
-                {
-                    // Failed to reach GitHub, assume internet is down and try again soon
-                    VersionCheckState = "Version check failed";
-                    nextRetry = TimeSpan.FromSeconds(60);
-                }
-                catch (Exception)
-                {
-                    // Any other exception (probably NoSuccessResponseException), assume GitHub doesn't want a request for a while
-                    VersionCheckState = "Version check failed";
-                    nextRetry = TimeSpan.FromHours(24);
-                }
+                    catch (Exception ex) when (ex is not OperationCanceledException)
+                    {
+                        VersionCheckState = "Version check failed";
+                        nextRetry = TimeSpan.FromHours(24);
+                    }
 
-                await Task.Delay(nextRetry);
+                    await Task.Delay(nextRetry, cancellationToken);
+                }
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                // Application shutdown is expected.
+            }
+            catch (Exception ex)
+            {
+                WindowLogger.Write($"Version-check loop stopped unexpectedly: {ex}");
             }
         }
 
-        private static async Task<string> GetLatestReleaseTag()
+        private static async Task<string> GetLatestReleaseTag(CancellationToken cancellationToken)
         {
             using HttpClient client = new();
 
@@ -143,7 +152,7 @@ namespace CPUSetSetter.Util
 
             string url = "https://api.github.com/repos/SimonvBez/CPUSetSetter/releases/latest";
 
-            var response = await client.GetAsync(url);
+            var response = await client.GetAsync(url, cancellationToken);
             try
             {
                 response.EnsureSuccessStatusCode();
@@ -153,7 +162,7 @@ namespace CPUSetSetter.Util
                 throw new NoSuccessResponseException();
             }
 
-            string json = await response.Content.ReadAsStringAsync();
+            string json = await response.Content.ReadAsStringAsync(cancellationToken);
 
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;

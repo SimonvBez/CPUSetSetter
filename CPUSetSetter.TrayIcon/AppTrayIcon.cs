@@ -11,7 +11,7 @@ namespace CPUSetSetter.TrayIcon
 
         public event EventHandler? OpenClicked;
         public event EventHandler? CloseClicked;
-        public event EventHandler<bool>? GameModeToggled;
+        public event EventHandler<bool>? GameModeToggleRequested;
 
         public bool IsGameModeEnabled
         {
@@ -33,8 +33,7 @@ namespace CPUSetSetter.TrayIcon
             IsGameModeEnabled = false; // This triggers the setter and sets the initial text
             _gameModeItem.Click += (_, _) =>
             {
-                IsGameModeEnabled = !_isGameModeEnabled;
-                GameModeToggled?.Invoke(this, _isGameModeEnabled);
+                GameModeToggleRequested?.Invoke(this, !_isGameModeEnabled);
             };
             trayMenu.Items.Add(_gameModeItem);
 

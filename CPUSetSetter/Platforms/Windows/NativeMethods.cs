@@ -19,7 +19,15 @@ namespace CPUSetSetter.Platforms
 
         [LibraryImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
+        public static partial bool GetProcessDefaultCpuSets(SafeProcessHandle Process, uint[]? CpuSetIds, uint CpuSetIdCount, ref uint RequiredIdCount);
+
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
         public static partial bool SetProcessAffinityMask(SafeProcessHandle hProcess, UIntPtr dwProcessAffinityMask);
+
+        [LibraryImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static partial bool GetProcessAffinityMask(SafeProcessHandle hProcess, ref UIntPtr lpProcessAffinityMask, ref UIntPtr lpSystemAffinityMask);
 
         [LibraryImport("kernel32.dll", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
         [return: MarshalAs(UnmanagedType.Bool)]

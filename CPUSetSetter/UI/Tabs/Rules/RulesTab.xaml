@@ -30,32 +30,32 @@
         </Grid.RowDefinitions>
         
         <DataGrid Grid.Row="0" Margin="0,0,0,10"
-          ItemsSource="{Binding ProgramRules, Source={x:Static config:AppConfig.Instance}}"
-          AutoGenerateColumns="False"
-          RowHeight="24"
-          HeadersVisibility="Column"
-          VerticalScrollBarVisibility="Visible"
-          CanUserReorderColumns="False"
-          CanUserDeleteRows="False"
-          CanUserAddRows="False"
-          CanUserResizeRows="False">
+                  ItemsSource="{Binding ProgramRules, Source={x:Static config:AppConfig.Instance}}"
+                  AutoGenerateColumns="False"
+                  RowHeight="24"
+                  HeadersVisibility="Column"
+                  VerticalScrollBarVisibility="Visible"
+                  CanUserReorderColumns="False"
+                  CanUserDeleteRows="False"
+                  CanUserAddRows="False"
+                  CanUserResizeRows="False">
 
             <DataGrid.Columns>
                 <!--Path column-->
                 <DataGridTextColumn Header="Program Rules"
-                            Binding="{Binding ProgramPath}"
-                            IsReadOnly="True"
-                            Width="*"/>
+                                    Binding="{Binding ProgramPath}"
+                                    IsReadOnly="True"
+                                    Width="*"/>
 
                 <!--Core Mask column-->
                 <DataGridTemplateColumn Header="Core Mask"
-                                IsReadOnly="True"
-                                Width="120"
-                                SortMemberPath="Mask.Name">
+                                        IsReadOnly="True"
+                                        Width="120"
+                                        SortMemberPath="Mask.Name">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <ComboBox ItemsSource="{Binding LogicalProcessorMasks, Source={x:Static config:AppConfig.Instance}}"
-                              SelectedValue="{Binding Mask, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                      SelectedValue="{Binding Mask, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding Name}"/>
@@ -66,9 +66,24 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
+                <!--Force column-->
+                <DataGridTemplateColumn Header="Force"
+                                        CanUserResize="False"
+                                        Width="45">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox HorizontalAlignment="Center"
+                                      IsChecked="{Binding AutoReapply, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                      ToolTip="Enable to periodically reapply the Mask if it was changed externally">
+                            </CheckBox>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
                 <!--Action buttons column-->
                 <DataGridTemplateColumn IsReadOnly="True"
-                                Width="54">
+                                        CanUserResize="False"
+                                        Width="54">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
 
@@ -80,10 +95,10 @@
 
                                 <!--Program Rule Reapply button-->
                                 <Button Grid.Column="0"
-                                BorderThickness="0.7"
-                                Command="{Binding DataContext.ProgramRuleReapplyCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                CommandParameter="{Binding}"
-                                ToolTipService.ShowOnDisabled="True">
+                                        BorderThickness="0.7"
+                                        Command="{Binding DataContext.ProgramRuleReapplyCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        ToolTipService.ShowOnDisabled="True">
 
                                     <!--Disable the Reapply button when the Program Rule is not matching a Rule Template-->
                                     <Button.Style>
@@ -111,10 +126,10 @@
 
                                 <!--Program Rule Remove button-->
                                 <Button Grid.Column="1"
-                                BorderThickness="0.7"
-                                Command="{Binding DataContext.ProgramRuleRemoveCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                CommandParameter="{Binding}"
-                                ToolTipService.ShowOnDisabled="True">
+                                        BorderThickness="0.7"
+                                        Command="{Binding DataContext.ProgramRuleRemoveCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        ToolTipService.ShowOnDisabled="True">
 
                                     <!--Disable the Remove button when the Program Rule falls under a RuleTemplate AND has an active process-->
                                     <Button.Style>
@@ -158,24 +173,24 @@
 
             <!--Create Program Rule button-->
             <Button Grid.Column="0" Margin="0,0,10,0"
-            Command="{Binding CreateProgramRuleCommand}"
-            Content="Create..."/>
+                    Command="{Binding CreateProgramRuleCommand}"
+                    Content="Create..."/>
 
             <TextBlock Grid.Column="1" Margin="0,0,5,0"
-               VerticalAlignment="Center"
-               Text="Search:"/>
+                       VerticalAlignment="Center"
+                       Text="Search:"/>
 
             <!--Program Rule search bar-->
             <TextBox Grid.Column="2" Margin="0,0,5,0"
-             Text="{Binding ProgramRuleFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                     Text="{Binding ProgramRuleFilter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
             <!--Template-deviating rules only-->
             <CheckBox Grid.Column="3"
-              IsChecked="{Binding ShowOnlyDeviatingProgramRule, UpdateSourceTrigger=PropertyChanged}"/>
+                      IsChecked="{Binding ShowOnlyDeviatingProgramRule, UpdateSourceTrigger=PropertyChanged}"/>
 
             <TextBlock Grid.Column="4"
-               VerticalAlignment="Center"
-               Text="Show only Rules deviating from Templates"/>
+                       VerticalAlignment="Center"
+                       Text="Show only Rules deviating from Templates"/>
         </Grid>
     </Grid>
 

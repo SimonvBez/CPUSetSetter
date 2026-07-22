@@ -1,38 +1,38 @@
-﻿using CPUSetSetter.Config.Models;
+using CPUSetSetter.Config.Models;
 using CPUSetSetter.UI.Tabs.Processes;
 using System.Windows;
+
 
 namespace CPUSetSetter.Platforms.Windows
 {
     /// <summary>
-    /// Windows Game Mode is abysmal to gaming performance when combined with CPU Set Setter.
-    /// Warn the user, and encourage them to turn it off, or experiment with it on.
+    /// Warns when Windows Game Mode can conflict with CPU Set Setter masks.
     /// </summary>
-    public static class WindowsGameModeWarning
+    internal sealed class WindowsGameModeWarning : IDisposable
     {
-        private static bool _eventHooked = false;
         private const string LogWarningMessage = "WARNING: While Windows Game Mode is enabled, no masks are applied. (This behavior can be disabled in the Settings tab)";
 
-        public static void ShowIfEnabled()
-        {
-            if (!_eventHooked)
-            {
-                _eventHooked = true;
-                GameMode.IsEnabledChanged += (s, e) =>
-                {
-                    if (GameMode.IsEnabled && !AppConfig.Instance.DisableGameModeMaskClearing)
-                    {
-                        WindowLogger.Write(LogWarningMessage);
-                    }
-                };
-            }
+        private readonly IGameModeService _gameModeService;
+        private readonly EventHandler<GameModeStateChangedEventArgs> _stateChangedHandler;
+        private bool _isDisposed;
 
-            if (!GameMode.IsEnabled)
+        public WindowsGameModeWarning(IGameModeService gameModeService)
+        {
+            _gameModeService = gameModeService;
+            _stateChangedHandler = OnGameModeStateChanged;
+            _gameModeService.StateChanged += _stateChangedHandler;
+        }
+
+        public void ShowIfEnabled()
+        {
+            if (!_gameModeService.IsEnabled)
+            {
                 return;
+            }
 
             if (AppConfig.Instance.ShowGameModePopup)
             {
-                Application.Current?.Dispatcher?.InvokeAsync(() =>
+                Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     MessageBoxResult result = MessageBox.Show(
                         "Windows Game Mode is currently enabled.\n" +
@@ -46,20 +46,38 @@ namespace CPUSetSetter.Platforms.Windows
 
                     if (result == MessageBoxResult.Yes)
                     {
-                        GameMode.IsEnabled = false;
+                        _gameModeService.TrySetEnabled(false);
                     }
-                    else
+                    else if (!AppConfig.Instance.KeepMasksDuringGameMode)
                     {
-                        if (!AppConfig.Instance.DisableGameModeMaskClearing)
-                            WindowLogger.Write(LogWarningMessage);
+                        WindowLogger.Write(LogWarningMessage);
                     }
                 });
             }
-            else
+            else if (!AppConfig.Instance.KeepMasksDuringGameMode)
             {
-                if (!AppConfig.Instance.DisableGameModeMaskClearing)
-                    WindowLogger.Write(LogWarningMessage);
+                WindowLogger.Write(LogWarningMessage);
             }
+        }
+
+        private static void OnGameModeStateChanged(object? sender, GameModeStateChangedEventArgs e)
+        {
+            if (e.IsEnabled && !AppConfig.Instance.KeepMasksDuringGameMode)
+            {
+                WindowLogger.Write(LogWarningMessage);
+            }
+        }
+
+        public void Dispose()
+        {
+            if (_isDisposed)
+            {
+                return;
+            }
+
+            _isDisposed = true;
+            _gameModeService.StateChanged -= _stateChangedHandler;
+            GC.SuppressFinalize(this);
         }
     }
 }

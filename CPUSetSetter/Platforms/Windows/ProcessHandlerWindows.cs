@@ -3,7 +3,6 @@ using CPUSetSetter.UI.Tabs.Processes;
 using Microsoft.Win32.SafeHandles;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Drawing;
 using System.Runtime.InteropServices;
 
 
@@ -11,7 +10,8 @@ namespace CPUSetSetter.Platforms.Windows
 {
     public class ProcessHandlerWindows : IProcessHandler
     {
-        private readonly static Dictionary<int, uint> _setIdPerLogicalProcessor;
+        private readonly static Dictionary<int, uint> _logicalProcessorToSetId;
+        private readonly static Dictionary<uint, int> _setIdToLogicalProcessor;
 
         private readonly string _executableName;
         private readonly uint _pid;
@@ -22,7 +22,8 @@ namespace CPUSetSetter.Platforms.Windows
 
         static ProcessHandlerWindows()
         {
-            _setIdPerLogicalProcessor = GetCpuSetIdPerLogicalProcessor();
+            _logicalProcessorToSetId = GetCpuSetIdPerLogicalProcessor();
+            _setIdToLogicalProcessor = _logicalProcessorToSetId.ToDictionary(x => x.Value, x => x.Key);
         }
 
         public ProcessHandlerWindows(string executableName, uint pid, SafeProcessHandle queryHandle)
@@ -74,6 +75,13 @@ namespace CPUSetSetter.Platforms.Windows
             return Math.Clamp((double)deltaCpuTime.Ticks / deltaTime.Ticks / CpuInfo.LogicalProcessorCount, 0, 1);
         }
 
+        public void ResetCpuUsageSampling()
+        {
+            _isFirstCall = true;
+            _lastTimeStamp = 0;
+            _lastTotalCpuTime = TimeSpan.Zero;
+        }
+
         public bool ApplyMask(LogicalProcessorMask mask)
         {
             bool result;
@@ -112,35 +120,57 @@ namespace CPUSetSetter.Platforms.Windows
             return result;
         }
 
+        public bool ReapplyMask(LogicalProcessorMask mask)
+        {
+            if (_previousMaskType != mask.MaskType)
+                return true;
+
+            bool[] actualMask;
+            try
+            {
+                actualMask = mask.MaskType switch
+                {
+                    MaskApplyType.CPUSet => GetCpuSetMask(),
+                    MaskApplyType.Affinity => GetAffinityMask(),
+                    _ => throw new NotImplementedException(),
+                };
+            }
+            catch (InvalidOperationException)
+            {
+                return false;
+            }
+            catch (Win32Exception)
+            {
+                return false;
+            }
+
+            if (actualMask.SequenceEqual(mask.BoolMask))
+                return true;
+
+            return mask.MaskType switch
+            {
+                MaskApplyType.CPUSet => ApplyCpuSet(mask),
+                MaskApplyType.Affinity => ApplyAffinity(mask),
+                _ => throw new NotImplementedException(),
+            };
+        }
+
         /// <summary>
         /// Apply a given mask as a CPU Set
         /// </summary>
         private bool ApplyCpuSet(LogicalProcessorMask mask)
         {
             int error;
+            string extraHelpString;
 
-            if (_setLimitedInfoHandle is null)
-            {
-                _setLimitedInfoHandle = NativeMethods.OpenProcess(ProcessAccessFlags.PROCESS_SET_LIMITED_INFORMATION, false, _pid);
-                if (_setLimitedInfoHandle.IsInvalid)
-                {
-                    error = Marshal.GetLastWin32Error();
-                    string extraHelpString = (error == 5 && !Environment.IsPrivilegedProcess) ? " Try restarting CPU Set Setter as Admin" : "";
-                    WindowLogger.Write($"ERROR: Could not open process '{_executableName}': {new Win32Exception(error).Message}{extraHelpString}");
-                    return false;
-                }
-            }
-            else if (_setLimitedInfoHandle.IsInvalid)
-            {
-                // The handle was already made previously, don't bother trying again
+            if (!AquireSetLimitedInfoHandle(out SafeProcessHandle setLimitedInfoHandle))
                 return false;
-            }
 
             bool success;
             if (mask.MaskType == MaskApplyType.NoMask)
             {
                 // Clear the CPU Set
-                success = NativeMethods.SetProcessDefaultCpuSets(_setLimitedInfoHandle, null, 0);
+                success = NativeMethods.SetProcessDefaultCpuSets(setLimitedInfoHandle, null, 0);
                 if (success)
                 {
                     WindowLogger.Write($"Cleared CPU Set of '{_executableName}'");
@@ -159,7 +189,7 @@ namespace CPUSetSetter.Platforms.Windows
                 try
                 {
                     if (mask.BoolMask[i])
-                        cpuSetIds.Add(_setIdPerLogicalProcessor[i]);
+                        cpuSetIds.Add(_logicalProcessorToSetId[i]);
                 }
                 catch (KeyNotFoundException)
                 {
@@ -167,7 +197,7 @@ namespace CPUSetSetter.Platforms.Windows
                 }
             }
             uint[] cpuSetIdsArray = cpuSetIds.ToArray();
-            success = NativeMethods.SetProcessDefaultCpuSets(_setLimitedInfoHandle, cpuSetIdsArray, (uint)cpuSetIdsArray.Length);
+            success = NativeMethods.SetProcessDefaultCpuSets(setLimitedInfoHandle, cpuSetIdsArray, (uint)cpuSetIdsArray.Length);
             if (success)
             {
                 WindowLogger.Write($"Applied CPU Set '{mask.Name}' to '{_executableName}'");
@@ -175,31 +205,64 @@ namespace CPUSetSetter.Platforms.Windows
             }
 
             error = Marshal.GetLastWin32Error();
-            string errorMessage = $"ERROR: Could not apply CPU Set to '{_executableName}': {new Win32Exception(error).Message}";
-            if (error == 5)
-                errorMessage += " Likely due to anti-cheat";
-            WindowLogger.Write(errorMessage);
+            extraHelpString = (error == 5 && !Environment.IsPrivilegedProcess) ? " Try restarting CPU Set Setter as Admin" : " Likely due to anti-cheat";
+            WindowLogger.Write($"ERROR: Could not apply CPU Set to '{_executableName}': {new Win32Exception(error).Message}{extraHelpString}");
             return false;
+        }
+
+        private bool[] GetCpuSetMask()
+        {
+            if (_queryLimitedInfoHandle.IsInvalid)
+            {
+                throw new InvalidOperationException("Cannot get process CPU Sets due to invalid handle");
+            }
+
+            uint requiredIdCount = 0;
+            if (!NativeMethods.GetProcessDefaultCpuSets(_queryLimitedInfoHandle, null, 0, ref requiredIdCount))
+            {
+                int error = Marshal.GetLastWin32Error();
+                if (error != 0x7A) // ERROR_INSUFFICIENT_BUFFER
+                    throw new Win32Exception(error);
+            }
+
+            uint[] cpuSetIds = new uint[requiredIdCount];
+            if (!NativeMethods.GetProcessDefaultCpuSets(_queryLimitedInfoHandle, cpuSetIds, (uint)cpuSetIds.Length, ref requiredIdCount))
+            {
+                throw new Win32Exception(Marshal.GetLastWin32Error());
+            }
+
+            bool[] result = new bool[CpuInfo.LogicalProcessorCount];
+            foreach (uint cpuSetId in cpuSetIds)
+            {
+                int logicalProcessor = _setIdToLogicalProcessor[cpuSetId];
+                result[logicalProcessor] = true;
+            }
+            return result;
+        }
+
+        private bool AquireSetLimitedInfoHandle(out SafeProcessHandle setLimitedInfoHandle)
+        {
+            if (_setLimitedInfoHandle is null)
+            {
+                _setLimitedInfoHandle = NativeMethods.OpenProcess(ProcessAccessFlags.PROCESS_SET_LIMITED_INFORMATION, false, _pid);
+                if (_setLimitedInfoHandle.IsInvalid)
+                {
+                    int error = Marshal.GetLastWin32Error();
+                    string extraHelpString = (error == 5 && !Environment.IsPrivilegedProcess) ? " Try restarting CPU Set Setter as Admin" : "";
+                    WindowLogger.Write($"ERROR: Could not open process '{_executableName}': {new Win32Exception(error).Message}{extraHelpString}");
+                }
+            }
+            setLimitedInfoHandle = _setLimitedInfoHandle;
+            return !setLimitedInfoHandle.IsInvalid;
         }
 
         private bool ApplyAffinity(LogicalProcessorMask mask)
         {
-            if (_setInfoHandle is null)
-            {
-                _setInfoHandle = NativeMethods.OpenProcess(ProcessAccessFlags.PROCESS_SET_INFORMATION, false, _pid);
-                if (_setInfoHandle.IsInvalid)
-                {
-                    int error = Marshal.GetLastWin32Error();
-                    string extraHelpString = (error == 5 && !Environment.IsPrivilegedProcess) ? " Try restarting CPU Set Setter as Admin" : " Try a CPU Set Mask instead";
-                    WindowLogger.Write($"ERROR: Could not open process '{_executableName}': {new Win32Exception(error).Message}{extraHelpString}");
-                    return false;
-                }
-            }
-            else if (_setInfoHandle.IsInvalid)
-            {
-                // The handle was already made previously, don't bother trying again
+            int error;
+            string extraHelpString;
+
+            if (!AquireSetInfoHandle(out SafeProcessHandle setInfoHandle))
                 return false;
-            }
 
             bool success;
             if (mask.MaskType == MaskApplyType.NoMask)
@@ -209,44 +272,80 @@ namespace CPUSetSetter.Platforms.Windows
                 {
                     allMask |= (UIntPtr)1 << i;
                 }
-                success = NativeMethods.SetProcessAffinityMask(_setInfoHandle, allMask);
+                success = NativeMethods.SetProcessAffinityMask(setInfoHandle, allMask);
                 if (success)
                 {
                     WindowLogger.Write($"Cleared Affinity of '{_executableName}'");
                     return true;
                 }
-                else
-                {
-                    int error = Marshal.GetLastWin32Error();
-                    WindowLogger.Write($"ERROR: Could not clear Affinity of '{_executableName}': {new Win32Exception(error).Message}");
-                    return false;
-                }
-            }
-            else
-            {
-                UIntPtr bitMask = 0;
-                for (int i = 0; i < mask.BoolMask.Count; ++i)
-                {
-                    if (mask.BoolMask[i])
-                        bitMask |= (UIntPtr)1 << i;
-                }
 
-                success = NativeMethods.SetProcessAffinityMask(_setInfoHandle, bitMask);
-                if (success)
-                {
-                    WindowLogger.Write($"Applied Affinity '{mask.Name}' to '{_executableName}'");
-                    return true;
-                }
-                else
+                error = Marshal.GetLastWin32Error();
+                WindowLogger.Write($"ERROR: Could not clear Affinity of '{_executableName}': {new Win32Exception(error).Message}");
+                return false;
+            }
+
+            UIntPtr bitMask = 0;
+            for (int i = 0; i < mask.BoolMask.Count; ++i)
+            {
+                if (mask.BoolMask[i])
+                    bitMask |= (UIntPtr)1 << i;
+            }
+
+            success = NativeMethods.SetProcessAffinityMask(setInfoHandle, bitMask);
+            if (success)
+            {
+                WindowLogger.Write($"Applied Affinity '{mask.Name}' to '{_executableName}'");
+                return true;
+            }
+
+            error = Marshal.GetLastWin32Error();
+            extraHelpString = (error == 5 && !Environment.IsPrivilegedProcess) ? " Try restarting CPU Set Setter as Admin" : " Likely due to anti-cheat";
+            WindowLogger.Write($"ERROR: Could not apply Affinity to '{_executableName}': {new Win32Exception(error).Message}{extraHelpString}");
+            return false;
+        }
+
+        private bool[] GetAffinityMask()
+        {
+            if (_queryLimitedInfoHandle.IsInvalid)
+            {
+                throw new InvalidOperationException("Cannot get process Affinity due to invalid handle");
+            }
+
+            UIntPtr bitMaskProcess = 0;
+            UIntPtr bitMaskSystem = 0;
+            if (!NativeMethods.GetProcessAffinityMask(_queryLimitedInfoHandle, ref bitMaskProcess, ref bitMaskSystem))
+            {
+                throw new Win32Exception(Marshal.GetLastWin32Error());
+            }
+
+            if (bitMaskProcess == 0)
+            {
+                throw new InvalidOperationException("GetProcessAffinityMask returned a mask of 0");
+            }
+
+            bool[] result = new bool[CpuInfo.LogicalProcessorCount];
+            for (int i = 0; i < result.Length; ++i)
+            {
+                if ((bitMaskProcess & ((UIntPtr)1 << i)) != 0)
+                    result[i] = true;
+            }
+            return result;
+        }
+
+        private bool AquireSetInfoHandle(out SafeProcessHandle setInfoHandle)
+        {
+            if (_setInfoHandle is null)
+            {
+                _setInfoHandle = NativeMethods.OpenProcess(ProcessAccessFlags.PROCESS_SET_INFORMATION, false, _pid);
+                if (_setInfoHandle.IsInvalid)
                 {
                     int error = Marshal.GetLastWin32Error();
-                    string errorMessage = $"ERROR: Could not apply Affinity to '{_executableName}': {new Win32Exception(error).Message}";
-                    if (error == 5)
-                        errorMessage += " Likely due to anti-cheat";
-                    WindowLogger.Write(errorMessage);
-                    return false;
+                    string extraHelpString = (error == 5 && !Environment.IsPrivilegedProcess) ? " Try restarting CPU Set Setter as Admin" : "";
+                    WindowLogger.Write($"ERROR: Could not open process '{_executableName}': {new Win32Exception(error).Message}{extraHelpString}");
                 }
             }
+            setInfoHandle = _setInfoHandle;
+            return !setInfoHandle.IsInvalid;
         }
 
         /// <summary>
@@ -259,7 +358,7 @@ namespace CPUSetSetter.Platforms.Windows
             {
                 int error = Marshal.GetLastWin32Error();
                 if (error != 0x7A) // ERROR_INSUFFICIENT_BUFFER
-                    throw new Win32Exception(Marshal.GetLastWin32Error());
+                    throw new Win32Exception(error);
             }
 
             Dictionary<int, uint> cpuSets = [];

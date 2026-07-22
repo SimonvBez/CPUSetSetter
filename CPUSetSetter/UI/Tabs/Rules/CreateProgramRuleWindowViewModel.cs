@@ -37,7 +37,7 @@ namespace CPUSetSetter.UI.Tabs.Rules
         private void CreateProgramRule()
         {
             // Create, add and apply the new ProgramRule
-            ProgramRule programRule = new(RulePath, SelectedMask, false);
+            ProgramRule programRule = new(RulePath, SelectedMask, false, false);
             AppConfig.Instance.ProgramRules.Add(programRule);
             programRule.SetMask(SelectedMask, false);
             CloseWindow();

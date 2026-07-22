@@ -64,10 +64,10 @@ namespace CPUSetSetter.Themes
         [DllImport("dwmapi.dll")]
         private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
 
-        // On Windows 10 20H1 (build 19041) and later, attribute 20 is the correct value.
-        private const int DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19;
-        // Fallback for Windows 10 1903/1909 (builds 18362–18363), where attribute 19 was used instead.
-        private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+        // Windows 10 1903/1909 (builds 18362-18363) used attribute 19.
+        private const int DwmwaUseImmersiveDarkModeBefore20H1 = 19;
+        // Windows 10 20H1 (build 19041) and later use attribute 20.
+        private const int DwmwaUseImmersiveDarkMode = 20;
 
         private static bool _isDarkTheme;
         private static bool _isWindowLoadedRegistered;
@@ -90,6 +90,7 @@ namespace CPUSetSetter.Themes
                 var hwnd = new WindowInteropHelper(window).Handle;
                 if (hwnd == IntPtr.Zero)
                 {
+                    window.SourceInitialized -= OnSourceInitialized;
                     window.SourceInitialized += OnSourceInitialized;
                 }
                 else
@@ -126,11 +127,11 @@ namespace CPUSetSetter.Themes
             int useImmersiveDarkMode = isDarkTheme ? 1 : 0;
 
             // Try the modern attribute first (Windows 10 20H1+).
-            if (DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref useImmersiveDarkMode, sizeof(int)) != 0)
+            if (DwmSetWindowAttribute(hwnd, DwmwaUseImmersiveDarkMode, ref useImmersiveDarkMode, sizeof(int)) != 0)
             {
                 // If it failed, fall back to the pre-20H1 attribute (Windows 10 1903/1909).
                 // On versions older than 1903, this will also fail silently with no effect.
-                DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, ref useImmersiveDarkMode, sizeof(int));
+                DwmSetWindowAttribute(hwnd, DwmwaUseImmersiveDarkModeBefore20H1, ref useImmersiveDarkMode, sizeof(int));
             }
         }
     }

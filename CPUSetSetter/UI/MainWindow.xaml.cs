@@ -1,77 +1,144 @@
-﻿using CPUSetSetter.Platforms.Windows;
+using CPUSetSetter.Platforms;
 using CPUSetSetter.UI.Tabs.Processes;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
 
+
 namespace CPUSetSetter.UI
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, IDisposable
     {
-        private bool _listIsPaused = false;
+        private readonly IGameModeService _gameModeService;
+        private readonly EventHandler<GameModeStateChangedEventArgs> _gameModeChangedHandler;
+        private bool _isUpdatingGameModeCheckBox;
+        private bool _isDisposed;
 
-        // Store the handler in a field for proper unsubscription
-        private readonly EventHandler _gameModeChangedHandler;
-
-        public MainWindow()
+        internal MainWindow(
+            IGameModeService gameModeService,
+            CancellationToken cancellationToken)
         {
+            _gameModeService = gameModeService;
+            _gameModeChangedHandler = OnGameModeStateChanged;
+
             InitializeComponent();
+            ProcessesTabControl.Initialize(gameModeService, cancellationToken);
 
-            // Listen for the Ctrl key, so the processes list's live sorting can be paused
-            PreviewKeyDown += (_, e) => KeyPressed(e);
-            PreviewKeyUp += (_, e) => KeyReleased(e);
-
-            Deactivated += (_, _) => ResumeListUpdates();
-
-            GameModeCheckBox.IsChecked = GameMode.IsEnabled;
-            GameModeCheckBox.Checked += (s, e) => GameMode.IsEnabled = true;
-            GameModeCheckBox.Unchecked += (s, e) => GameMode.IsEnabled = false;
-
-            _gameModeChangedHandler = (s, e) =>
-            {
-                Dispatcher.InvokeAsync(() =>
-                {
-                    if (GameModeCheckBox.IsChecked != GameMode.IsEnabled)
-                    {
-                        GameModeCheckBox.IsChecked = GameMode.IsEnabled;
-                    }
-                });
-            };
-            GameMode.IsEnabledChanged += _gameModeChangedHandler;
-            Application.Current.Exit += (s, ev) => GameMode.IsEnabledChanged -= _gameModeChangedHandler;
+            PreviewKeyDown += OnPreviewKeyDown;
+            PreviewKeyUp += OnPreviewKeyUp;
+            Activated += OnActivated;
+            GameModeCheckBox.IsChecked = _gameModeService.IsEnabled;
+            GameModeCheckBox.Checked += OnGameModeChecked;
+            GameModeCheckBox.Unchecked += OnGameModeUnchecked;
+            _gameModeService.StateChanged += _gameModeChangedHandler;
         }
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            e.Cancel = true;
-            Hide();
+            if (!_isDisposed)
+            {
+                e.Cancel = true;
+                Hide();
+            }
             base.OnClosing(e);
         }
 
-        private void KeyPressed(KeyEventArgs e)
-        {
-            if ((e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl) && !_listIsPaused)
-            {
-                _listIsPaused = true;
-                ProcessesTabViewModel.Instance?.PauseListUpdates();
-            }
-        }
-
-        private void KeyReleased(KeyEventArgs e)
+        private void OnPreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl)
             {
-                ResumeListUpdates();
+                ProcessesTabViewModel.Instance?.SetListPauseReason(ProcessListPauseReason.UserInput, true);
             }
         }
 
-        private void ResumeListUpdates()
+        private void OnPreviewKeyUp(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            if (_listIsPaused)
+            if (e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl)
             {
-                _listIsPaused = false;
-                ProcessesTabViewModel.Instance?.ResumeListUpdates();
+                bool otherControlKeyIsPressed = e.Key == Key.LeftCtrl
+                    ? Keyboard.IsKeyDown(Key.RightCtrl)
+                    : Keyboard.IsKeyDown(Key.LeftCtrl);
+                ProcessesTabViewModel.Instance?.SetListPauseReason(
+                    ProcessListPauseReason.UserInput,
+                    otherControlKeyIsPressed);
             }
+        }
+
+        private static void OnActivated(object? sender, EventArgs e)
+        {
+            bool controlKeyIsPressed = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
+            ProcessesTabViewModel.Instance?.SetListPauseReason(
+                ProcessListPauseReason.UserInput,
+                controlKeyIsPressed);
+        }
+
+        private void OnGameModeChecked(object sender, RoutedEventArgs e)
+        {
+            RequestGameModeState(true);
+        }
+
+        private void OnGameModeUnchecked(object sender, RoutedEventArgs e)
+        {
+            RequestGameModeState(false);
+        }
+
+        private void RequestGameModeState(bool isEnabled)
+        {
+            if (_isUpdatingGameModeCheckBox)
+            {
+                return;
+            }
+
+            _gameModeService.TrySetEnabled(isEnabled);
+            UpdateGameModeCheckBox(_gameModeService.IsEnabled);
+        }
+
+        private void OnGameModeStateChanged(object? sender, GameModeStateChangedEventArgs e)
+        {
+            if (Dispatcher.CheckAccess())
+            {
+                UpdateGameModeCheckBox(e.IsEnabled);
+            }
+            else if (!Dispatcher.HasShutdownStarted)
+            {
+                Dispatcher.InvokeAsync(() => UpdateGameModeCheckBox(e.IsEnabled));
+            }
+        }
+
+        private void UpdateGameModeCheckBox(bool isEnabled)
+        {
+            if (GameModeCheckBox.IsChecked == isEnabled)
+            {
+                return;
+            }
+
+            _isUpdatingGameModeCheckBox = true;
+            try
+            {
+                GameModeCheckBox.IsChecked = isEnabled;
+            }
+            finally
+            {
+                _isUpdatingGameModeCheckBox = false;
+            }
+        }
+
+        public void Dispose()
+        {
+            if (_isDisposed)
+            {
+                return;
+            }
+
+            _isDisposed = true;
+            PreviewKeyDown -= OnPreviewKeyDown;
+            PreviewKeyUp -= OnPreviewKeyUp;
+            Activated -= OnActivated;
+            GameModeCheckBox.Checked -= OnGameModeChecked;
+            GameModeCheckBox.Unchecked -= OnGameModeUnchecked;
+            _gameModeService.StateChanged -= _gameModeChangedHandler;
+            ProcessesTabControl.DisposeViewModel();
+            GC.SuppressFinalize(this);
         }
     }
 }

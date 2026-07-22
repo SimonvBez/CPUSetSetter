@@ -14,8 +14,8 @@ namespace CPUSetSetter.UI.Tabs.Processes.CoreUsage
     /// </summary>
     public partial class CoreUsageControl : UserControl
     {
-        private const int UPDATE_DELAY_VISIBLE_MS = 1000;
-        private const int UPDATE_DELAY_HIDDEN_MS = 2000;
+        private const int UpdateDelayVisibleMs = 1000;
+        private const int UpdateDelayHiddenMs = 2000;
 
         private static bool _isRunning = false;
         private static List<CoreUsage> coreUsages = CpuInfo.LogicalProcessorNames.Select(cpuName => new CoreUsage(cpuName)).ToList();
@@ -96,15 +96,20 @@ namespace CPUSetSetter.UI.Tabs.Processes.CoreUsage
             if (!_isRunning)
             {
                 _isRunning = true;
-                Task.Run(async () => await PerCoreUsageUpdateLoop(Dispatcher));
+                CancellationToken cancellationToken = ((App)Application.Current).ApplicationLifetimeToken;
+                _ = Task.Run(() => PerCoreUsageUpdateLoop(Dispatcher, cancellationToken));
             }
         }
 
-        private static async Task PerCoreUsageUpdateLoop(Dispatcher dispatcher)
+        private static async Task PerCoreUsageUpdateLoop(Dispatcher dispatcher, CancellationToken cancellationToken)
         {
             try
             {
-                await PerCoreUsageUpdateLoopInner(dispatcher);
+                await PerCoreUsageUpdateLoopInner(dispatcher, cancellationToken);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested || dispatcher.HasShutdownStarted)
+            {
+                // Application shutdown is expected.
             }
             catch (Exception ex)
             {
@@ -112,7 +117,7 @@ namespace CPUSetSetter.UI.Tabs.Processes.CoreUsage
             }
         }
 
-        private static async Task PerCoreUsageUpdateLoopInner(Dispatcher dispatcher)
+        private static async Task PerCoreUsageUpdateLoopInner(Dispatcher dispatcher, CancellationToken cancellationToken)
         {
             // Create the Utility% counters for each logical processor
             PerformanceCounter[] utilityCounters = new PerformanceCounter[coreUsages.Count];
@@ -143,16 +148,17 @@ namespace CPUSetSetter.UI.Tabs.Processes.CoreUsage
             bool[] parkedValues = new bool[coreUsages.Count];
             while (true)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 bool windowIsVisible = false;
                 await dispatcher.InvokeAsync(() =>
                 {
-                    windowIsVisible = App.Current.MainWindow.Visibility == Visibility.Visible;
+                    windowIsVisible = Application.Current.MainWindow?.Visibility == Visibility.Visible;
                 });
 
                 if (!windowIsVisible)
                 {
                     // Skip the update if the window is not visible
-                    await Task.Delay(UPDATE_DELAY_HIDDEN_MS);
+                    await Task.Delay(UpdateDelayHiddenMs, cancellationToken);
                     continue;
                 }
 
@@ -178,7 +184,7 @@ namespace CPUSetSetter.UI.Tabs.Processes.CoreUsage
                     }
                 });
 
-                await Task.Delay(UPDATE_DELAY_VISIBLE_MS);
+                await Task.Delay(UpdateDelayVisibleMs, cancellationToken);
             }
         }
     }

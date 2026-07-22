@@ -41,7 +41,7 @@ namespace CPUSetSetter.Util
             if (ruleTemplate is not null)
             {
                 // A RuleTemplate exists. Create a new ProgramRule based on it
-                ProgramRule newRule = new(imagePath, ruleTemplate.Mask, true);
+                ProgramRule newRule = new(imagePath, ruleTemplate.Mask, false, true);
                 newRule.MatchingRuleTemplate = ruleTemplate;
                 AppConfig.Instance.ProgramRules.Add(newRule);
                 return newRule;

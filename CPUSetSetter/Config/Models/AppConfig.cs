@@ -41,7 +41,7 @@ namespace CPUSetSetter.Config.Models
         private bool _clearMasksOnClose;
 
         [ObservableProperty]
-        private bool _disableGameModeMaskClearing;
+        private bool _keepMasksDuringGameMode;
 
         [ObservableProperty]
         private Theme _uiTheme;
@@ -60,7 +60,7 @@ namespace CPUSetSetter.Config.Models
             bool showGameModePopup,
             bool showUpdatePopup,
             bool clearMasksOnClose,
-            bool disableGameModeMaskClearing,
+            bool keepMasksDuringGameMode,
             Theme uiTheme,
             bool generateDefaultMasks,
             bool isFirstRun,
@@ -81,7 +81,7 @@ namespace CPUSetSetter.Config.Models
             _showGameModePopup = showGameModePopup;
             _showUpdatePopup = showUpdatePopup;
             _clearMasksOnClose = clearMasksOnClose;
-            _disableGameModeMaskClearing = disableGameModeMaskClearing;
+            _keepMasksDuringGameMode = keepMasksDuringGameMode;
             _uiTheme = uiTheme;
             IsFirstRun = isFirstRun;
 

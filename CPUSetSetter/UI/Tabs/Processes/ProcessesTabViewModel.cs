@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CPUSetSetter.Config.Models;
 using CPUSetSetter.Platforms;
 using CPUSetSetter.Platforms.Windows;
@@ -11,72 +11,73 @@ using System.Windows.Threading;
 
 namespace CPUSetSetter.UI.Tabs.Processes
 {
-    public partial class ProcessesTabViewModel : ObservableObject
+    [Flags]
+    internal enum ProcessListPauseReason
     {
-        private const int UPDATE_DELAY_VISIBLE_MS = 1000;
-        private const int UPDATE_DELAY_HIDDEN_MS = 2000;
+        None = 0,
+        UserInput = 1,
+        WindowHidden = 2
+    }
+
+    public partial class ProcessesTabViewModel : ObservableObject, IDisposable
+    {
+        private const int UpdateDelayVisibleMs = 1000;
+        private const int UpdateDelayHiddenMs = 2000;
+        private static readonly TimeSpan ReapplyInterval = TimeSpan.FromSeconds(15);
 
         public static ProcessesTabViewModel? Instance { get; private set; }
 
         private readonly Dispatcher _dispatcher;
-        private readonly ListCollectionView runningProcessesView;
+        private readonly IGameModeService _gameModeService;
+        private readonly CancellationToken _cancellationToken;
+        private readonly ListCollectionView _runningProcessesView;
+        private readonly EventHandler<NewProcessEventArgs> _processCreatedHandler;
+        private readonly EventHandler<ExitedProcessEventArgs> _processExitedHandler;
+        private readonly PropertyChangedEventHandler _configChangedHandler;
+        private readonly EventHandler<GameModeStateChangedEventArgs> _gameModeChangedHandler;
+        private ProcessListPauseReason _pauseReasons;
+        private bool _isDisposed;
 
         public static PausableObservableCollection<ProcessListEntryViewModel> RunningProcesses { get; } = [];
 
         [ObservableProperty]
         private string _processNameFilter = string.Empty;
 
-        public ProcessesTabViewModel(Dispatcher dispatcher)
+        internal ProcessesTabViewModel(
+            Dispatcher dispatcher,
+            IGameModeService gameModeService,
+            CancellationToken cancellationToken)
         {
             _dispatcher = dispatcher;
+            _gameModeService = gameModeService;
+            _cancellationToken = cancellationToken;
             Instance = this;
 
-            ProcessEvents.Default.ProcessCreated += (_, e) => OnNewProcess(e.Info);
-            ProcessEvents.Default.ProcessExited += (_, e) => OnExitedProcess(e.PID);
+            _runningProcessesView = (ListCollectionView)CollectionViewSource.GetDefaultView(RunningProcesses);
+            _runningProcessesView.SortDescriptions.Add(new(nameof(ProcessListEntryViewModel.CpuUsage), ListSortDirection.Descending));
+            _runningProcessesView.IsLiveSorting = true;
+            _runningProcessesView.LiveSortingProperties.Add(nameof(ProcessListEntryViewModel.CpuUsage));
+            _runningProcessesView.Filter = item =>
+                ((ProcessListEntryViewModel)item).Name.Contains(ProcessNameFilter, StringComparison.OrdinalIgnoreCase);
+
+            _processCreatedHandler = (_, e) => OnNewProcess(e.Info);
+            _processExitedHandler = (_, e) => OnExitedProcess(e.PID);
+            _configChangedHandler = OnConfigChanged;
+            _gameModeChangedHandler = OnGameModeStateChanged;
+
+            ProcessEvents.Default.ProcessCreated += _processCreatedHandler;
+            ProcessEvents.Default.ProcessExited += _processExitedHandler;
+            AppConfig.Instance.PropertyChanged += _configChangedHandler;
+            _gameModeService.StateChanged += _gameModeChangedHandler;
             ProcessEvents.Default.Start();
 
-            runningProcessesView = (ListCollectionView)CollectionViewSource.GetDefaultView(RunningProcesses);
-            runningProcessesView.SortDescriptions.Add(new(nameof(ProcessListEntryViewModel.CpuUsage), ListSortDirection.Descending));
-            runningProcessesView.IsLiveSorting = true;
-            runningProcessesView.LiveSortingProperties.Add(nameof(ProcessListEntryViewModel.CpuUsage));
-            runningProcessesView.Filter = item => ((ProcessListEntryViewModel)item).Name.Contains(ProcessNameFilter, StringComparison.OrdinalIgnoreCase);
-
-            AppConfig.Instance.PropertyChanged += (s, e) =>
-            {
-                if (e.PropertyName == nameof(AppConfig.DisableGameModeMaskClearing) && GameMode.IsEnabled)
-                {
-                    foreach (var process in RunningProcesses)
-                    {
-                        process.RefreshGameModeApply();
-                        // UpdateVisualMask is called to ensure UI bindings (like IsMaskAllowed and DisplayedMask) immediately update when the user changes this setting.
-                        process.UpdateVisualMask();
-                    }
-                }
-            };
-
-            GameMode.IsEnabledChanged += (s, e) =>
-            {
-                bool shouldRefresh = !AppConfig.Instance.DisableGameModeMaskClearing;
-                foreach (var process in RunningProcesses)
-                {
-                    if (shouldRefresh)
-                        process.RefreshGameModeApply();
-
-                    // UpdateVisualMask must always be called when GameMode toggles to ensure the UI correctly updates the combobox logic,
-                    // regardless of whether we actively re-apply the masks to the underlying process.
-                    process.UpdateVisualMask();
-                }
-            };
-
-            Task.Run(ProcessCpuUsageUpdateLoop);
+            _ = Task.Run(ProcessCpuUsageUpdateLoop);
+            _ = Task.Run(ProcessReapplyLoop);
         }
 
-        /// <summary>
-        /// Triggered by a LogicalProcessorMask when its hotkeys are pressed
-        /// </summary>
         public void OnMaskHotkeyPressed(LogicalProcessorMask mask)
         {
-            if (GameMode.IsEnabled && !AppConfig.Instance.DisableGameModeMaskClearing)
+            if (GameModeForcesNoMask)
             {
                 return;
             }
@@ -88,9 +89,13 @@ namespace CPUSetSetter.UI.Tabs.Processes
                 if (success)
                 {
                     if (mask.MaskType == MaskApplyType.NoMask)
+                    {
                         HotkeySoundPlayer.Default.PlayCleared();
+                    }
                     else
+                    {
                         HotkeySoundPlayer.Default.PlayApplied();
+                    }
                 }
                 else
                 {
@@ -99,49 +104,106 @@ namespace CPUSetSetter.UI.Tabs.Processes
             }
         }
 
-        /// <summary>
-        /// Pause the live sorting of the Processes list
-        /// </summary>
-        public void PauseListUpdates()
+        internal void SetListPauseReason(ProcessListPauseReason reason, bool enabled)
         {
-            if (runningProcessesView != null)
+            _dispatcher.VerifyAccess();
+
+            ProcessListPauseReason previousReasons = _pauseReasons;
+            if (enabled)
             {
-                runningProcessesView.IsLiveSorting = false;
+                _pauseReasons |= reason;
+            }
+            else
+            {
+                _pauseReasons &= ~reason;
+            }
+
+            if (previousReasons == ProcessListPauseReason.None && _pauseReasons != ProcessListPauseReason.None)
+            {
+                _runningProcessesView.IsLiveSorting = false;
                 RunningProcesses.SuppressNotifications(true);
             }
-        }
-
-        /// <summary>
-        /// Resume the live sorting of the Processes list
-        /// </summary>
-        public void ResumeListUpdates()
-        {
-            if (runningProcessesView != null)
+            else if (previousReasons != ProcessListPauseReason.None && _pauseReasons == ProcessListPauseReason.None)
             {
                 RunningProcesses.SuppressNotifications(false);
-                runningProcessesView.IsLiveSorting = true;
+                _runningProcessesView.IsLiveSorting = true;
             }
         }
 
         partial void OnProcessNameFilterChanged(string value)
         {
-            runningProcessesView.Refresh();
+            _runningProcessesView.Refresh();
+        }
+
+        private bool GameModeForcesNoMask =>
+            _gameModeService.IsEnabled && !AppConfig.Instance.KeepMasksDuringGameMode;
+
+        private void OnConfigChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(AppConfig.KeepMasksDuringGameMode) && _gameModeService.IsEnabled)
+            {
+                DispatchGameModeRefresh(applyMask: true);
+            }
+        }
+
+        private void OnGameModeStateChanged(object? sender, GameModeStateChangedEventArgs e)
+        {
+            DispatchGameModeRefresh(applyMask: !AppConfig.Instance.KeepMasksDuringGameMode);
+        }
+
+        private void DispatchGameModeRefresh(bool applyMask)
+        {
+            void Refresh()
+            {
+                foreach (ProcessListEntryViewModel process in RunningProcesses)
+                {
+                    if (applyMask)
+                    {
+                        process.RefreshGameModeApply();
+                    }
+                    process.UpdateVisualMask();
+                }
+            }
+
+            if (_dispatcher.CheckAccess())
+            {
+                Refresh();
+            }
+            else if (!_dispatcher.HasShutdownStarted)
+            {
+                _dispatcher.InvokeAsync(Refresh);
+            }
         }
 
         private void OnNewProcess(ProcessInfo pInfo)
         {
-            _dispatcher.Invoke(() =>
+            if (_isDisposed || _dispatcher.HasShutdownStarted)
             {
-                if (!RunningProcesses.Any(x => x.Pid == pInfo.PID))
+                pInfo.ProcessHandler.Dispose();
+                return;
+            }
+
+            _dispatcher.InvokeAsync(() =>
+            {
+                if (!_isDisposed && !RunningProcesses.Any(x => x.Pid == pInfo.PID))
                 {
-                    RunningProcesses.Add(new ProcessListEntryViewModel(pInfo));
+                    RunningProcesses.Add(new ProcessListEntryViewModel(pInfo, _gameModeService));
+                }
+                else
+                {
+                    pInfo.ProcessHandler.Dispose();
                 }
             });
         }
 
         private void OnExitedProcess(uint exitedPid)
         {
-            _dispatcher.Invoke(() =>
+            if (_isDisposed || _dispatcher.HasShutdownStarted)
+            {
+                return;
+            }
+
+            _dispatcher.InvokeAsync(() =>
             {
                 for (int i = RunningProcesses.Count - 1; i >= 0; --i)
                 {
@@ -154,7 +216,7 @@ namespace CPUSetSetter.UI.Tabs.Processes
             });
         }
 
-        private ProcessListEntryViewModel? GetCurrentForegroundProcess()
+        private static ProcessListEntryViewModel? GetCurrentForegroundProcess()
         {
             IntPtr hwnd = NativeMethods.GetForegroundWindow();
             if (hwnd == 0)
@@ -168,44 +230,109 @@ namespace CPUSetSetter.UI.Tabs.Processes
 
         private async Task ProcessCpuUsageUpdateLoop()
         {
-            bool wasVisible = true;
-
-            while (true)
+            try
             {
-                // Periodically sync Windows Game Mode registry changes
-                GameMode.CheckState();
-
-                bool windowIsVisible = false;
-                await _dispatcher.InvokeAsync(() =>
+                bool wasVisible = true;
+                while (true)
                 {
-                    windowIsVisible = App.Current.MainWindow.Visibility == Visibility.Visible;
-                });
-
-                if (!windowIsVisible)
-                {
-                    if (wasVisible)
+                    _cancellationToken.ThrowIfCancellationRequested();
+                    bool windowIsVisible = false;
+                    await _dispatcher.InvokeAsync(() =>
                     {
-                        await _dispatcher.InvokeAsync(PauseListUpdates);
-                        wasVisible = false;
-                    }
-                    await Task.Delay(UPDATE_DELAY_HIDDEN_MS);
-                    continue;
-                }
-                else if (!wasVisible)
-                {
-                    await _dispatcher.InvokeAsync(ResumeListUpdates);
-                    wasVisible = true;
-                }
+                        windowIsVisible = Application.Current.MainWindow?.Visibility == Visibility.Visible;
+                    });
 
-                await _dispatcher.InvokeAsync(() =>
-                {
-                    foreach (ProcessListEntryViewModel pEntry in RunningProcesses)
+                    if (!windowIsVisible)
                     {
-                        pEntry.UpdateCpuUsage();
+                        if (wasVisible)
+                        {
+                            await _dispatcher.InvokeAsync(() =>
+                                SetListPauseReason(ProcessListPauseReason.WindowHidden, true));
+                            wasVisible = false;
+                        }
+                        await Task.Delay(UpdateDelayHiddenMs, _cancellationToken);
+                        continue;
                     }
-                });
-                await Task.Delay(UPDATE_DELAY_VISIBLE_MS);
+
+                    await _dispatcher.InvokeAsync(() =>
+                    {
+                        if (!wasVisible)
+                        {
+                            foreach (ProcessListEntryViewModel process in RunningProcesses)
+                            {
+                                process.ResetCpuUsageSampling();
+                            }
+                            SetListPauseReason(ProcessListPauseReason.WindowHidden, false);
+                            wasVisible = true;
+                        }
+
+                        foreach (ProcessListEntryViewModel process in RunningProcesses)
+                        {
+                            process.UpdateCpuUsage();
+                        }
+                    });
+                    await Task.Delay(UpdateDelayVisibleMs, _cancellationToken);
+                }
             }
+            catch (OperationCanceledException) when (_cancellationToken.IsCancellationRequested || _dispatcher.HasShutdownStarted)
+            {
+                // Application shutdown is expected.
+            }
+            catch (Exception ex)
+            {
+                WindowLogger.Write($"Process CPU-usage loop stopped unexpectedly: {ex}");
+            }
+        }
+
+        private async Task ProcessReapplyLoop()
+        {
+            try
+            {
+                while (true)
+                {
+                    await Task.Delay(ReapplyInterval, _cancellationToken);
+                    await _dispatcher.InvokeAsync(() =>
+                    {
+                        foreach (ProcessListEntryViewModel process in RunningProcesses)
+                        {
+                            if (process.AutoReapply)
+                            {
+                                process.ReapplyMask();
+                            }
+                        }
+                    });
+                }
+            }
+            catch (OperationCanceledException) when (_cancellationToken.IsCancellationRequested || _dispatcher.HasShutdownStarted)
+            {
+                // Application shutdown is expected.
+            }
+            catch (Exception ex)
+            {
+                WindowLogger.Write($"Automatic-reapply loop stopped unexpectedly: {ex}");
+            }
+        }
+
+        public void Dispose()
+        {
+            if (_isDisposed)
+            {
+                return;
+            }
+
+            _isDisposed = true;
+            ProcessEvents.Default.ProcessCreated -= _processCreatedHandler;
+            ProcessEvents.Default.ProcessExited -= _processExitedHandler;
+            AppConfig.Instance.PropertyChanged -= _configChangedHandler;
+            _gameModeService.StateChanged -= _gameModeChangedHandler;
+
+            foreach (ProcessListEntryViewModel process in RunningProcesses.ToList())
+            {
+                process.Dispose();
+            }
+            RunningProcesses.Clear();
+            Instance = null;
+            GC.SuppressFinalize(this);
         }
     }
 }

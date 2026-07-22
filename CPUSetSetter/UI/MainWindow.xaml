@@ -15,23 +15,27 @@
         MinWidth="900">
 
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
         <!--Windows Game Mode Checkbox-->
-        <CheckBox x:Name="GameModeCheckBox" 
-                  Content="Windows Game Mode" 
+        <CheckBox x:Name="GameModeCheckBox"
+                  Grid.Row="0"
+                  Content="Windows Game Mode"
                   ToolTip="When Windows Game Mode is enabled, all Masks are cleared on any running process to allow for full Core Parking on supported CPUs. Disabling restores all active Masks."
-                  HorizontalAlignment="Right" 
-                  VerticalAlignment="Top" 
-                  Margin="0,5,5,0"
-                  Panel.ZIndex="1"/>
-                  
-        <TabControl>
+                  HorizontalAlignment="Right"
+                  Margin="0,5,5,5"/>
+
+        <TabControl Grid.Row="1">
             <!--Processes Tab-->
             <TabItem>
                 <TabItem.Header>
                     <TextBlock Text="Processes"/>
                 </TabItem.Header>
 
-                <proc:ProcessesTab/>
+                <proc:ProcessesTab x:Name="ProcessesTabControl"/>
             </TabItem>
 
             <!--Masks Tab-->
@@ -60,6 +64,6 @@
 
                 <settings:SettingsTab/>
             </TabItem>
-            </TabControl>
+        </TabControl>
     </Grid>
 </Window>

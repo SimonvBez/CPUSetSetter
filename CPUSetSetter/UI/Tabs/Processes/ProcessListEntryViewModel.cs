@@ -1,8 +1,7 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CPUSetSetter.Config.Models;
-using CPUSetSetter.Util;
 using CPUSetSetter.Platforms;
-using CPUSetSetter.Platforms.Windows;
+using CPUSetSetter.Util;
 
 
 namespace CPUSetSetter.UI.Tabs.Processes
@@ -13,18 +12,19 @@ namespace CPUSetSetter.UI.Tabs.Processes
     public partial class ProcessListEntryViewModel : ObservableObject, IDisposable
     {
         private readonly IProcessHandler _processHandler;
+        private readonly IGameModeService _gameModeService;
         private LogicalProcessorMask _lastAppliedMask = LogicalProcessorMask.NoMask;
 
         public uint Pid { get; }
         public string Name { get; }
         public string ImagePath { get; }
+        public bool AutoReapply { get; set; }
 
-        private static bool GameModeForcesNoMask => GameMode.IsEnabled && !AppConfig.Instance.DisableGameModeMaskClearing;
+        private bool GameModeForcesNoMask => _gameModeService.IsEnabled && !AppConfig.Instance.KeepMasksDuringGameMode;
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(CpuPercentageStr))]
         private double _cpuUsage;
-
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(DisplayedMask))]
@@ -35,7 +35,7 @@ namespace CPUSetSetter.UI.Tabs.Processes
             get => GameModeForcesNoMask ? LogicalProcessorMask.NoMask : (Mask ?? LogicalProcessorMask.NoMask);
             set
             {
-                if (!GameModeForcesNoMask && value != null)
+                if (!GameModeForcesNoMask && value is not null)
                 {
                     Mask = value;
                 }
@@ -45,16 +45,17 @@ namespace CPUSetSetter.UI.Tabs.Processes
         public bool IsMaskAllowed => !GameModeForcesNoMask;
 
         [ObservableProperty]
-        private bool _previousApplyFailed = false;
+        private bool _previousApplyFailed;
 
         public string CpuPercentageStr => CpuUsage == -1 ? "" : $"{CpuUsage * 100:F1}%";
 
-        public ProcessListEntryViewModel(ProcessInfo pInfo)
+        internal ProcessListEntryViewModel(ProcessInfo pInfo, IGameModeService gameModeService)
         {
             Pid = pInfo.PID;
             Name = pInfo.Name;
             ImagePath = pInfo.ImagePath;
             _processHandler = pInfo.ProcessHandler;
+            _gameModeService = gameModeService;
 
             ProgramRule? programRule = RuleHelpers.GetProgramRuleOrNull(pInfo.ImagePath);
             programRule?.AddRunningProcess(this);
@@ -62,6 +63,7 @@ namespace CPUSetSetter.UI.Tabs.Processes
             LogicalProcessorMask mask = programRule?.Mask ?? LogicalProcessorMask.NoMask;
             SetMask(mask, false);
             _mask = mask; // _mask is already set by SetMask, this just suppresses a warning
+            AutoReapply = programRule?.AutoReapply ?? false;
 
             CpuUsage = _processHandler.GetCpuUsage();
         }
@@ -71,10 +73,27 @@ namespace CPUSetSetter.UI.Tabs.Processes
             CpuUsage = _processHandler.GetCpuUsage();
         }
 
+        public void ResetCpuUsageSampling()
+        {
+            _processHandler.ResetCpuUsageSampling();
+        }
+
+        public void ReapplyMask()
+        {
+            if (GameModeForcesNoMask || Mask.MaskType == MaskApplyType.NoMask)
+            {
+                return;
+            }
+
+            PreviousApplyFailed = !_processHandler.ReapplyMask(Mask);
+        }
+
         public bool SetMask(LogicalProcessorMask newMask, bool updateRule)
         {
-            if (newMask == _lastAppliedMask) // Return the previous status if the mask is still the same
+            if (newMask == _lastAppliedMask)
+            {
                 return !PreviousApplyFailed;
+            }
 
             _lastAppliedMask = newMask;
             Mask = newMask;
@@ -82,15 +101,15 @@ namespace CPUSetSetter.UI.Tabs.Processes
             bool ruleSuccess = true;
             if (updateRule && ImagePath.Length != 0)
             {
-                // SetMask was called from the Processes tab UI, so the ProgramRule needs to be updated or created too
                 ProgramRule? programRule = RuleHelpers.GetProgramRuleOrNull(ImagePath);
                 if (programRule is null)
                 {
-                    programRule = new(ImagePath, newMask, true);
+                    programRule = new(ImagePath, newMask, false, true);
                     AppConfig.Instance.ProgramRules.Add(programRule);
                 }
                 ruleSuccess = programRule.SetMask(newMask, true);
             }
+
             bool success = ApplyMaskConsideringGameMode(newMask);
             PreviousApplyFailed = !success;
             return success && ruleSuccess;
@@ -98,7 +117,7 @@ namespace CPUSetSetter.UI.Tabs.Processes
 
         public void RefreshGameModeApply()
         {
-            ApplyMaskConsideringGameMode(Mask);
+            PreviousApplyFailed = !ApplyMaskConsideringGameMode(Mask);
         }
 
         public void UpdateVisualMask()
@@ -107,37 +126,27 @@ namespace CPUSetSetter.UI.Tabs.Processes
             OnPropertyChanged(nameof(IsMaskAllowed));
         }
 
-        /// <summary>
-        /// The UI picked a different mask
-        /// </summary>
         partial void OnMaskChanged(LogicalProcessorMask? oldValue, LogicalProcessorMask newValue)
         {
             if (oldValue is not null)
+            {
                 oldValue.MaskChanged -= OnMaskEdited;
+            }
             newValue.MaskChanged += OnMaskEdited;
             SetMask(newValue, true);
         }
 
         private void OnMaskEdited(object? sender, EventArgs e)
         {
-            // One of the logical processors in the mask or the type has changed, apply it
-            bool success = ApplyMaskConsideringGameMode(Mask);
-            PreviousApplyFailed = !success;
+            PreviousApplyFailed = !ApplyMaskConsideringGameMode(Mask);
         }
 
         private bool ApplyMaskConsideringGameMode(LogicalProcessorMask mask)
         {
-            if (GameModeForcesNoMask)
-            {
-                return _processHandler.ApplyMask(LogicalProcessorMask.NoMask);
-            }
-
-            return _processHandler.ApplyMask(mask);
+            LogicalProcessorMask appliedMask = GameModeForcesNoMask ? LogicalProcessorMask.NoMask : mask;
+            return _processHandler.ApplyMask(appliedMask);
         }
 
-        /// <summary>
-        /// The process has exited
-        /// </summary>
         public void Dispose()
         {
             RuleHelpers.GetProgramRuleOrNull(ImagePath)?.RemoveRunningProcess(this);
